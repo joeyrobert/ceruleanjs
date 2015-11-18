@@ -1,0 +1,12 @@
+{
+  "name": "ceruleanjs",
+  "version": "0.0.1",
+  "description": "",
+  "main": "src/xboard.js",
+  "author": "joeyrobert <joey@joeyrobert.org>",
+  "license": "GPLv2",
+  "dependencies": {},
+  "engines": {
+    "node": ">=4.0.0"
+  }
+}
