@@ -6,10 +6,6 @@ const utils = require('./utils');
 module.exports = class Board {
     constructor() {
         this.emptyBoard();
-        this.fileDistance = [];
-        this.squareDistance = [];
-        this.queenIncrement = [];
-        this.knightIncrement = [];
         this.fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
     }
 
@@ -58,6 +54,7 @@ module.exports = class Board {
                 else {
                     let isWhite = piece.toUpperCase() === piece;
                     this.addPiece(rankIndex, fileIndex, piece, isWhite);
+                    fileIndex++;
                 }
             });
 
@@ -65,7 +62,7 @@ module.exports = class Board {
     }
 
     addPiece(rankIndex, fileIndex, piece, isWhite) {
-
+        console.log('addPiece', rankIndex, fileIndex, piece, isWhite);
     }
 
     get pgn() {

@@ -18,7 +18,7 @@ CeruleanJS aims to be the first JavaScript chess engine to rank on the CCRL 40/4
 
 ## Requirements
 
-- Node 4.0
+- Node >= 4.0
 
 ## Correctness
 
