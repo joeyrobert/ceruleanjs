@@ -6,7 +6,15 @@
   "author": "joeyrobert <joey@joeyrobert.org>",
   "license": "GPLv2",
   "dependencies": {},
+  "scripts": {
+    "test": "mocha",
+    "start": "node src/interface.js"
+  },
   "engines": {
     "node": ">=4.0.0"
+  },
+  "devDependencies": {
+    "chai": "^3.4.1",
+    "mocha": "^2.3.4"
   }
 }
