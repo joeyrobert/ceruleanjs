@@ -52,17 +52,24 @@ module.exports = class Board {
                 if (utils.isNumeric(piece))
                     fileIndex += parseInt(piece, 10);
                 else {
-                    let isWhite = piece.toUpperCase() === piece;
-                    this.addPiece(rankIndex, fileIndex, piece, isWhite);
+                    let side = piece.toUpperCase() === piece ? constants.WHITE : constants.BLACK;
+                    this.addPiece(rankIndex, fileIndex, piece, side);
                     fileIndex++;
                 }
             });
-
         });
     }
 
-    addPiece(rankIndex, fileIndex, piece, isWhite) {
-        console.log('addPiece', rankIndex, fileIndex, piece, isWhite);
+    addPiece(rankIndex, fileIndex, piece, side) {
+        console.log('addPiece', rankIndex, fileIndex, piece, side);
+        this.pieces[side].push(this.rankFileToIndex(rankIndex, fileIndex));
+    }
+
+    rankFileToIndex(rankIndex, fileIndex) {
+    }
+
+    indexToRankFile() {
+
     }
 
     get pgn() {
@@ -72,4 +79,6 @@ module.exports = class Board {
     set pgn(pgnRead) {
 
     }
+
+
 };

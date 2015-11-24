@@ -31,6 +31,33 @@ const FILE_DISTANCE = fileDistance();
 const SQUARE_DISTANCE = squareDistance();
 const QUEEN_INCREMENT = queenIncrement();
 const KNIGHT_INCREMENT = knightIncrement();
+const PIECE_MAP = {
+    'p': 1,
+    'n': 2,
+    'b': 3,
+    'r': 4,
+    'q': 5,
+    'k': 6,
+};
+
+const PIECE_DISPLAY_MAP = [
+    {
+        1: '♙',
+        2: '♘',
+        3: '♗',
+        4: '♖',
+        5: '♕',
+        6: '♔'
+    },
+    {
+        1: '♟',
+        2: '♞',
+        3: '♝',
+        4: '♜',
+        5: '♛',
+        6: '♚'
+    }
+];
 
 module.exports = {
     WHITE,
