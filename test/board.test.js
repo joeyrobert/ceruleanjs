@@ -23,5 +23,5 @@ describe('board', () => {
             board.fen = fen;
             expect(board.fen).to.equal(fen);
         });
-    });`
+    });
 });
