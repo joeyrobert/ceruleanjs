@@ -29,7 +29,43 @@ module.exports = class Board {
     }
 
     get fen() {
+        let board = [];
 
+        for (let fileIndex = 0; fileIndex <= 7; fileIndex++) {
+            let fileOffset = 0;
+            let fileBoard = '';
+
+            for (let rankIndex = 7; rankIndex >= 0; rankIndex++) {
+                let index = rankFileToIndex(rankIndex, fileIndex);
+
+                if (this.board[index]) {
+                    fileBoard += fenOffset;
+                    fenOffset = 0;
+                    fileBoard += constants.INVERSE_PIECE_MAP[]
+                } else {
+                    fenOffset++;
+                }
+            }
+            board.push(fileBoard);
+        }
+
+        board = board.join('/');
+        let turn = this.turn === constants.WHITE ? 'w' : 'b';
+        let castling = '';
+
+        for (let castlingTurn = 0; castlingTurn <= 1; castlingTurn++) {
+        }
+
+        let enPassant = this.enPassant ? this.indexToAlgebraic(this.enPassant) : '-';
+
+        return [
+            board,
+            turn,
+            castling,
+            enPassant,
+            this.halfMoveClock,
+            this.fullMoveNumber
+        ].join(' ');
     }
 
     set fen(fen) {
@@ -39,46 +75,67 @@ module.exports = class Board {
         }
 
         this.emptyBoard();
-
-        var parts = fen.split(' ');
-        var ranks = parts[0].split('/');
+        let parts = fen.split(' ');
+        let ranks = parts[0].split('/');
 
         ranks.forEach((rank, invertedRankIndex) => {
-            var fileIndex = 0;
-            var rankIndex = 7 - invertedRankIndex;
-            var pieces = rank.split('');
+            let fileIndex = 0;
+            let rankIndex = 7 - invertedRankIndex;
+            let pieces = rank.split('');
 
             pieces.forEach(piece => {
                 if (utils.isNumeric(piece))
                     fileIndex += parseInt(piece, 10);
                 else {
-                    let side = piece.toUpperCase() === piece ? constants.WHITE : constants.BLACK;
-                    this.addPiece(rankIndex, fileIndex, piece, side);
+                    let turn = piece.toUpperCase() === piece ? constants.WHITE : constants.BLACK;
+                    this.addPiece(rankIndex, fileIndex, piece, turn);
                     fileIndex++;
                 }
             });
         });
+
+        this.turn = parts[1] === 'w' ? constants.WHITE : constants.BLACK;
+        this.castling = [false, false, false, false];
+
+        parts[2].split().forEach(castling => {
+            if (item === '-') return;
+            let turn = castling === castling.toUpperCase() ? constants.WHITE : constants.BLACK;
+            this.castling[constants.CASTLING[castling]] = true;
+        });
+
+        this.enPassant = parts[3] === '-' ? null : this.algebraicToIndex(parts[3]);
+        this.halfMoveClock = parseInt(parts[4], 10);
+        this.fullMoveNumber = parseInt(parts[5], 10);
     }
 
-    addPiece(rankIndex, fileIndex, piece, side) {
-        console.log('addPiece', rankIndex, fileIndex, piece, side);
-        this.pieces[side].push(this.rankFileToIndex(rankIndex, fileIndex));
+    addPiece(rankIndex, fileIndex, piece, turn) {
+        let index = this.rankFileToIndex(rankIndex, fileIndex);
+        this.pieces[turn].push(index);
+        this.board[index] = piece & turn;
     }
 
     rankFileToIndex(rankIndex, fileIndex) {
+        return rankIndex*15 + fileIndex + 17;
     }
 
-    indexToRankFile() {
-
+    indexToRank(index) {
+        return (index / 15) >> 0 - 1;
     }
 
-    get pgn() {
-
+    indexToFile(index) {
+        return (index - 3) % 15 + 1;
     }
 
-    set pgn(pgnRead) {
-
+    algebraicToIndex(algebraic) {
+        let splitted = algebraic.split();
+        let fileIndex = splitted[0].charCodeAt(0) - 97;
+        let rankIndex = parseInt(splitted[1], 10);
+        return this.rankFileToIndex(rankIndex, fileIndex);
     }
 
-
+    indexToAlgebraic(index) {
+        let fileIndex = this.indexToFile(index);
+        let rankIndex = this.indexToRank(index);
+        return String.fromCharCode(97 + fileIndex) + rankIndex;
+    }
 };
