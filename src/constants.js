@@ -31,6 +31,7 @@ const FILE_DISTANCE = fileDistance();
 const SQUARE_DISTANCE = squareDistance();
 const QUEEN_INCREMENT = queenIncrement();
 const KNIGHT_INCREMENT = knightIncrement();
+const JUST_PIECE = 126; // 1111110
 const PIECE_MAP = {
     'p': 2,
     'n': 4,
@@ -75,6 +76,13 @@ const CASTLING = {
     q: 3
 };
 
+const INVERSE_CASTLING = [
+    'K',
+    'Q',
+    'k',
+    'q'
+];
+
 module.exports = {
     WHITE,
     BLACK,
@@ -86,7 +94,9 @@ module.exports = {
     QUEEN_INCREMENT,
     KNIGHT_INCREMENT,
     PIECE_MAP,
+    JUST_PIECE,
     INVERSE_PIECE_MAP,
     PIECE_DISPLAY_MAP,
-    CASTLING
+    CASTLING,
+    INVERSE_CASTLING
 };

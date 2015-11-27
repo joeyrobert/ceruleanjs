@@ -11,9 +11,9 @@ module.exports = class Board {
 
     emptyBoard() {
         this.moves = [];
-        this.pieces = [];
+        this.pieces = [[], []];
         this.board = new Array(constants.WIDTH * constants.HEIGHT);
-        this.castling = [true, true, true, true]; // KQkq
+        this.castling = [false, false, false, false]; // KQkq
         this.enPassant = false;
         this.turn = constants.WHITE;
         this.halfMoveClock = 0;
@@ -31,31 +31,40 @@ module.exports = class Board {
     get fen() {
         let board = [];
 
-        for (let fileIndex = 0; fileIndex <= 7; fileIndex++) {
+        for (let rankIndex = 8; rankIndex >= 1; rankIndex--) {
             let fileOffset = 0;
-            let fileBoard = '';
+            let rankBoard = '';
 
-            for (let rankIndex = 7; rankIndex >= 0; rankIndex++) {
-                let index = rankFileToIndex(rankIndex, fileIndex);
+            for (let fileIndex = 1; fileIndex <= 8; fileIndex++) {
+                let index = this.rankFileToIndex(rankIndex, fileIndex);
 
                 if (this.board[index]) {
-                    fileBoard += fenOffset;
-                    fenOffset = 0;
-                    fileBoard += constants.INVERSE_PIECE_MAP[]
+                    if (fileOffset > 0) {
+                        rankBoard += fileOffset;
+                        fileOffset = 0;
+                    }
+                    let piece = constants.INVERSE_PIECE_MAP[this.board[index] & constants.JUST_PIECE];
+                    if (this.board[index] % 2 === 0)
+                        piece = piece.toUpperCase();
+                    rankBoard += piece;
                 } else {
-                    fenOffset++;
+                    fileOffset++;
                 }
             }
-            board.push(fileBoard);
+
+            if (fileOffset > 0)
+                rankBoard += fileOffset;
+
+            board.push(rankBoard);
         }
 
         board = board.join('/');
         let turn = this.turn === constants.WHITE ? 'w' : 'b';
-        let castling = '';
-
-        for (let castlingTurn = 0; castlingTurn <= 1; castlingTurn++) {
-        }
-
+        let castling = this.castling.reduce((memo, castle, index) => {
+            if (castle)
+                memo = memo + constants.INVERSE_CASTLING[index];
+            return memo;
+        }, '') || '-';
         let enPassant = this.enPassant ? this.indexToAlgebraic(this.enPassant) : '-';
 
         return [
@@ -79,8 +88,8 @@ module.exports = class Board {
         let ranks = parts[0].split('/');
 
         ranks.forEach((rank, invertedRankIndex) => {
-            let fileIndex = 0;
-            let rankIndex = 7 - invertedRankIndex;
+            let fileIndex = 1;
+            let rankIndex = 8 - invertedRankIndex;
             let pieces = rank.split('');
 
             pieces.forEach(piece => {
@@ -97,9 +106,8 @@ module.exports = class Board {
         this.turn = parts[1] === 'w' ? constants.WHITE : constants.BLACK;
         this.castling = [false, false, false, false];
 
-        parts[2].split().forEach(castling => {
-            if (item === '-') return;
-            let turn = castling === castling.toUpperCase() ? constants.WHITE : constants.BLACK;
+        parts[2].split('').forEach(castling => {
+            if (castling === '-') return;
             this.castling[constants.CASTLING[castling]] = true;
         });
 
@@ -111,7 +119,7 @@ module.exports = class Board {
     addPiece(rankIndex, fileIndex, piece, turn) {
         let index = this.rankFileToIndex(rankIndex, fileIndex);
         this.pieces[turn].push(index);
-        this.board[index] = piece & turn;
+        this.board[index] = constants.PIECE_MAP[piece.toLowerCase()] | turn;
     }
 
     rankFileToIndex(rankIndex, fileIndex) {
@@ -119,7 +127,7 @@ module.exports = class Board {
     }
 
     indexToRank(index) {
-        return (index / 15) >> 0 - 1;
+        return Math.floor(index / 15 - 1);
     }
 
     indexToFile(index) {
@@ -127,8 +135,8 @@ module.exports = class Board {
     }
 
     algebraicToIndex(algebraic) {
-        let splitted = algebraic.split();
-        let fileIndex = splitted[0].charCodeAt(0) - 97;
+        let splitted = algebraic.split('');
+        let fileIndex = splitted[0].charCodeAt(0) - 96;
         let rankIndex = parseInt(splitted[1], 10);
         return this.rankFileToIndex(rankIndex, fileIndex);
     }
@@ -136,6 +144,6 @@ module.exports = class Board {
     indexToAlgebraic(index) {
         let fileIndex = this.indexToFile(index);
         let rankIndex = this.indexToRank(index);
-        return String.fromCharCode(97 + fileIndex) + rankIndex;
+        return String.fromCharCode(96 + fileIndex) + rankIndex;
     }
 };
