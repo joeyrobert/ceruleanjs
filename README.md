@@ -14,11 +14,11 @@ CeruleanJS is a chess engine for NodeJS. The goal of CeruleanJS is threefold:
 - Performance
 - Ease of programming
 
-CeruleanJS aims to be the first JavaScript chess engine to rank on the CCRL 40/40.
+CeruleanJS aims to be ranked on the CCRL 40/40.
 
 ## Requirements
 
-- Node 4.0
+- Node >= 4.0
 
 ## Correctness
 
