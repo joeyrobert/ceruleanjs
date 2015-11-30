@@ -1,6 +1,7 @@
 'use strict';
 
-var stdio = require('stdio');
+const stdio = require('stdio');
+const colors = require('colors');
 const constants = require('./constants');
 const Board = require('./board');
 const packageInfo = require('../package.json');
@@ -27,7 +28,30 @@ class Interface {
     }
 
     display() {
+        let display = '';
 
+        for (let rankIndex = 8; rankIndex >= 1; rankIndex--) {
+            display += ` ${colors.bold(rankIndex)} `;
+
+            for (let fileIndex = 1; fileIndex <= 8; fileIndex++) {
+                let index = this.board.rankFileToIndex(rankIndex, fileIndex);
+                let turn = this.board.board[index] % 2;
+                let square = index % 2 === 0;
+                let value = ` ${constants.PIECE_DISPLAY_MAP[this.board.board[index] - turn]} `;
+                value = colors[square ? 'bgGreen' : 'bgYellow'](value);
+                value = colors[turn === constants.WHITE ? 'white' : 'black'](value);
+                display += value;
+            }
+            display += '\n';
+        }
+
+        display += '   ';
+
+        for (let fileIndex = 1; fileIndex <= 8; fileIndex++) {
+            display += ` ${String.fromCharCode(96 + fileIndex)} `;
+        }
+
+        console.log(display);
     }
 
     divide(depth) {

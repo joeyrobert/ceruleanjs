@@ -1,5 +1,7 @@
 'use strict';
 
+const os = require('os');
+
 /*
  * Constant generators
  */
@@ -52,24 +54,24 @@ const INVERSE_PIECE_MAP = {
     64: 'k'
 };
 
-const PIECE_DISPLAY_MAP = [
-    {
-        2: '♙',
-        4: '♘',
-        8: '♗',
-        16: '♖',
-        32: '♕',
-        64: '♔'
-    },
-    {
-        2: '♟',
-        4: '♞',
-        8: '♝',
-        16: '♜',
-        32: '♛',
-        64: '♚'
-    }
-];
+
+const PIECE_DISPLAY_MAP = os.platform() !== 'win32' ? {
+    2: '♟',
+    4: '♞',
+    8: '♝',
+    16: '♜',
+    32: '♛',
+    64: '♚',
+    128: ' '
+} : {
+    2: 'p',
+    4: 'n',
+    8: 'b',
+    16: 'r',
+    32: 'q',
+    64: 'k',
+    128: ' '
+};
 
 const CASTLING = {
     K: 0,

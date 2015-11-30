@@ -6,6 +6,7 @@
   "author": "joeyrobert <joey@joeyrobert.org>",
   "license": "GPL-2.0",
   "dependencies": {
+    "colors": "^1.1.2",
     "stdio": "^0.2.7"
   },
   "scripts": {
