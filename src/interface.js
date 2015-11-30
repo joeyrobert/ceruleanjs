@@ -21,8 +21,8 @@ class Interface {
                 this.move(action);
             } else if (this[action]) {
                 this[action].apply(this, parts.slice(1));
-            } else if (this.xboard) {
-                console.log('Invalid command');
+            } else if (!this.xboard) {
+                console.log('Invalid command:', line);
             }
         });
     }
