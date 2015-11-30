@@ -32,7 +32,6 @@ const SQUARE_DISTANCE = squareDistance();
 const QUEEN_INCREMENT = queenIncrement();
 const KNIGHT_INCREMENT = knightIncrement();
 const JUST_PIECE = 126; // 1111110
-const JUST_TURN = 1;
 const PIECE_MAP = {
     'p': 2,
     'n': 4,
@@ -121,6 +120,20 @@ const DELTA_ROOK = [
     15
 ];
 
+const CASTLING_INDEX = [
+    39,
+    35,
+    144,
+    140
+];
+
+const DELTA_MAP = [
+    [DELTA_BISHOP, PIECE_MAP.b],
+    [DELTA_ROOK, PIECE_MAP.r],
+    [DELTA_KNIGHT, PIECE_MAP.n],
+    [DELTA_KING, PIECE_MAP.k]
+];
+
 module.exports = {
     WHITE,
     BLACK,
@@ -133,7 +146,6 @@ module.exports = {
     KNIGHT_INCREMENT,
     PIECE_MAP,
     JUST_PIECE,
-    JUST_TURN,
     INVERSE_PIECE_MAP,
     PIECE_DISPLAY_MAP,
     CASTLING,
@@ -141,5 +153,7 @@ module.exports = {
     DELTA_KNIGHT,
     DELTA_KING,
     DELTA_BISHOP,
-    DELTA_ROOK
+    DELTA_ROOK,
+    CASTLING_INDEX,
+    DELTA_MAP
 };

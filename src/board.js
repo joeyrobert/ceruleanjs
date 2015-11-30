@@ -7,7 +7,6 @@ module.exports = class Board {
     constructor() {
         this.emptyBoard();
         this.fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
-        this.generateMoves();
     }
 
     emptyBoard() {
@@ -39,7 +38,7 @@ module.exports = class Board {
             for (let fileIndex = 1; fileIndex <= 8; fileIndex++) {
                 let index = this.rankFileToIndex(rankIndex, fileIndex);
 
-                if (this.board[index]) {
+                if (this.board[index] !== constants.PIECE_MAP.empty) {
                     if (fileOffset > 0) {
                         rankBoard += fileOffset;
                         fileOffset = 0;
@@ -47,7 +46,7 @@ module.exports = class Board {
 
                     let piece = constants.INVERSE_PIECE_MAP[this.board[index] & constants.JUST_PIECE];
 
-                    if (this.board[index] % 2 === 0) {
+                    if (this.board[index] % 2 === constants.WHITE) {
                         piece = piece.toUpperCase();
                     }
 
@@ -172,7 +171,7 @@ module.exports = class Board {
 
         // Piece moves
         for (let i = 0; i < pieces.length; i++) {
-            let index = pieces[i];
+            let index = this.board[i];
             let piece = this.board[index] - this.turn;
 
             switch (piece) {
@@ -183,13 +182,13 @@ module.exports = class Board {
                     moves = moves.concat(this.deltaMoves(constants.DELTA_KNIGHT, index));
                     break;
                 case constants.PIECE_MAP.b:
-                    moves = moves.concat(this.slidingMoves(constants.DELTA_BISHOP));
+                    moves = moves.concat(this.slidingMoves(constants.DELTA_BISHOP, index));
                     break;
                 case constants.PIECE_MAP.r:
-                    moves = moves.concat(this.slidingMoves(constants.DELTA_ROOK));
+                    moves = moves.concat(this.slidingMoves(constants.DELTA_ROOK, index));
                     break;
                 case constants.PIECE_MAP.q:
-                    moves = moves.concat(this.slidingMoves(constants.DELTA_BISHOP)).concat(this.slidingMoves(constants.DELTA_ROOK));
+                    moves = moves.concat(this.slidingMoves(constants.DELTA_BISHOP, index)).concat(this.slidingMoves(constants.DELTA_ROOK, index));
                     break;
                 case constants.PIECE_MAP.k:
                     moves = moves.concat(this.deltaMoves(constants.DELTA_KING, index));
@@ -198,6 +197,17 @@ module.exports = class Board {
         }
 
         // Castling
+        moves = moves.concat(this.castlingMoves());
+
+        return moves;
+    }
+
+    moveString() {
+        let moves = this.generateMoves();
+        let moveString = moves.map(move =>
+            this.indexToAlgebraic(move[0]) + this.indexToAlgebraic(move[1]))
+            .join('\n');
+        return moveString;
     }
 
     pawnMoves(index) {
@@ -230,7 +240,7 @@ module.exports = class Board {
         for (let j = 0; j <= 2; j = j + 2) {
             // Captures
             newMove = index + (16 + j - 1) * this.turn;
-            if (this.board[newMove] && this.board[newMove] & constants.JUST_TURN !== this.turn) {
+            if (this.board[newMove] && this.board[newMove] % 2 !== this.turn) {
                 if (this.indexToRank(newMove) === lastRank) {
                     moves.push([index, newMove, constants.PIECE_MAP.q]);
                     moves.push([index, newMove, constants.PIECE_MAP.r]);
@@ -271,18 +281,102 @@ module.exports = class Board {
 
             do {
                 newMove += deltas[i];
-                if (!this.board[newMove] || this.board[newMove] & this.constants.JUST_TURN === this.turn) {
-                    break;
-                }
 
-                if (this.board[newMove] === constants.PIECE_MAP.empty || this.board[newMove] & this.constants.JUST_TURN !== this.turn) {
+                if (this.board[newMove] &&
+                    (this.board[newMove] === constants.PIECE_MAP.empty ||
+                    this.board[newMove] % 2 !== this.turn)) {
                     moves.push([index, newMove]);
                 } else {
                     break;
                 }
-            } while(true);
+            } while (true);
         }
 
         return moves;
+    }
+
+    castlingMoves() {
+        let moves = [];
+        let index = this.turn === constants.WHITE ? 142 : 37;
+
+        castleLoop:
+        for (let i = 0; i < 2; i++) {
+            let castlingIndex = i + this.turn * 2;
+
+            if (this.castling[castlingIndex]) {
+                let newMove = constants.CASTLING_INDEX[castlingIndex];
+                let numberOffset = castlingIndex % 2 === 0 ? 2 : 3;
+                let direction = castlingIndex % 2 === 0 ? 1 : -1;
+
+                for (let j = 0; j < numberOffset; j++) {
+                    if (this.board[newMove + j * direction] !== constants.PIECE_MAP.empty) {
+                        continue castleLoop;
+                    }
+                }
+
+                moves.push([index, newMove]);
+            }
+        }
+
+        return moves;
+    }
+
+    isInCheck() {
+
+    }
+
+    isAttacked(index, turn) {
+        let newMove;
+
+        // Pawns
+        for (let j = 0; j < 2; j++) {
+            newMove = index + (15 - 1 + 2 * j) * (turn ? -1 : 1);
+            if (this.board[newMove] &&
+                this.board[newMove] % 2 === turn &&
+                this.board[newMove] === constants.PIECE_MAP.p) {
+                return true;
+            }
+        }
+
+        // Sliding attacks
+        for (let k = 0; k < 2; k++) {
+            let deltas = constants.DELTA_MAP[k][0];
+            let deltaPiece = constants.DELTA_MAP[k][1];
+
+            for (let j = 0; j < 4; j++) {
+                do {
+                    newMove = index + deltas[j];
+                    if (!this.board[newMove] ||
+                        this.board[newMove] % 2 !== turn ||
+                        (this.board[newMove] !== constants.PIECE_MAP.empty &&
+                            this.board[newMove] !== deltaPiece &&
+                            this.board[newMove] !== constants.PIECE_MAP.q)) {
+                        break;
+                    }
+
+                    if (this.board[newMove] % 2 === turn &&
+                        (this.board[newMove] === deltaPiece ||
+                            this.board[newMove] === constants.PIECE_MAP.q)) {
+                        return true;
+                    }
+                } while (true);
+            }
+        }
+
+        // Delta attacks
+        for (let k = 2; k < 4; k++) {
+            let deltas = constants.DELTA_MAP[k][0];
+            let deltaPiece = constants.DELTA_MAP[k][1];
+
+            for (let j = 0; j < 8; j++) {
+                newMove = deltas[j] + index;
+                if (this.board[newMove] &&
+                    this.board[newMove] % 2 === turn &&
+                    this.board[newMove] === deltaPiece) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 };

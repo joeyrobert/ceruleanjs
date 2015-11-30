@@ -5,7 +5,9 @@
   "main": "src/xboard.js",
   "author": "joeyrobert <joey@joeyrobert.org>",
   "license": "GPL-2.0",
-  "dependencies": {},
+  "dependencies": {
+    "stdio": "^0.2.7"
+  },
   "scripts": {
     "test": "mocha",
     "start": "node src/interface.js"
@@ -18,7 +20,7 @@
     "mocha": "^2.3.4"
   },
   "repository": {
-    "type" : "git",
-    "url" : "https://joeyrobert@bitbucket.org/joeyrobert/ceruleanjs.git"
+    "type": "git",
+    "url": "https://joeyrobert@bitbucket.org/joeyrobert/ceruleanjs.git"
   }
 }
