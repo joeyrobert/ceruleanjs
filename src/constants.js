@@ -27,6 +27,7 @@ const BLACK = 1;
 const WIDTH = 15;
 const HEIGHT = 12;
 const FEN_BOARD_REGEX = /^\s*([rnbqkpRNBQKP1-8]+\/){7}([rnbqkpRNBQKP1-8]+)\s[bw]\s(-|K?Q?k?q?)\s(-|[a-h‌​][36])/;
+const MOVE_REGEX = /^[a-h][1-8][a-h][1-8][bnrq]?$/;
 const FILE_DISTANCE = fileDistance();
 const SQUARE_DISTANCE = squareDistance();
 const QUEEN_INCREMENT = queenIncrement();
@@ -140,6 +141,7 @@ module.exports = {
     WIDTH,
     HEIGHT,
     FEN_BOARD_REGEX,
+    MOVE_REGEX,
     FILE_DISTANCE,
     SQUARE_DISTANCE,
     QUEEN_INCREMENT,

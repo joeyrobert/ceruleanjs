@@ -2,6 +2,7 @@
 
 const constants = require('./constants');
 const utils = require('./utils');
+const PieceList = require('./piece_list');
 
 module.exports = class Board {
     constructor() {
@@ -10,8 +11,8 @@ module.exports = class Board {
     }
 
     emptyBoard() {
-        this.moves = [];
-        this.pieces = [[], []];
+        this.history = [];
+        this.pieces = [new PieceList(), new PieceList()];
         this.board = new Array(constants.WIDTH * constants.HEIGHT);
         this.castling = [false, false, false, false]; // KQkq
         this.enPassant = false;
@@ -156,16 +157,32 @@ module.exports = class Board {
     }
 
     addMove(move) {
-        this.moves.push(move);
+        let from = move[0];
+        let to = move[1];
+        this.history.push([move, this.board[to], this.enPassant]);
+        this.board[to] = this.board[from];
+        this.board[from] = constants.PIECE_MAP.empty;
     }
 
     subtractMove() {
-        this.moves.pop();
+        let history = this.history.pop();
+        let from = history[0][0];
+        let to = history[0][1];
+        this.board[from] = this.board[to];
+        this.board[to] = history[1];
+        this.enPassant = history[2];
+    }
+
+    addMoveString(moveString) {
+        let from = this.algebraicToIndex(moveString.slice(0, 2));
+        let to = this.algebraicToIndex(moveString.slice(2, 4));
+        let capture = constants.PIECE_MAP[moveString[5]];
+        this.addMove([from, to, capture]);
     }
 
     // Move format is as follows: [from, to, promotion]
     generateMoves() {
-        let pieces = this.pieces[this.turn];
+        let pieces = this.pieces[this.turn].indices;
         let moves = [];
         let newMove;
 
@@ -239,7 +256,7 @@ module.exports = class Board {
 
         for (let j = 0; j <= 2; j = j + 2) {
             // Captures
-            newMove = index + (16 + j - 1) * this.turn;
+            newMove = index + (15 - 1 + 2 * j) * (this.turn ? -1 : 1);
             if (this.board[newMove] && this.board[newMove] % 2 !== this.turn) {
                 if (this.indexToRank(newMove) === lastRank) {
                     moves.push([index, newMove, constants.PIECE_MAP.q]);
@@ -377,6 +394,7 @@ module.exports = class Board {
                 }
             }
         }
+
         return false;
     }
 };

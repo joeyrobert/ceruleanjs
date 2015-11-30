@@ -2,7 +2,7 @@
   "name": "ceruleanjs",
   "version": "0.0.1",
   "description": "",
-  "main": "src/xboard.js",
+  "main": "src/interface.js",
   "author": "joeyrobert <joey@joeyrobert.org>",
   "license": "GPL-2.0",
   "dependencies": {
