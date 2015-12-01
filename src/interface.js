@@ -48,7 +48,7 @@ class Interface {
         display += '   ';
 
         for (let fileIndex = 1; fileIndex <= 8; fileIndex++) {
-            display += ` ${String.fromCharCode(96 + fileIndex)} `;
+            display += ` ${colors.bold(String.fromCharCode(96 + fileIndex))} `;
         }
 
         console.log(display);
@@ -136,7 +136,7 @@ class Interface {
 Commands
 --------
 display         Draws the board
-divide n        Divides the current board to a depth of n
+divide [INT]    Divides the current board to specified depth
 e2e4            Moves from the current position, and thinks
 go              Forces the engine to think
 undo            Subtracts the previous move
@@ -147,11 +147,11 @@ white           Sets the active colour to WHITE
 black           Sets the active colour to BLACK
 time [INT]      Sets engine's time (in centiseconds)
 otim [INT]      Sets opponent's time (in centiseconds)
-sd
+sd [INT]        Sets maximum depth
+st [INT]        Sets maximum time
 exit            Exits the menu
 quit            See exit
 help            Gets you this magical menu
-
         `;
         console.log(helpMenu);
     }
