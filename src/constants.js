@@ -35,6 +35,17 @@ const SQUARE_DISTANCE = squareDistance();
 const QUEEN_INCREMENT = queenIncrement();
 const KNIGHT_INCREMENT = knightIncrement();
 const JUST_PIECE = 126; // 1111110
+const CASTLING_W_K = 1;
+const CASTLING_W_Q = 2;
+const CASTLING_B_K = 4;
+const CASTLING_B_Q = 8;
+const CASTLING = {
+    K: 1,
+    Q: 2,
+    k: 4,
+    q: 8
+};
+
 const PIECE_MAP = {
     'p': 2,
     'n': 4,
@@ -73,20 +84,6 @@ const PIECE_DISPLAY_MAP = os.platform() !== 'win32' ? {
     128: ' '
 };
 
-const CASTLING = {
-    K: 0,
-    Q: 1,
-    k: 2,
-    q: 3
-};
-
-const INVERSE_CASTLING = [
-    'K',
-    'Q',
-    'k',
-    'q'
-];
-
 const DELTA_KNIGHT = [
     -31,
     -29,
@@ -124,10 +121,10 @@ const DELTA_ROOK = [
 ];
 
 const CASTLING_INDEX = [
-    39,
-    35,
-    144,
-    140
+    [CASTLING.K, 39],
+    [CASTLING.Q, 35],
+    [CASTLING.k, 144],
+    [CASTLING.q, 140]
 ];
 
 const DELTA_MAP = [
@@ -153,7 +150,10 @@ module.exports = {
     INVERSE_PIECE_MAP,
     PIECE_DISPLAY_MAP,
     CASTLING,
-    INVERSE_CASTLING,
+    CASTLING_W_K,
+    CASTLING_W_Q,
+    CASTLING_B_K,
+    CASTLING_B_Q,
     DELTA_KNIGHT,
     DELTA_KING,
     DELTA_BISHOP,

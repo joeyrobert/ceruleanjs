@@ -4,6 +4,7 @@ const stdio = require('stdio');
 const colors = require('colors');
 const constants = require('./constants');
 const Board = require('./board');
+const perft = require('./perft');
 const packageInfo = require('../package.json');
 
 class Interface {
@@ -28,7 +29,7 @@ class Interface {
     }
 
     display() {
-        let display = '';
+        let display = '\n';
 
         for (let rankIndex = 8; rankIndex >= 1; rankIndex--) {
             display += ` ${colors.bold(rankIndex)} `;
@@ -51,11 +52,17 @@ class Interface {
             display += ` ${colors.bold(String.fromCharCode(96 + fileIndex))} `;
         }
 
+        display += '\n\n' + this.board.fen;
+
         console.log(display);
     }
 
     divide(depth) {
 
+    }
+
+    perft(depth) {
+        console.log(perft(this.board, depth));
     }
 
     xboard() {
@@ -136,8 +143,9 @@ class Interface {
 Commands
 --------
 display         Draws the board
+perft [INT]     Perfts the current board to specified depth
 divide [INT]    Divides the current board to specified depth
-e2e4            Moves from the current position, and thinks
+e2e4            Moves from the current position and thinks
 go              Forces the engine to think
 undo            Subtracts the previous move
 new             Sets up the default board position

@@ -14,7 +14,7 @@ module.exports = class Board {
         this.history = [];
         this.pieces = [new PieceList(), new PieceList()];
         this.board = new Array(constants.WIDTH * constants.HEIGHT);
-        this.castling = [false, false, false, false]; // KQkq
+        this.castling = 0;
         this.enPassant = false;
         this.turn = constants.WHITE;
         this.halfMoveClock = 0;
@@ -65,12 +65,17 @@ module.exports = class Board {
 
         board = board.join('/');
         let turn = this.turn === constants.WHITE ? 'w' : 'b';
-        let castling = this.castling.reduce((memo, castle, index) => {
-            if (castle) {
-                memo = memo + constants.INVERSE_CASTLING[index];
-            }
-            return memo;
-        }, '') || '-';
+        let castling = '';
+
+        if (this.castling) {
+            if (this.castling & constants.CASTLING_W_K) castling += 'K';
+            if (this.castling & constants.CASTLING_W_Q) castling += 'Q';
+            if (this.castling & constants.CASTLING_B_K) castling += 'k';
+            if (this.castling & constants.CASTLING_B_Q) castling += 'q';
+        } else {
+            castling += '-';
+        }
+
         let enPassant = this.enPassant ? this.indexToAlgebraic(this.enPassant) : '-';
 
         return [
@@ -110,14 +115,14 @@ module.exports = class Board {
         });
 
         this.turn = parts[1] === 'w' ? constants.WHITE : constants.BLACK;
-        this.castling = [false, false, false, false];
+        this.castling = 0;
 
         parts[2].split('').forEach(castling => {
             if (castling === '-') {
                 return;
             }
 
-            this.castling[constants.CASTLING[castling]] = true;
+            this.castling += constants.CASTLING[castling];
         });
 
         this.enPassant = parts[3] === '-' ? null : this.algebraicToIndex(parts[3]);
@@ -159,7 +164,7 @@ module.exports = class Board {
     addMove(move) {
         let from = move[0];
         let to = move[1];
-        this.history.push([move, this.board[to], this.enPassant]);
+        this.history.push([move, this.board[to], this.enPassant, this.castling]);
         this.board[to] = this.board[from];
         this.board[from] = constants.PIECE_MAP.empty;
     }
@@ -319,9 +324,10 @@ module.exports = class Board {
         castleLoop:
         for (let i = 0; i < 2; i++) {
             let castlingIndex = i + this.turn * 2;
+            let castlingInfo = constants.CASTLING_INDEX[castlingIndex];
 
-            if (this.castling[castlingIndex]) {
-                let newMove = constants.CASTLING_INDEX[castlingIndex];
+            if (this.castling & castlingInfo[0]) {
+                let newMove = castlingInfo[1];
                 let numberOffset = castlingIndex % 2 === 0 ? 2 : 3;
                 let direction = castlingIndex % 2 === 0 ? 1 : -1;
 
