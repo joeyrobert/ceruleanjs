@@ -127,6 +127,20 @@ const CASTLING_INDEX = [
     [CASTLING.q, 140]
 ];
 
+const CASTLING_MAP = {
+    39: 37,
+    35: 37,
+    144: 142,
+    140: 142
+};
+
+const CASTLING_ROOK_MAP = {
+    39: 40,
+    35: 33,
+    144: 145,
+    140: 138
+};
+
 const DELTA_MAP = [
     [DELTA_BISHOP, PIECE_MAP.b],
     [DELTA_ROOK, PIECE_MAP.r],
@@ -154,6 +168,8 @@ module.exports = {
     CASTLING_W_Q,
     CASTLING_B_K,
     CASTLING_B_Q,
+    CASTLING_MAP,
+    CASTLING_ROOK_MAP,
     DELTA_KNIGHT,
     DELTA_KING,
     DELTA_BISHOP,

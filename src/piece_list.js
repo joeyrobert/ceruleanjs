@@ -13,7 +13,7 @@ module.exports = class PieceList {
         this.indices.push(index);
     }
 
-    subtract(index) {
+    remove(index) {
         let reverseIndex = this.reverse[index];
         this.indices.splice(reverseIndex, 1);
         this.reverse[index] = undefined;

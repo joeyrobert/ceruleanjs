@@ -62,7 +62,13 @@ class Interface {
     }
 
     perft(depth) {
-        console.log(perft(this.board, depth));
+        console.log(depth);
+        debugger;
+        console.log(perft(this.board, parseInt(depth, 10)));
+    }
+
+    moves() {
+        console.log(this.board.moveString());
     }
 
     xboard() {
@@ -145,6 +151,7 @@ Commands
 display         Draws the board
 perft [INT]     Perfts the current board to specified depth
 divide [INT]    Divides the current board to specified depth
+moves           Lists valid moves for this position
 e2e4            Moves from the current position and thinks
 go              Forces the engine to think
 undo            Subtracts the previous move

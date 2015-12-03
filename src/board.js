@@ -19,6 +19,7 @@ module.exports = class Board {
         this.turn = constants.WHITE;
         this.halfMoveClock = 0;
         this.fullMoveNumber = 1;
+        this.kings = [];
 
         // Set legal board empty
         for (let rankIndex = 1; rankIndex <= 8; rankIndex++) {
@@ -132,12 +133,16 @@ module.exports = class Board {
 
     addPiece(rankIndex, fileIndex, piece, turn) {
         let index = this.rankFileToIndex(rankIndex, fileIndex);
+        let pieceValue = constants.PIECE_MAP[piece.toLowerCase()];
         this.pieces[turn].push(index);
-        this.board[index] = constants.PIECE_MAP[piece.toLowerCase()] | turn;
+        this.board[index] = pieceValue | turn;
+        if (pieceValue === constants.PIECE_MAP.k) {
+            this.kings[turn] = index;
+        }
     }
 
     rankFileToIndex(rankIndex, fileIndex) {
-        return rankIndex*15 + fileIndex + 17;
+        return rankIndex * 15 + fileIndex + 17;
     }
 
     indexToRank(index) {
@@ -165,8 +170,38 @@ module.exports = class Board {
         let from = move[0];
         let to = move[1];
         this.history.push([move, this.board[to], this.enPassant, this.castling]);
-        this.board[to] = this.board[from];
-        this.board[from] = constants.PIECE_MAP.empty;
+
+        if (this.board[to] !== constants.PIECE_MAP.empty) {
+            let opponentTurn = (this.turn + 1) % 2;
+            this.pieces[opponentTurn].remove(to);
+        }
+
+        this.movePiece(from, to);
+
+        for (let i = 0; i < 2; i++) {
+            let castlingIndex = i + this.turn * 2;
+            let castlingTo = constants.CASTLING_INDEX[castlingIndex][1];
+
+            if (to === castlingTo && from === constants.CASTLING_MAP[castlingTo]) {
+                let rookTo = to + (to > from ? -1 : 1);
+                let rookFrom = to + (to > from ? 1 : -2);
+                this.movePiece(rookFrom, rookTo);
+            }
+        }
+
+        if (this.board[to] & constants.JUST_PIECE === constants.PIECE_MAP.k) {
+            this.kings[this.turn] = to;
+        }
+
+        let oldTurn = this.turn;
+        this.turn = (this.turn + 1) % 2;
+
+        if (this.isInCheck(oldTurn)) {
+            this.subtractMove();
+            return false;
+        }
+
+        return true;
     }
 
     subtractMove() {
@@ -176,6 +211,14 @@ module.exports = class Board {
         this.board[from] = this.board[to];
         this.board[to] = history[1];
         this.enPassant = history[2];
+        this.castling = history[3];
+    }
+
+    movePiece(from, to) {
+        this.pieces[this.turn].remove(from);
+        this.pieces[this.turn].push(to);
+        this.board[to] = this.board[from];
+        this.board[from] = constants.PIECE_MAP.empty;
     }
 
     addMoveString(moveString) {
@@ -193,7 +236,7 @@ module.exports = class Board {
 
         // Piece moves
         for (let i = 0; i < pieces.length; i++) {
-            let index = this.board[i];
+            let index = pieces[i];
             let piece = this.board[index] - this.turn;
 
             switch (piece) {

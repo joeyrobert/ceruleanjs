@@ -10,7 +10,7 @@ module.exports = function perft(board, depth) {
 
     for (let i = 0; i < moves.length; i++) {
         if (board.addMove(moves[i])) {
-            total += perft(depth - 1);
+            total += perft(board, depth - 1);
             board.subtractMove();
         }
     }
