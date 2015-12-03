@@ -169,23 +169,31 @@ module.exports = class Board {
     addMove(move) {
         let from = move[0];
         let to = move[1];
+        let opponentTurn = (this.turn + 1) % 2;
         this.history.push([move, this.board[to], this.enPassant, this.castling]);
 
         if (this.board[to] !== constants.PIECE_MAP.empty) {
-            let opponentTurn = (this.turn + 1) % 2;
             this.pieces[opponentTurn].remove(to);
         }
 
         this.movePiece(from, to);
 
-        for (let i = 0; i < 2; i++) {
-            let castlingIndex = i + this.turn * 2;
-            let castlingTo = constants.CASTLING_INDEX[castlingIndex][1];
+        if (move[2]) {
+            this.board[to] = move[2] | this.turn;
+        }
 
-            if (to === castlingTo && from === constants.CASTLING_MAP[castlingTo]) {
-                let rookTo = to + (to > from ? -1 : 1);
-                let rookFrom = to + (to > from ? 1 : -2);
-                this.movePiece(rookFrom, rookTo);
+        let castledThroughCheck = false;
+
+        if (move[3]) {
+            let rookMove = this.rookMovesForCastle(this.turn);
+            this.movePiece(rookMove[0], rookMove[1]);
+            let direction = to > from ? 1 : -1;
+
+            for (let kingIndex = from; kingIndex !== to; kingIndex += direction) {
+                if (this.isAttacked(kingIndex, opponentTurn)) {
+                    castledThroughCheck = true;
+                    break;
+                }
             }
         }
 
@@ -196,7 +204,7 @@ module.exports = class Board {
         let oldTurn = this.turn;
         this.turn = (this.turn + 1) % 2;
 
-        if (this.isInCheck(oldTurn)) {
+        if (castledThroughCheck || this.isInCheck(oldTurn)) {
             this.subtractMove();
             return false;
         }
@@ -204,14 +212,37 @@ module.exports = class Board {
         return true;
     }
 
+    rookMovesForCastle(turn) {
+        for (let i = 0; i < 2; i++) {
+            let castlingIndex = i + turn * 2;
+            let castlingTo = constants.CASTLING_INDEX[castlingIndex][1];
+
+            if (to === castlingTo && from === constants.CASTLING_MAP[castlingTo]) {
+                let rookTo = to + (to > from ? -1 : 1);
+                let rookFrom = to + (to > from ? 1 : -2);
+                return [rookFrom, rookTo];
+            }
+        }
+    }
+
     subtractMove() {
         let history = this.history.pop();
         let from = history[0][0];
         let to = history[0][1];
-        this.board[from] = this.board[to];
+        this.movePiece(to, from);
         this.board[to] = history[1];
         this.enPassant = history[2];
         this.castling = history[3];
+
+        if (this.board[to] !== constants.PIECE_MAP.empty) {
+            this.pieces[this.turn].push(this.board[1]);
+        }
+
+        this.turn = (this.turn + 1) % 2;
+
+        if (this.board[from] & constants.JUST_PIECE === constants.PIECE_MAP.k) {
+            this.kings[this.turn] = from;
+        }
     }
 
     movePiece(from, to) {
@@ -380,15 +411,15 @@ module.exports = class Board {
                     }
                 }
 
-                moves.push([index, newMove]);
+                moves.push([index, newMove, undefined, true]);
             }
         }
 
         return moves;
     }
 
-    isInCheck() {
-
+    isInCheck(turn) {
+        return this.isAttacked(this.kings[turn], (turn + 1) % 2);
     }
 
     isAttacked(index, turn) {

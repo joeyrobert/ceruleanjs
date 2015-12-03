@@ -62,8 +62,6 @@ class Interface {
     }
 
     perft(depth) {
-        console.log(depth);
-        debugger;
         console.log(perft(this.board, parseInt(depth, 10)));
     }
 
