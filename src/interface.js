@@ -75,7 +75,7 @@ class Interface {
     }
 
     move(move) {
-        this.board
+        this.board.addMoveString(move);
     }
 
     force() {

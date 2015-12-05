@@ -256,7 +256,18 @@ module.exports = class Board {
         let from = this.algebraicToIndex(moveString.slice(0, 2));
         let to = this.algebraicToIndex(moveString.slice(2, 4));
         let capture = constants.PIECE_MAP[moveString[5]];
-        this.addMove([from, to, capture]);
+        let castling = false;
+
+        Object.keys(constants.CASTLING_MAP).forEach(castlingTo => {
+            if (to === castlingTo && from === constants.CASTLING_MAP[castlingTo]) {
+                castling = true;
+            }
+        });
+
+        let move = [from, to, capture, castling];
+        console.log(move);
+
+        this.addMove(move);
     }
 
     // Move format is as follows: [from, to, promotion]
