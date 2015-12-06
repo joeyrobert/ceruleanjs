@@ -197,6 +197,13 @@ module.exports = class Board {
             }
         }
 
+        let pawnDirection = this.turn ? -1 : 1;
+        if ((this.board[to] & constants.JUST_PIECE) === constants.PIECE_MAP.p && from + 30 * pawnDirection === to) {
+            this.enPassant = from + 15 * pawnDirection;
+        } else {
+            this.enPassant = undefined;
+        }
+
         if ((this.board[to] & constants.JUST_PIECE) === constants.PIECE_MAP.k) {
             this.kings[this.turn] = to;
         }
@@ -367,7 +374,7 @@ module.exports = class Board {
             }
 
             // En passant
-            if (this.board[newMove] && newMove === this.enPassant) {
+            if (newMove === this.enPassant) {
                 moves.push([index, newMove]);
             }
         }
