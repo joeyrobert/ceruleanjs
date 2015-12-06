@@ -205,8 +205,6 @@ module.exports = class Board {
         this.turn = opponentTurn;
 
         if (castledThroughCheck || this.isInCheck(oldTurn)) {
-            this.kings;
-            this.isInCheck(oldTurn);
             this.subtractMove();
             return false;
         }
@@ -462,18 +460,16 @@ module.exports = class Board {
                 newMove = index;
                 do {
                     newMove += deltas[j];
-                    if (this.board[newMove] !== constants.PIECE_MAP.empty &&
-                        (this.board[newMove] % 2 !== turn ||
-                            (this.board[newMove] !== deltaPiece &&
-                            this.board[newMove] !== constants.PIECE_MAP.q))) {
+                    if (this.board[newMove] % 2 === turn &&
+                        ((this.board[newMove] & constants.JUST_PIECE) === deltaPiece ||
+                            (this.board[newMove] & constants.JUST_PIECE) === constants.PIECE_MAP.q)) {
+                        return true;
+                    }
+
+                    if (this.board[newMove] !== constants.PIECE_MAP.empty) {
                         break;
                     }
 
-                    if (this.board[newMove] % 2 === turn &&
-                        (this.board[newMove] === deltaPiece ||
-                            this.board[newMove] === constants.PIECE_MAP.q)) {
-                        return true;
-                    }
                 } while (true);
             }
         }
@@ -487,7 +483,7 @@ module.exports = class Board {
                 newMove = deltas[j] + index;
                 if (this.board[newMove] &&
                     this.board[newMove] % 2 === turn &&
-                    this.board[newMove] === deltaPiece) {
+                    (this.board[newMove] & constants.JUST_PIECE) === deltaPiece) {
                     return true;
                 }
             }

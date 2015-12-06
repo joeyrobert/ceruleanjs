@@ -22,7 +22,7 @@ class Interface {
             if (constants.MOVE_REGEX.test(action)) {
                 this.move(action);
             } else if (this[action]) {
-                this[action].apply(this, parts.slice(1));
+                this[action].call(this, parts.slice(1).join(' '));
             } else if (!this.xboard) {
                 console.log('Invalid command:', line);
             }
@@ -178,4 +178,3 @@ help            Gets you this magical menu
 new Interface();
 
 let board = new Board();
-
