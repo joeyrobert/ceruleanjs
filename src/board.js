@@ -202,7 +202,7 @@ module.exports = class Board {
         }
 
         let oldTurn = this.turn;
-        this.turn = (this.turn + 1) % 2;
+        this.turn = opponentTurn;
 
         if (castledThroughCheck || this.isInCheck(oldTurn)) {
             this.subtractMove();
@@ -229,16 +229,16 @@ module.exports = class Board {
         let history = this.history.pop();
         let from = history[0][0];
         let to = history[0][1];
+        let opponentTurn = this.turn;
+        this.turn = (this.turn + 1) % 2;
         this.movePiece(to, from);
         this.board[to] = history[1];
         this.enPassant = history[2];
         this.castling = history[3];
 
         if (this.board[to] !== constants.PIECE_MAP.empty) {
-            this.pieces[this.turn].push(this.board[1]);
+            this.pieces[opponentTurn].push(to);
         }
-
-        this.turn = (this.turn + 1) % 2;
 
         if (this.board[from] & constants.JUST_PIECE === constants.PIECE_MAP.k) {
             this.kings[this.turn] = from;
@@ -265,8 +265,6 @@ module.exports = class Board {
         });
 
         let move = [from, to, capture, castling];
-        console.log(move);
-
         this.addMove(move);
     }
 
@@ -279,7 +277,8 @@ module.exports = class Board {
         // Piece moves
         for (let i = 0; i < pieces.length; i++) {
             let index = pieces[i];
-            let piece = this.board[index] - this.turn;
+
+            let piece = this.board[index] & constants.JUST_PIECE;
 
             switch (piece) {
                 case constants.PIECE_MAP.p:
@@ -372,7 +371,9 @@ module.exports = class Board {
 
         for (let j = 0; j < deltas.length; j++) {
             let newMove = index + deltas[j];
-            if (this.board[newMove] && this.board[newMove] !== this.turn) {
+            if (this.board[newMove] &&
+                (this.board[newMove] === constants.PIECE_MAP.empty ||
+                this.board[newMove] % 2 !== this.turn)) {
                 moves.push([index, newMove]);
             }
         }
@@ -452,13 +453,13 @@ module.exports = class Board {
             let deltaPiece = constants.DELTA_MAP[k][1];
 
             for (let j = 0; j < 4; j++) {
+                newMove = index;
                 do {
-                    newMove = index + deltas[j];
-                    if (!this.board[newMove] ||
-                        this.board[newMove] % 2 !== turn ||
-                        (this.board[newMove] !== constants.PIECE_MAP.empty &&
-                            this.board[newMove] !== deltaPiece &&
-                            this.board[newMove] !== constants.PIECE_MAP.q)) {
+                    newMove += deltas[j];
+                    if (this.board[newMove] !== constants.PIECE_MAP.empty &&
+                        (this.board[newMove] % 2 !== turn ||
+                            (this.board[newMove] !== deltaPiece &&
+                            this.board[newMove] !== constants.PIECE_MAP.q))) {
                         break;
                     }
 

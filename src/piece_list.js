@@ -5,17 +5,14 @@ const constants = require('./constants');
 module.exports = class PieceList {
     constructor() {
         this.indices = [];
-        this.reverse = new Array(constants.WIDTH * constants.HEIGHT);
     }
 
     push(index) {
-        this.reverse[index] = this.indices.length;
         this.indices.push(index);
     }
 
     remove(index) {
-        let reverseIndex = this.reverse[index];
+        let reverseIndex = this.indices.indexOf(index);
         this.indices.splice(reverseIndex, 1);
-        this.reverse[index] = undefined;
     }
 };
