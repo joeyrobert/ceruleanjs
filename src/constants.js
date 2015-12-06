@@ -35,16 +35,6 @@ const SQUARE_DISTANCE = squareDistance();
 const QUEEN_INCREMENT = queenIncrement();
 const KNIGHT_INCREMENT = knightIncrement();
 const JUST_PIECE = 126; // 1111110
-const CASTLING_W_K = 1;
-const CASTLING_W_Q = 2;
-const CASTLING_B_K = 4;
-const CASTLING_B_Q = 8;
-const CASTLING = {
-    K: 1,
-    Q: 2,
-    k: 4,
-    q: 8
-};
 
 const PIECE_MAP = {
     'p': 2,
@@ -120,11 +110,22 @@ const DELTA_ROOK = [
     15
 ];
 
+const CASTLING_W_K = 1;
+const CASTLING_W_Q = 2;
+const CASTLING_B_K = 4;
+const CASTLING_B_Q = 8;
+const CASTLING = {
+    K: CASTLING_W_K,
+    Q: CASTLING_W_Q,
+    k: CASTLING_B_K,
+    q: CASTLING_B_Q
+};
+
 const CASTLING_INDEX = [
-    [CASTLING.K, 39],
-    [CASTLING.Q, 35],
-    [CASTLING.k, 144],
-    [CASTLING.q, 140]
+    [CASTLING_W_K, 39],
+    [CASTLING_W_Q, 35],
+    [CASTLING_B_K, 144],
+    [CASTLING_B_Q, 140]
 ];
 
 const CASTLING_MAP = {
@@ -134,12 +135,12 @@ const CASTLING_MAP = {
     140: 142
 };
 
-const CASTLING_ROOK_MAP = {
-    39: 40,
-    35: 33,
-    144: 145,
-    140: 138
-};
+const CASTLING_PIECES = [
+    [37, 40, CASTLING_W_K],
+    [37, 33, CASTLING_W_Q],
+    [142, 138, CASTLING_B_K],
+    [142, 145, CASTLING_B_Q]
+];
 
 const DELTA_MAP = [
     [DELTA_BISHOP, PIECE_MAP.b],
@@ -169,7 +170,7 @@ module.exports = {
     CASTLING_B_K,
     CASTLING_B_Q,
     CASTLING_MAP,
-    CASTLING_ROOK_MAP,
+    CASTLING_PIECES,
     DELTA_KNIGHT,
     DELTA_KING,
     DELTA_BISHOP,

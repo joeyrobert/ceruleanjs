@@ -201,6 +201,13 @@ module.exports = class Board {
             this.kings[this.turn] = to;
         }
 
+        for (let i = 0; i < 4; i++) {
+            let castlingPieces = constants.CASTLING_PIECES[i];
+            if ((this.castling & castlingPieces[2]) && (from == castlingPieces[0] || to == castlingPieces[1] || from == castlingPieces[1])) {
+                this.castling -= castlingPieces[2];
+            }
+        }
+
         let oldTurn = this.turn;
         this.turn = opponentTurn;
 
