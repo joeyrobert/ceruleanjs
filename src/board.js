@@ -457,10 +457,10 @@ module.exports = class Board {
 
         // Pawns
         for (let j = 0; j < 2; j++) {
-            newMove = index + (14 + 2 * j) * (turn ? -1 : 1);
+            newMove = index + (14 + 2 * j) * (turn ? 1 : -1);
             if (this.board[newMove] &&
                 this.board[newMove] % 2 === turn &&
-                this.board[newMove] === constants.PIECE_MAP.p) {
+                (this.board[newMove] & constants.JUST_PIECE) === constants.PIECE_MAP.p) {
                 return true;
             }
         }
