@@ -197,7 +197,7 @@ module.exports = class Board {
             }
         }
 
-        if (this.board[to] & constants.JUST_PIECE === constants.PIECE_MAP.k) {
+        if ((this.board[to] & constants.JUST_PIECE) === constants.PIECE_MAP.k) {
             this.kings[this.turn] = to;
         }
 
@@ -205,6 +205,8 @@ module.exports = class Board {
         this.turn = opponentTurn;
 
         if (castledThroughCheck || this.isInCheck(oldTurn)) {
+            this.kings;
+            this.isInCheck(oldTurn);
             this.subtractMove();
             return false;
         }
@@ -240,7 +242,7 @@ module.exports = class Board {
             this.pieces[opponentTurn].push(to);
         }
 
-        if (this.board[from] & constants.JUST_PIECE === constants.PIECE_MAP.k) {
+        if ((this.board[from] & constants.JUST_PIECE) === constants.PIECE_MAP.k) {
             this.kings[this.turn] = from;
         }
     }
@@ -308,12 +310,15 @@ module.exports = class Board {
         return moves;
     }
 
-    moveString() {
+    movesString() {
         let moves = this.generateMoves();
-        let moveString = moves.map(move =>
-            this.indexToAlgebraic(move[0]) + this.indexToAlgebraic(move[1]))
-            .join('\n');
-        return moveString;
+        return moves.map(move => this.moveToString(move)).join('\n');
+    }
+
+    moveToString(move) {
+        return this.indexToAlgebraic(move[0]) +
+            this.indexToAlgebraic(move[1]) +
+            (move[2] ? constants.INVERSE_PIECE_MAP[move[2]] : '');
     }
 
     pawnMoves(index) {
@@ -323,7 +328,7 @@ module.exports = class Board {
 
         // Regular push
         let newMove = index + 15 - 30 * this.turn;
-        if (this.board[newMove]) {
+        if (this.board[newMove] === constants.PIECE_MAP.empty) {
             if (this.indexToRank(newMove) === lastRank) {
                 moves.push([index, newMove, constants.PIECE_MAP.q]);
                 moves.push([index, newMove, constants.PIECE_MAP.r]);
@@ -336,17 +341,16 @@ module.exports = class Board {
 
         // Double push
         newMove = index + 30 - 60 * this.turn;
-        if (this.board[newMove] &&
-            this.board[newMove] === constants.PIECE_MAP.empty &&
+        if (this.board[newMove] === constants.PIECE_MAP.empty &&
             this.board[index + 15  - 30 * this.turn] === constants.PIECE_MAP.empty &&
             this.indexToRank(index) === firstRank) {
             moves.push([index, newMove]);
         }
 
-        for (let j = 0; j <= 2; j = j + 2) {
+        for (let j = 0; j < 2; j++) {
             // Captures
-            newMove = index + (15 - 1 + 2 * j) * (this.turn ? -1 : 1);
-            if (this.board[newMove] && this.board[newMove] % 2 !== this.turn) {
+            newMove = index + (14 + 2 * j) * (this.turn ? -1 : 1);
+            if (this.board[newMove] && this.board[newMove] !== constants.PIECE_MAP.empty && this.board[newMove] % 2 !== this.turn) {
                 if (this.indexToRank(newMove) === lastRank) {
                     moves.push([index, newMove, constants.PIECE_MAP.q]);
                     moves.push([index, newMove, constants.PIECE_MAP.r]);
@@ -394,7 +398,9 @@ module.exports = class Board {
                     (this.board[newMove] === constants.PIECE_MAP.empty ||
                     this.board[newMove] % 2 !== this.turn)) {
                     moves.push([index, newMove]);
-                } else {
+                }
+
+                if (this.board[newMove] !== constants.PIECE_MAP.empty) {
                     break;
                 }
             } while (true);
@@ -439,7 +445,7 @@ module.exports = class Board {
 
         // Pawns
         for (let j = 0; j < 2; j++) {
-            newMove = index + (15 - 1 + 2 * j) * (turn ? -1 : 1);
+            newMove = index + (14 + 2 * j) * (turn ? -1 : 1);
             if (this.board[newMove] &&
                 this.board[newMove] % 2 === turn &&
                 this.board[newMove] === constants.PIECE_MAP.p) {
