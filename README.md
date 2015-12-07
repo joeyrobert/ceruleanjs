@@ -27,17 +27,3 @@ CeruleanJS is written using TDD, where the API is created and tested.
 ## Performance
 
 CeruleanJS generates automatic performance charts during build time. You can see them below.
-
-### Perft
-
-### Search
-
-## API
-
-API docs coming.
-
-## CLI
-
-    Options:
-      -t THREADS	Number of threads to use, defaults to the # of cores on the machine
-      -o BOOK		Opening book to use (supports .apk)
