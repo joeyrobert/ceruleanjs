@@ -170,10 +170,17 @@ module.exports = class Board {
         let from = move[0];
         let to = move[1];
         let opponentTurn = (this.turn + 1) % 2;
+        let pawnDirection = this.turn ? -1 : 1;
         this.history.push([move, this.board[to], this.enPassant, this.castling]);
 
         if (this.board[to] !== constants.PIECE_MAP.empty) {
             this.pieces[opponentTurn].remove(to);
+        }
+
+        if (to === this.enPassant && (this.board[from] & constants.JUST_PIECE) === constants.PIECE_MAP.p) {
+            let destroyedPawn = to + -1 * pawnDirection * 15;
+            this.pieces[opponentTurn].remove(destroyedPawn);
+            this.board[destroyedPawn] = constants.PIECE_MAP.empty;
         }
 
         this.movePiece(from, to);
@@ -197,7 +204,6 @@ module.exports = class Board {
             }
         }
 
-        let pawnDirection = this.turn ? -1 : 1;
         if ((this.board[to] & constants.JUST_PIECE) === constants.PIECE_MAP.p && from + 30 * pawnDirection === to) {
             this.enPassant = from + 15 * pawnDirection;
         } else {
@@ -256,6 +262,13 @@ module.exports = class Board {
 
         if ((this.board[from] & constants.JUST_PIECE) === constants.PIECE_MAP.k) {
             this.kings[this.turn] = from;
+        }
+
+        if (to === this.enPassant && (this.board[from] & constants.JUST_PIECE) === constants.PIECE_MAP.p) {
+            let pawnDirection = this.turn ? -1 : 1;
+            let destroyedPawn = to + -1 * pawnDirection * 15;
+            this.pieces[opponentTurn].push(destroyedPawn);
+            this.board[destroyedPawn] = constants.PIECE_MAP.p | opponentTurn;
         }
     }
 
