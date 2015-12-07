@@ -10,7 +10,7 @@
     "stdio": "^0.2.7"
   },
   "scripts": {
-    "test": "mocha",
+    "test": "mocha --no-timeouts",
     "start": "node src/interface.js"
   },
   "engines": {
