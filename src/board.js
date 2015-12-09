@@ -302,14 +302,13 @@ module.exports = class Board {
 
     // Move format is as follows: [from, to, promotion]
     generateMoves() {
-        let pieces = this.pieces[this.turn].indices;
+        let pieces = this.pieces[this.turn];
         let moves = [];
         let newMove;
 
         // Piece moves
         for (let i = 0; i < pieces.length; i++) {
-            let index = pieces[i];
-
+            let index = pieces.indices[i];
             let piece = this.board[index] & constants.JUST_PIECE;
 
             switch (piece) {
