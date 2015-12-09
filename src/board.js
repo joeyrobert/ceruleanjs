@@ -215,9 +215,9 @@ module.exports = class Board {
         }
 
         for (let i = 0; i < 4; i++) {
-            let castlingPieces = constants.CASTLING_PIECES[i];
-            if ((this.castling & castlingPieces[2]) && (from == castlingPieces[0] || to == castlingPieces[1] || from == castlingPieces[1])) {
-                this.castling -= castlingPieces[2];
+            let castlingInfo = constants.CASTLING_INFO[i];
+            if ((this.castling & castlingInfo[0]) && (from === castlingInfo[1] || to === castlingInfo[3] || from === castlingInfo[3])) {
+                this.castling -= castlingInfo[0];
             }
         }
 
@@ -235,7 +235,7 @@ module.exports = class Board {
     rookMovesForCastle(turn, from, to) {
         for (let i = 0; i < 2; i++) {
             let castlingIndex = i + turn * 2;
-            let castlingTo = constants.CASTLING_INDEX[castlingIndex][1];
+            let castlingTo = constants.CASTLING_INFO[castlingIndex][2];
 
             if (to === castlingTo && from === constants.CASTLING_MAP[castlingTo]) {
                 let rookTo = to + (to > from ? -1 : 1);
@@ -442,20 +442,20 @@ module.exports = class Board {
         let moves = [];
         let index = this.turn ? 142 : 37;
 
-        castleLoop:
+        castlingLoop:
         for (let i = 0; i < 2; i++) {
             let castlingIndex = i + this.turn * 2;
-            let castlingInfo = constants.CASTLING_INDEX[castlingIndex];
+            let castlingInfo = constants.CASTLING_INFO[castlingIndex];
 
             if (this.castling & castlingInfo[0]) {
-                let newMove = castlingInfo[1];
+                let newMove = castlingInfo[2];
                 let numberOffset = castlingIndex % 2 === 0 ? 2 : 3;
                 let direction = castlingIndex % 2 === 0 ? 1 : -1;
 
                 for (let j = 1; j <= numberOffset; j++) {
                     let indexToCheck = index + j * direction;
                     if (this.board[indexToCheck] !== constants.PIECE_MAP.empty) {
-                        continue castleLoop;
+                        continue castlingLoop;
                     }
                 }
 

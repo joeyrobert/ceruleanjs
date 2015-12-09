@@ -32,7 +32,6 @@ const INVERSE_PIECE_MAP = {
     64: 'k'
 };
 
-
 const PIECE_DISPLAY_MAP = os.platform() !== 'win32' ? {
     2: '♟',
     4: '♞',
@@ -87,6 +86,13 @@ const DELTA_ROOK = [
     15
 ];
 
+const DELTA_MAP = [
+    [DELTA_BISHOP, PIECE_MAP.b],
+    [DELTA_ROOK, PIECE_MAP.r],
+    [DELTA_KNIGHT, PIECE_MAP.n],
+    [DELTA_KING, PIECE_MAP.k]
+];
+
 const CASTLING_W_K = 1;
 const CASTLING_W_Q = 2;
 const CASTLING_B_K = 4;
@@ -98,11 +104,11 @@ const CASTLING = {
     q: CASTLING_B_Q
 };
 
-const CASTLING_INDEX = [
-    [CASTLING_W_K, 39],
-    [CASTLING_W_Q, 35],
-    [CASTLING_B_K, 144],
-    [CASTLING_B_Q, 140]
+const CASTLING_INFO = [
+    [CASTLING_W_K, 37, 39, 40, 38],
+    [CASTLING_W_Q, 37, 35, 33, 36],
+    [CASTLING_B_K, 142, 144, 145, 143],
+    [CASTLING_B_Q, 142, 140, 138, 141]
 ];
 
 const CASTLING_MAP = {
@@ -112,20 +118,6 @@ const CASTLING_MAP = {
     140: 142
 };
 
-const CASTLING_PIECES = [
-    [37, 40, CASTLING_W_K],
-    [37, 33, CASTLING_W_Q],
-    [142, 138, CASTLING_B_K],
-    [142, 145, CASTLING_B_Q]
-];
-
-const DELTA_MAP = [
-    [DELTA_BISHOP, PIECE_MAP.b],
-    [DELTA_ROOK, PIECE_MAP.r],
-    [DELTA_KNIGHT, PIECE_MAP.n],
-    [DELTA_KING, PIECE_MAP.k]
-];
-
 module.exports = {
     WHITE,
     BLACK,
@@ -133,21 +125,20 @@ module.exports = {
     HEIGHT,
     FEN_BOARD_REGEX,
     MOVE_REGEX,
-    PIECE_MAP,
     JUST_PIECE,
+    PIECE_MAP,
     INVERSE_PIECE_MAP,
     PIECE_DISPLAY_MAP,
+    DELTA_KNIGHT,
+    DELTA_KING,
+    DELTA_BISHOP,
+    DELTA_ROOK,
+    DELTA_MAP,
     CASTLING,
     CASTLING_W_K,
     CASTLING_W_Q,
     CASTLING_B_K,
     CASTLING_B_Q,
-    CASTLING_MAP,
-    CASTLING_PIECES,
-    DELTA_KNIGHT,
-    DELTA_KING,
-    DELTA_BISHOP,
-    DELTA_ROOK,
-    CASTLING_INDEX,
-    DELTA_MAP
+    CASTLING_INFO,
+    CASTLING_MAP
 };

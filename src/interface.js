@@ -92,7 +92,7 @@ class Interface {
     }
 
     undo() {
-        this.board.subtractMove(0);
+        this.board.subtractMove();
     }
 
     new() {
