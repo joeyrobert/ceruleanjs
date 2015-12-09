@@ -65,7 +65,7 @@ module.exports = class Board {
         }
 
         board = board.join('/');
-        let turn = this.turn === constants.WHITE ? 'w' : 'b';
+        let turn = this.turn ? 'b' : 'w';
         let castling = '';
 
         if (this.castling) {
@@ -192,7 +192,7 @@ module.exports = class Board {
         let castledThroughCheck = false;
 
         if (move[3]) {
-            let rookMove = this.rookMovesForCastle(this.turn);
+            let rookMove = this.rookMovesForCastle(this.turn, from, to);
             this.movePiece(rookMove[0], rookMove[1]);
             let direction = to > from ? 1 : -1;
 
@@ -232,7 +232,7 @@ module.exports = class Board {
         return true;
     }
 
-    rookMovesForCastle(turn) {
+    rookMovesForCastle(turn, from, to) {
         for (let i = 0; i < 2; i++) {
             let castlingIndex = i + turn * 2;
             let castlingTo = constants.CASTLING_INDEX[castlingIndex][1];
@@ -270,6 +270,11 @@ module.exports = class Board {
             this.pieces[opponentTurn].push(destroyedPawn);
             this.board[destroyedPawn] = constants.PIECE_MAP.p | opponentTurn;
         }
+
+        if (history[0][3]) {
+            let rookMove = this.rookMovesForCastle(this.turn, from, to);
+            this.movePiece(rookMove[1], rookMove[0]);
+        }
     }
 
     movePiece(from, to) {
@@ -286,7 +291,7 @@ module.exports = class Board {
         let castling = false;
 
         Object.keys(constants.CASTLING_MAP).forEach(castlingTo => {
-            if (to === castlingTo && from === constants.CASTLING_MAP[castlingTo]) {
+            if (to === parseInt(castlingTo, 10) && from === constants.CASTLING_MAP[castlingTo]) {
                 castling = true;
             }
         });
@@ -436,7 +441,7 @@ module.exports = class Board {
 
     castlingMoves() {
         let moves = [];
-        let index = this.turn === constants.WHITE ? 142 : 37;
+        let index = this.turn ? 142 : 37;
 
         castleLoop:
         for (let i = 0; i < 2; i++) {
@@ -448,8 +453,9 @@ module.exports = class Board {
                 let numberOffset = castlingIndex % 2 === 0 ? 2 : 3;
                 let direction = castlingIndex % 2 === 0 ? 1 : -1;
 
-                for (let j = 0; j < numberOffset; j++) {
-                    if (this.board[newMove + j * direction] !== constants.PIECE_MAP.empty) {
+                for (let j = 1; j <= numberOffset; j++) {
+                    let indexToCheck = index + j * direction;
+                    if (this.board[indexToCheck] !== constants.PIECE_MAP.empty) {
                         continue castleLoop;
                     }
                 }
