@@ -232,29 +232,21 @@ module.exports = class Board {
         return true;
     }
 
-    rookMovesForCastle(turn, from, to) {
-        for (let i = 0; i < 2; i++) {
-            let castlingIndex = i + turn * 2;
-            let castlingTo = constants.CASTLING_INFO[castlingIndex][2];
-
-            if (to === castlingTo && from === constants.CASTLING_MAP[castlingTo]) {
-                let rookTo = to + (to > from ? -1 : 1);
-                let rookFrom = to + (to > from ? 1 : -2);
-                return [rookFrom, rookTo];
-            }
-        }
-    }
-
     subtractMove() {
         let history = this.history.pop();
-        let from = history[0][0];
-        let to = history[0][1];
+        let move = history[0];
+        let from = move[0];
+        let to = move[1];
         let opponentTurn = this.turn;
         this.turn = (this.turn + 1) % 2;
         this.movePiece(to, from);
         this.board[to] = history[1];
         this.enPassant = history[2];
         this.castling = history[3];
+
+        if (move[2]) {
+            this.board[from] = constants.PIECE_MAP.p | this.turn;
+        }
 
         if (this.board[to] !== constants.PIECE_MAP.empty) {
             this.pieces[opponentTurn].push(to);
@@ -271,7 +263,7 @@ module.exports = class Board {
             this.board[destroyedPawn] = constants.PIECE_MAP.p | opponentTurn;
         }
 
-        if (history[0][3]) {
+        if (move[3]) {
             let rookMove = this.rookMovesForCastle(this.turn, from, to);
             this.movePiece(rookMove[1], rookMove[0]);
         }
@@ -282,6 +274,19 @@ module.exports = class Board {
         this.pieces[this.turn].push(to);
         this.board[to] = this.board[from];
         this.board[from] = constants.PIECE_MAP.empty;
+    }
+
+    rookMovesForCastle(turn, from, to) {
+        for (let i = 0; i < 2; i++) {
+            let castlingIndex = i + turn * 2;
+            let castlingTo = constants.CASTLING_INFO[castlingIndex][2];
+
+            if (to === castlingTo && from === constants.CASTLING_MAP[castlingTo]) {
+                let rookTo = to + (to > from ? -1 : 1);
+                let rookFrom = to + (to > from ? 1 : -2);
+                return [rookFrom, rookTo];
+            }
+        }
     }
 
     addMoveString(moveString) {

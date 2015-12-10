@@ -54,9 +54,6 @@ class Interface {
         }
 
         display += '\n\n' + this.board.fen;
-        display += '\n\n' + JSON.stringify(this.board.pieces[0].indices);
-        display += '\n\n' + JSON.stringify(this.board.pieces[1].indices);
-        display += '\n\n' + JSON.stringify(this.board.board);
 
         console.log(display);
     }
