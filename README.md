@@ -26,4 +26,5 @@ CeruleanJS is written using TDD, where the API is created and tested.
 
 ## Performance
 
-CeruleanJS generates automatic performance charts during build time. You can see them below.
+CeruleanJS generates automatic performance charts during build time. You can
+see them below.
