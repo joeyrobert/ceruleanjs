@@ -6,7 +6,7 @@ let rankFileToIndex = (rankIndex, fileIndex) => rankIndex * 15 + fileIndex + 17;
 
 let generateZobristKeys = () => {
     let mt = new MersenneTwister(3141592654);
-    let fortyEightBitFloat = number => Math.floor(mt.rndHiRes() * Math.pow(2, 48));
+    let fortyEightBitFloat = number => Math.floor(mt.rndHiRes() * 0.75 * Math.pow(2, 48));
     let zobristSquares = [];
     let zobristEnPassant = [];
     let zobristCastling = []

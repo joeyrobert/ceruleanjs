@@ -45,8 +45,13 @@ are a maximum of 38 values in the zobrist sum:
 * 1 side to move
 
 This should be enough to uniquely describe the board position, with a
-collision frequency of one in 2^24 (16,777,216) boards. This architecture was
-inspired by [this
+collision frequency of one in 2^24 (16,777,216) boards. With the chosen random
+seed, the max zobrist sum possible in this scheme is 7,827,150,971,215,194
+(less than the max JS safe integer size of 9,007,199,254,740,991). This number
+does not account for maximum *legal* position, only a sum of the 38 largest
+integers generated.
+
+This architecture was inspired by [this
 paragraph](https://chessprogramming.wikispaces.com/Zobrist+Hashing#Collisions-
 When you lack a true integer type) on zobrist keys in the Chess Programming
 Wiki.
