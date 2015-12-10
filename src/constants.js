@@ -14,13 +14,13 @@ const MOVE_REGEX = /^[a-h][1-8][a-h][1-8][bnrq]?$/;
 const JUST_PIECE = 126; // 1111110
 
 const PIECE_MAP = {
-    'p': 2,
-    'n': 4,
-    'b': 8,
-    'r': 16,
-    'q': 32,
-    'k': 64,
-    'empty': 128
+    p: 2,
+    n: 4,
+    b: 8,
+    r: 16,
+    q: 32,
+    k: 64,
+    empty: 128
 };
 
 const INVERSE_PIECE_MAP = {
