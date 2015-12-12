@@ -54,16 +54,27 @@ class Interface {
         }
 
         display += '\n\n' + this.board.fen;
+        display += '\n\n' + this.board.hash;
 
         console.log(display);
     }
 
     divide(depth) {
+        if (!depth) {
+            console.log('Usage: divide [INT]    Divides the current board to specified depth');
+            return;
+        }
+
         let division = divide(this.board, parseInt(depth, 10));
         console.log(division.map(entry => `${entry[0]} ${entry[1]}`).join('\n'));
     }
 
     perft(depth) {
+        if (!depth) {
+            console.log('Usage: perft [INT]     Perfts the current board to specified depth');
+            return;
+        }
+
         console.log(perft(this.board, parseInt(depth, 10)));
     }
 
