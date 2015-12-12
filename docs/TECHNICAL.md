@@ -14,17 +14,13 @@
 
 ## Move representation
 
-Moves are represented as an array with a maximum length of 4. The entries in the
-array are:
+Moves are represented as a 32-bit integer with the following fields:
 
-    [
-        FROM_INDEX,
-        TO_INDEX,
-        PROMOTION_PIECE,
-        CASTLING
-    ]
+    [EMPTY]  PROMO    TO       FROM
+    00000000 00000000 00000000 00000000
+    ^ MSB                         LSB ^
 
-Fields [2] and [3] are optional and only used for those specific piece types.
+TO/FROM are board indices, and PROMO is the promotion piece type.
 
 ## Zobrist hashing
 

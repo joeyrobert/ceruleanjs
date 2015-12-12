@@ -1,17 +1,17 @@
 'use strict';
 
 const HashTable = require('./hash_table');
-let perftTable = new HashTable(16);
+var perftTable = new HashTable(16);
 
 function perft(board, depth) {
     if (depth === 0) {
         return 1;
     }
 
-    let moves = board.generateMoves();
-    let total = 0;
+    var moves = board.generateMoves();
+    var total = 0;
 
-    for (let i = 0; i < moves.length; i++) {
+    for (var i = 0; i < moves.length; i++) {
         if (board.addMove(moves[i])) {
             total += perft(board, depth - 1);
             board.subtractMove();
@@ -26,16 +26,16 @@ function perftHashed(board, depth) {
         return 1;
     }
 
-    let savedPerft = perftTable.get(board.hash);
+    var savedPerft = perftTable.get(board.hash);
 
     if (savedPerft && savedPerft[depth]) {
         return savedPerft[depth];
     }
 
-    let moves = board.generateMoves();
-    let total = 0;
+    var moves = board.generateMoves();
+    var total = 0;
 
-    for (let i = 0; i < moves.length; i++) {
+    for (var i = 0; i < moves.length; i++) {
         if (board.addMove(moves[i])) {
             total += perftHashed(board, depth - 1);
             board.subtractMove();
@@ -48,10 +48,10 @@ function perftHashed(board, depth) {
 }
 
 function divide(board, depth) {
-    let moves = board.generateMoves();
-    let movePerfts = [];
+    var moves = board.generateMoves();
+    var movePerfts = [];
 
-    for (let i = 0; i < moves.length; i++) {
+    for (var i = 0; i < moves.length; i++) {
         if (board.addMove(moves[i])) {
             movePerfts.push([board.moveToString(moves[i]), perft(board, depth - 1)]);
             board.subtractMove();

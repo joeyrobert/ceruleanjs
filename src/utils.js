@@ -1,6 +1,8 @@
 'use strict';
 
-let isNumeric = (n) => !isNaN(parseFloat(n)) && isFinite(n);
+function isNumeric(n) {
+    return !isNaN(parseFloat(n)) && isFinite(n);
+}
 
 module.exports = {
     isNumeric

@@ -11,7 +11,7 @@ const WIDTH = 15;
 const HEIGHT = 12;
 const FEN_BOARD_REGEX = /^\s*([rnbqkpRNBQKP1-8]+\/){7}([rnbqkpRNBQKP1-8]+)\s[bw]\s(-|K?Q?k?q?)\s(-|[a-h‌​][36])/;
 const MOVE_REGEX = /^[a-h][1-8][a-h][1-8][bnrq]?$/;
-const JUST_PIECE = 126; // 1111110
+const JUST_PIECE = 0b1111110;
 
 const PIECE_MAP = {
     p: 2,
@@ -118,6 +118,23 @@ const CASTLING_MAP = {
     140: 142
 };
 
+const CASTLING_ROOK_MOVES = {
+    39: 9768,
+    35: 9249,
+    144: 36753,
+    140: 36234
+};
+
+const PAWN_FIRST_RANK = [
+    [48, 55],
+    [123, 130]
+];
+
+const PAWN_LAST_RANK = [
+    [138, 145],
+    [33, 40]
+];
+
 module.exports = {
     WHITE,
     BLACK,
@@ -140,5 +157,8 @@ module.exports = {
     CASTLING_B_K,
     CASTLING_B_Q,
     CASTLING_INFO,
-    CASTLING_MAP
+    CASTLING_MAP,
+    CASTLING_ROOK_MOVES,
+    PAWN_FIRST_RANK,
+    PAWN_LAST_RANK
 };
