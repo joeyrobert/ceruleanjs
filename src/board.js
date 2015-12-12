@@ -470,10 +470,6 @@ module.exports = class Board {
         return moves;
     }
 
-    isInCheck(turn) {
-        return this.isAttacked(this.kings[turn], (turn + 1) % 2);
-    }
-
     isAttacked(index, turn) {
         var newMove, deltas, deltaPiece, j, k;
 
