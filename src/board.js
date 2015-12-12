@@ -24,23 +24,26 @@ module.exports = class Board {
         this.hash = 0;
 
         // Set legal board empty
-        for (let rankIndex = 1; rankIndex <= 8; rankIndex++) {
-            for (let fileIndex = 1; fileIndex <= 8; fileIndex++) {
-                let index = this.rankFileToIndex(rankIndex, fileIndex);
+        var rankIndex, fileIndex, index;
+
+        for (rankIndex = 1; rankIndex <= 8; rankIndex++) {
+            for (fileIndex = 1; fileIndex <= 8; fileIndex++) {
+                index = this.rankFileToIndex(rankIndex, fileIndex);
                 this.board[index] = constants.PIECE_MAP.empty;
             }
         }
     }
 
     get fen() {
-        let board = [];
+        var board = [];
+        var rankIndex, fileOffset, rankBoard, fileIndex, piece, index;
 
-        for (let rankIndex = 8; rankIndex >= 1; rankIndex--) {
-            let fileOffset = 0;
-            let rankBoard = '';
+        for (rankIndex = 8; rankIndex >= 1; rankIndex--) {
+            fileOffset = 0;
+            rankBoard = '';
 
-            for (let fileIndex = 1; fileIndex <= 8; fileIndex++) {
-                let index = this.rankFileToIndex(rankIndex, fileIndex);
+            for (fileIndex = 1; fileIndex <= 8; fileIndex++) {
+                index = this.rankFileToIndex(rankIndex, fileIndex);
 
                 if (this.board[index] !== constants.PIECE_MAP.empty) {
                     if (fileOffset > 0) {
@@ -48,7 +51,7 @@ module.exports = class Board {
                         fileOffset = 0;
                     }
 
-                    let piece = constants.INVERSE_PIECE_MAP[this.board[index] & constants.JUST_PIECE];
+                    piece = constants.INVERSE_PIECE_MAP[this.board[index] & constants.JUST_PIECE];
 
                     if (this.board[index] % 2 === constants.WHITE) {
                         piece = piece.toUpperCase();
@@ -67,8 +70,8 @@ module.exports = class Board {
         }
 
         board = board.join('/');
-        let turn = this.turn ? 'b' : 'w';
-        let castling = '';
+        var turn = this.turn ? 'b' : 'w';
+        var castling = '';
 
         if (this.castling) {
             constants.CASTLING_INFO.forEach((castlingInfo, castlingIndex) => {
@@ -80,7 +83,7 @@ module.exports = class Board {
             castling += '-';
         }
 
-        let enPassant = this.enPassant ? this.indexToAlgebraic(this.enPassant) : '-';
+        var enPassant = this.enPassant ? this.indexToAlgebraic(this.enPassant) : '-';
 
         return [
             board,
@@ -99,19 +102,19 @@ module.exports = class Board {
         }
 
         this.emptyBoard();
-        let parts = fen.split(' ');
-        let ranks = parts[0].split('/');
+        var parts = fen.split(' ');
+        var ranks = parts[0].split('/');
 
         ranks.forEach((rank, invertedRankIndex) => {
-            let fileIndex = 1;
-            let rankIndex = 8 - invertedRankIndex;
-            let pieces = rank.split('');
+            var fileIndex = 1;
+            var rankIndex = 8 - invertedRankIndex;
+            var pieces = rank.split('');
 
             pieces.forEach(piece => {
                 if (utils.isNumeric(piece)) {
                     fileIndex += parseInt(piece, 10);
                 } else {
-                    let turn = piece.toUpperCase() === piece ? constants.WHITE : constants.BLACK;
+                    var turn = piece.toUpperCase() === piece ? constants.WHITE : constants.BLACK;
                     this.addPiece(rankIndex, fileIndex, piece, turn);
                     fileIndex++;
                 }
@@ -136,8 +139,8 @@ module.exports = class Board {
     }
 
     addPiece(rankIndex, fileIndex, piece, turn) {
-        let index = this.rankFileToIndex(rankIndex, fileIndex);
-        let pieceValue = constants.PIECE_MAP[piece.toLowerCase()];
+        var index = this.rankFileToIndex(rankIndex, fileIndex);
+        var pieceValue = constants.PIECE_MAP[piece.toLowerCase()];
         this.pieces[turn].push(index);
         this.board[index] = pieceValue | turn;
         if (pieceValue === constants.PIECE_MAP.k) {
@@ -158,23 +161,23 @@ module.exports = class Board {
     }
 
     algebraicToIndex(algebraic) {
-        let splitted = algebraic.split('');
-        let fileIndex = splitted[0].charCodeAt(0) - 96;
-        let rankIndex = parseInt(splitted[1], 10);
+        var splitted = algebraic.split('');
+        var fileIndex = splitted[0].charCodeAt(0) - 96;
+        var rankIndex = parseInt(splitted[1], 10);
         return this.rankFileToIndex(rankIndex, fileIndex);
     }
 
     indexToAlgebraic(index) {
-        let fileIndex = this.indexToFile(index);
-        let rankIndex = this.indexToRank(index);
+        var fileIndex = this.indexToFile(index);
+        var rankIndex = this.indexToRank(index);
         return String.fromCharCode(96 + fileIndex) + rankIndex;
     }
 
     addMove(move) {
-        let from = move[0];
-        let to = move[1];
-        let opponentTurn = (this.turn + 1) % 2;
-        let pawnDirection = this.turn ? -1 : 1;
+        var from = this.moveFrom(move);
+        var to = this.moveTo(move);
+        var opponentTurn = (this.turn + 1) % 2;
+        var pawnDirection = this.turn ? -1 : 1;
         this.history.push([move, this.board[to], this.enPassant, this.castling, this.hash]);
 
         if (this.board[to] !== constants.PIECE_MAP.empty) {
@@ -183,7 +186,7 @@ module.exports = class Board {
         }
 
         if (to === this.enPassant && (this.board[from] & constants.JUST_PIECE) === constants.PIECE_MAP.p) {
-            let destroyedPawn = to + -1 * pawnDirection * 15;
+            var destroyedPawn = to + -1 * pawnDirection * 15;
             this.pieces[opponentTurn].remove(destroyedPawn);
             this.board[destroyedPawn] = constants.PIECE_MAP.empty;
             this.hash -= zobrist.SQUARES[destroyedPawn][this.board[destroyedPawn]];
@@ -191,18 +194,20 @@ module.exports = class Board {
 
         this.movePiece(from, to);
 
-        if (move[2]) {
-            this.board[to] = move[2] | this.turn;
+        var promotion = this.movePromotion(move);
+
+        if (promotion) {
+            this.board[to] = promotion | this.turn;
         }
 
-        let castledThroughCheck = false;
+        var castledThroughCheck = false;
 
-        if (move[3]) {
-            let rookMove = constants.CASTLING_ROOK_MOVES[to];
-            this.movePiece(rookMove[0], rookMove[1]);
-            let direction = to > from ? 1 : -1;
+        if (constants.CASTLING_MAP[to] === from && (this.board[to] & constants.JUST_PIECE) === constants.PIECE_MAP.k) {
+            var rookMove = constants.CASTLING_ROOK_MOVES[to];
+            this.movePiece(this.moveFrom(rookMove), this.moveTo(rookMove));
+            var direction = to > from ? 1 : -1;
 
-            for (let kingIndex = from; kingIndex !== to; kingIndex += direction) {
+            for (var kingIndex = from; kingIndex !== to; kingIndex += direction) {
                 if (this.isAttacked(kingIndex, opponentTurn)) {
                     castledThroughCheck = true;
                     break;
@@ -225,19 +230,19 @@ module.exports = class Board {
             this.kings[this.turn] = to;
         }
 
-        for (let castlingIndex = 0; castlingIndex < constants.CASTLING_INFO.length; castlingIndex++) {
-            let castlingInfo = constants.CASTLING_INFO[castlingIndex];
+        for (var castlingIndex = 0; castlingIndex < constants.CASTLING_INFO.length; castlingIndex++) {
+            var castlingInfo = constants.CASTLING_INFO[castlingIndex];
             if ((this.castling & castlingInfo[0]) && (from === castlingInfo[1] || to === castlingInfo[3] || from === castlingInfo[3])) {
                 this.castling -= castlingInfo[0];
                 this.hash -= zobrist.CASTLING[castlingIndex];
             }
         }
 
-        let oldTurn = this.turn;
+        var oldTurn = this.turn;
         this.turn = opponentTurn;
         this.hash += zobrist.TURN * (this.turn ? 1 : -1);
 
-        if (castledThroughCheck || this.isInCheck(oldTurn)) {
+        if (castledThroughCheck || this.isAttacked(this.kings[oldTurn], this.turn)) {
             this.subtractMove();
             return false;
         }
@@ -246,18 +251,18 @@ module.exports = class Board {
     }
 
     subtractMove() {
-        let history = this.history.pop();
-        let move = history[0];
-        let from = move[0];
-        let to = move[1];
-        let opponentTurn = this.turn;
+        var history = this.history.pop();
+        var move = history[0];
+        var from = this.moveFrom(move);
+        var to = this.moveTo(move);
+        var opponentTurn = this.turn;
         this.turn = (this.turn + 1) % 2;
         this.movePiece(to, from);
         this.board[to] = history[1];
         this.enPassant = history[2];
         this.castling = history[3];
 
-        if (move[2]) {
+        if (this.movePromotion(move)) {
             this.board[from] = constants.PIECE_MAP.p | this.turn;
         }
 
@@ -270,15 +275,15 @@ module.exports = class Board {
         }
 
         if (to === this.enPassant && (this.board[from] & constants.JUST_PIECE) === constants.PIECE_MAP.p) {
-            let pawnDirection = this.turn ? -1 : 1;
-            let destroyedPawn = to + -1 * pawnDirection * 15;
+            var pawnDirection = this.turn ? -1 : 1;
+            var destroyedPawn = to + -1 * pawnDirection * 15;
             this.pieces[opponentTurn].push(destroyedPawn);
             this.board[destroyedPawn] = constants.PIECE_MAP.p | opponentTurn;
         }
 
-        if (move[3]) {
-            let rookMove = constants.CASTLING_ROOK_MOVES[to];
-            this.movePiece(rookMove[1], rookMove[0]);
+        if (constants.CASTLING_MAP[to] === from && (this.board[from] & constants.JUST_PIECE) === constants.PIECE_MAP.k) {
+            var rookMove = constants.CASTLING_ROOK_MOVES[to];
+            this.movePiece(this.moveTo(rookMove), this.moveFrom(rookMove));
         }
 
         this.hash = history[4];
@@ -294,31 +299,21 @@ module.exports = class Board {
     }
 
     addMoveString(moveString) {
-        let from = this.algebraicToIndex(moveString.slice(0, 2));
-        let to = this.algebraicToIndex(moveString.slice(2, 4));
-        let capture = constants.PIECE_MAP[moveString[5]];
-        let castling = false;
-
-        Object.keys(constants.CASTLING_MAP).forEach(castlingTo => {
-            if (to === parseInt(castlingTo, 10) && from === constants.CASTLING_MAP[castlingTo]) {
-                castling = true;
-            }
-        });
-
-        let move = [from, to, capture, castling];
-        this.addMove(move);
+        var from = this.algebraicToIndex(moveString.slice(0, 2));
+        var to = this.algebraicToIndex(moveString.slice(2, 4));
+        var promotion = constants.PIECE_MAP[moveString[5]];
+        this.addMove(this.createMove(from, to, promotion));
     }
 
-    // Move format is as follows: [from, to, promotion]
     generateMoves() {
-        let pieces = this.pieces[this.turn];
-        let moves = [];
-        let newMove;
+        var pieces = this.pieces[this.turn];
+        var moves = [];
+        var i, index, piece;
 
         // Piece moves
-        for (let i = 0; i < pieces.length; i++) {
-            let index = pieces.indices[i];
-            let piece = this.board[index] & constants.JUST_PIECE;
+        for (i = 0; i < pieces.length; i++) {
+            index = pieces.indices[i];
+            piece = this.board[index] & constants.JUST_PIECE;
 
             switch (piece) {
                 case constants.PIECE_MAP.p:
@@ -349,31 +344,32 @@ module.exports = class Board {
     }
 
     movesString() {
-        let moves = this.generateMoves();
+        var moves = this.generateMoves();
         return moves.map(move => this.moveToString(move)).join('\n');
     }
 
     moveToString(move) {
-        return this.indexToAlgebraic(move[0]) +
-            this.indexToAlgebraic(move[1]) +
-            (move[2] ? constants.INVERSE_PIECE_MAP[move[2]] : '');
+        return this.indexToAlgebraic(this.moveFrom(move)) +
+            this.indexToAlgebraic(this.moveTo(move)) +
+            (this.movePromotion(move) ? constants.INVERSE_PIECE_MAP[this.movePromotion(move)] : '');
     }
 
     pawnMoves(index) {
-        let moves = [];
-        let lastRank = constants.PAWN_LAST_RANK[this.turn];
-        let firstRank = constants.PAWN_FIRST_RANK[this.turn]
+        var moves = [];
+        var lastRank = constants.PAWN_LAST_RANK[this.turn];
+        var firstRank = constants.PAWN_FIRST_RANK[this.turn]
+        var j;
 
         // Regular push
-        let newMove = index + 15 - 30 * this.turn;
+        var newMove = index + 15 - 30 * this.turn;
         if (this.board[newMove] === constants.PIECE_MAP.empty) {
             if (newMove >= lastRank[0] && newMove <= lastRank[1]) {
-                moves.push([index, newMove, constants.PIECE_MAP.q]);
-                moves.push([index, newMove, constants.PIECE_MAP.r]);
-                moves.push([index, newMove, constants.PIECE_MAP.b]);
-                moves.push([index, newMove, constants.PIECE_MAP.n]);
+                moves.push(this.createMove(index, newMove, constants.PIECE_MAP.q));
+                moves.push(this.createMove(index, newMove, constants.PIECE_MAP.r));
+                moves.push(this.createMove(index, newMove, constants.PIECE_MAP.b));
+                moves.push(this.createMove(index, newMove, constants.PIECE_MAP.n));
             } else {
-                moves.push([index, newMove]);
+                moves.push(this.createMove(index, newMove));
             }
         }
 
@@ -382,26 +378,26 @@ module.exports = class Board {
         if (this.board[newMove] === constants.PIECE_MAP.empty &&
             this.board[index + 15  - 30 * this.turn] === constants.PIECE_MAP.empty &&
             index >= firstRank[0] && index <= firstRank[1]) {
-            moves.push([index, newMove]);
+            moves.push(this.createMove(index, newMove));
         }
 
-        for (let j = 0; j < 2; j++) {
+        for (j = 0; j < 2; j++) {
             // Captures
             newMove = index + (14 + 2 * j) * (this.turn ? -1 : 1);
             if (this.board[newMove] && this.board[newMove] !== constants.PIECE_MAP.empty && this.board[newMove] % 2 !== this.turn) {
                 if (newMove >= lastRank[0] && newMove <= lastRank[1]) {
-                    moves.push([index, newMove, constants.PIECE_MAP.q]);
-                    moves.push([index, newMove, constants.PIECE_MAP.r]);
-                    moves.push([index, newMove, constants.PIECE_MAP.b]);
-                    moves.push([index, newMove, constants.PIECE_MAP.n]);
+                    moves.push(this.createMove(index, newMove, constants.PIECE_MAP.q));
+                    moves.push(this.createMove(index, newMove, constants.PIECE_MAP.r));
+                    moves.push(this.createMove(index, newMove, constants.PIECE_MAP.b));
+                    moves.push(this.createMove(index, newMove, constants.PIECE_MAP.n));
                 } else {
-                    moves.push([index, newMove]);
+                    moves.push(this.createMove(index, newMove));
                 }
             }
 
             // En passant
             if (newMove === this.enPassant) {
-                moves.push([index, newMove]);
+                moves.push(this.createMove(index, newMove));
             }
         }
 
@@ -409,14 +405,15 @@ module.exports = class Board {
     }
 
     deltaMoves(deltas, index) {
-        let moves = [];
+        var moves = [];
+        var newMove;
 
-        for (let j = 0; j < deltas.length; j++) {
-            let newMove = index + deltas[j];
+        for (var j = 0; j < deltas.length; j++) {
+            newMove = index + deltas[j];
             if (this.board[newMove] &&
                 (this.board[newMove] === constants.PIECE_MAP.empty ||
                 this.board[newMove] % 2 !== this.turn)) {
-                moves.push([index, newMove]);
+                moves.push(this.createMove(index, newMove));
             }
         }
 
@@ -424,10 +421,11 @@ module.exports = class Board {
     }
 
     slidingMoves(deltas, index) {
-        let moves = [];
+        var moves = [];
+        var newMove, i;
 
-        for (let i = 0; i < deltas.length; i++) {
-            let newMove = index;
+        for (i = 0; i < deltas.length; i++) {
+            newMove = index;
 
             do {
                 newMove += deltas[i];
@@ -435,40 +433,37 @@ module.exports = class Board {
                 if (this.board[newMove] &&
                     (this.board[newMove] === constants.PIECE_MAP.empty ||
                     this.board[newMove] % 2 !== this.turn)) {
-                    moves.push([index, newMove]);
+                    moves.push(this.createMove(index, newMove));
                 }
-
-                if (this.board[newMove] !== constants.PIECE_MAP.empty) {
-                    break;
-                }
-            } while (true);
+            } while (this.board[newMove] === constants.PIECE_MAP.empty);
         }
 
         return moves;
     }
 
     castlingMoves() {
-        let moves = [];
-        let index = this.turn ? 142 : 37;
+        var moves = [];
+        var index = this.turn ? 142 : 37;
+        var i, j, castlingIndex, castlingInfo, newMove, numberOffset, direction, indexToCheck;
 
         castlingLoop:
-        for (let i = 0; i < 2; i++) {
-            let castlingIndex = i + this.turn * 2;
-            let castlingInfo = constants.CASTLING_INFO[castlingIndex];
+        for (i = 0; i < 2; i++) {
+            castlingIndex = i + this.turn * 2;
+            castlingInfo = constants.CASTLING_INFO[castlingIndex];
 
             if (this.castling & castlingInfo[0]) {
-                let newMove = castlingInfo[2];
-                let numberOffset = castlingIndex % 2 === 0 ? 2 : 3;
-                let direction = castlingIndex % 2 === 0 ? 1 : -1;
+                newMove = castlingInfo[2];
+                numberOffset = castlingIndex % 2 === 0 ? 2 : 3;
+                direction = castlingIndex % 2 === 0 ? 1 : -1;
 
-                for (let j = 1; j <= numberOffset; j++) {
-                    let indexToCheck = index + j * direction;
+                for (j = 1; j <= numberOffset; j++) {
+                    indexToCheck = index + j * direction;
                     if (this.board[indexToCheck] !== constants.PIECE_MAP.empty) {
                         continue castlingLoop;
                     }
                 }
 
-                moves.push([index, newMove, undefined, true]);
+                moves.push(this.createMove(index, newMove));
             }
         }
 
@@ -480,10 +475,10 @@ module.exports = class Board {
     }
 
     isAttacked(index, turn) {
-        let newMove;
+        var newMove, deltas, deltaPiece, j, k;
 
         // Pawns
-        for (let j = 0; j < 2; j++) {
+        for (j = 0; j < 2; j++) {
             newMove = index + (14 + 2 * j) * (turn ? 1 : -1);
             if (this.board[newMove] &&
                 this.board[newMove] % 2 === turn &&
@@ -493,11 +488,11 @@ module.exports = class Board {
         }
 
         // Sliding attacks
-        for (let k = 0; k < 2; k++) {
-            let deltas = constants.DELTA_MAP[k][0];
-            let deltaPiece = constants.DELTA_MAP[k][1];
+        for (k = 0; k < 2; k++) {
+            deltas = constants.DELTA_MAP[k][0];
+            deltaPiece = constants.DELTA_MAP[k][1];
 
-            for (let j = 0; j < 4; j++) {
+            for (j = 0; j < 4; j++) {
                 newMove = index;
                 do {
                     newMove += deltas[j];
@@ -516,11 +511,11 @@ module.exports = class Board {
         }
 
         // Delta attacks
-        for (let k = 2; k < 4; k++) {
-            let deltas = constants.DELTA_MAP[k][0];
-            let deltaPiece = constants.DELTA_MAP[k][1];
+        for (k = 2; k < 4; k++) {
+            deltas = constants.DELTA_MAP[k][0];
+            deltaPiece = constants.DELTA_MAP[k][1];
 
-            for (let j = 0; j < 8; j++) {
+            for (j = 0; j < 8; j++) {
                 newMove = deltas[j] + index;
                 if (this.board[newMove] &&
                     this.board[newMove] % 2 === turn &&
@@ -534,11 +529,12 @@ module.exports = class Board {
     }
 
     generateHash() {
-        let hash = 0;
+        var hash = 0;
+        var rankIndex, fileIndex, index;
 
-        for (let rankIndex = 1; rankIndex <= 8; rankIndex++) {
-            for (let fileIndex = 1; fileIndex <= 8; fileIndex++) {
-                let index = this.rankFileToIndex(rankIndex, fileIndex);
+        for (rankIndex = 1; rankIndex <= 8; rankIndex++) {
+            for (fileIndex = 1; fileIndex <= 8; fileIndex++) {
+                index = this.rankFileToIndex(rankIndex, fileIndex);
                 if (this.board[index] !== constants.PIECE_MAP.empty) {
                     hash += zobrist.SQUARES[index][this.board[index]];
                 }
@@ -562,5 +558,21 @@ module.exports = class Board {
         }
 
         return hash;
+    }
+
+    createMove(from, to, promotion) {
+        return from + (to << 8) + (promotion << 16);
+    }
+
+    moveFrom(move) {
+        return move & 0b11111111;
+    }
+
+    moveTo(move) {
+        return (move >> 8) & 0b11111111;
+    }
+
+    movePromotion(move) {
+        return move >> 16;
     }
 };

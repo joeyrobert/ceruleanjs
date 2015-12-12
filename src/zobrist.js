@@ -3,24 +3,25 @@
 const MersenneTwister = require('mersennetwister');
 const constants = require('./constants');
 
-let rankFileToIndex = (rankIndex, fileIndex) => rankIndex * 15 + fileIndex + 17;
+var rankFileToIndex = (rankIndex, fileIndex) => rankIndex * 15 + fileIndex + 17;
 
-let generateZobristKeys = () => {
-    let mt = new MersenneTwister(3141592654);
-    let fortyEightBitFloat = number => Math.floor(mt.rndHiRes() * Math.pow(2, 48));
-    let SQUARES = [];
-    let EN_PASSANT = [];
-    let CASTLING = []
-    let TURN = fortyEightBitFloat();
-    let pieceKeys = ['p', 'n', 'b', 'r', 'q', 'k'];
+var generateZobristKeys = () => {
+    var mt = new MersenneTwister(3141592654);
+    var fortyEightBitFloat = number => Math.floor(mt.rndHiRes() * Math.pow(2, 48));
+    var SQUARES = [];
+    var EN_PASSANT = [];
+    var CASTLING = []
+    var TURN = fortyEightBitFloat();
+    var pieceKeys = ['p', 'n', 'b', 'r', 'q', 'k'];
+    var rankIndex, fileIndex, index, turn, pieceIndex, pieceValue, castling;
 
-    for (let rankIndex = 1; rankIndex <= 8; rankIndex++) {
-        for (let fileIndex = 1; fileIndex <= 8; fileIndex++) {
-            let index = rankFileToIndex(fileIndex, rankIndex);
+    for (rankIndex = 1; rankIndex <= 8; rankIndex++) {
+        for (fileIndex = 1; fileIndex <= 8; fileIndex++) {
+            index = rankFileToIndex(fileIndex, rankIndex);
 
-            for (let turn = 0; turn < 2; turn++) {
-                for (let pieceIndex = 0; pieceIndex < pieceKeys.length; pieceIndex++) {
-                    let pieceValue = constants.PIECE_MAP[pieceKeys[pieceIndex]];
+            for (turn = 0; turn < 2; turn++) {
+                for (pieceIndex = 0; pieceIndex < pieceKeys.length; pieceIndex++) {
+                    pieceValue = constants.PIECE_MAP[pieceKeys[pieceIndex]];
 
                     if (!SQUARES[index]) {
                         SQUARES[index] = [];
@@ -34,7 +35,7 @@ let generateZobristKeys = () => {
         }
     }
 
-    for (let castling = 0; castling < 4; castling++) {
+    for (castling = 0; castling < 4; castling++) {
         CASTLING.push(fortyEightBitFloat());
     }
 

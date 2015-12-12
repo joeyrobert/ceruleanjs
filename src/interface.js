@@ -15,8 +15,8 @@ class Interface {
         console.log('CeruleanJS', packageInfo.version, 'by', packageInfo.author);
 
         stdio.readByLines(line => {
-            let parts = line.split(' ');
-            let action = parts[0];
+            var parts = line.split(' ');
+            var action = parts[0];
 
             if (constants.MOVE_REGEX.test(action)) {
                 this.move(action);
@@ -29,16 +29,16 @@ class Interface {
     }
 
     display() {
-        let display = '\n';
+        var display = '\n';
 
-        for (let rankIndex = 8; rankIndex >= 1; rankIndex--) {
+        for (var rankIndex = 8; rankIndex >= 1; rankIndex--) {
             display += ` ${colors.bold(rankIndex)} `;
 
-            for (let fileIndex = 1; fileIndex <= 8; fileIndex++) {
-                let index = this.board.rankFileToIndex(rankIndex, fileIndex);
-                let turn = this.board.board[index] % 2;
-                let square = index % 2 === 0;
-                let value = ` ${constants.PIECE_DISPLAY_MAP[this.board.board[index] - turn]} `;
+            for (var fileIndex = 1; fileIndex <= 8; fileIndex++) {
+                var index = this.board.rankFileToIndex(rankIndex, fileIndex);
+                var turn = this.board.board[index] % 2;
+                var square = index % 2 === 0;
+                var value = ` ${constants.PIECE_DISPLAY_MAP[this.board.board[index] - turn]} `;
                 value = colors[square ? 'bgGreen' : 'bgYellow'](value);
                 value = colors[turn === constants.WHITE ? 'white' : 'black'](value);
                 display += value;
@@ -48,7 +48,7 @@ class Interface {
 
         display += '   ';
 
-        for (let fileIndex = 1; fileIndex <= 8; fileIndex++) {
+        for (var fileIndex = 1; fileIndex <= 8; fileIndex++) {
             display += ` ${colors.bold(String.fromCharCode(96 + fileIndex))} `;
         }
 
@@ -64,7 +64,7 @@ class Interface {
             return;
         }
 
-        let division = perft.divide(this.board, parseInt(depth, 10));
+        var division = perft.divide(this.board, parseInt(depth, 10));
         console.log(division.map(entry => `${entry[0]} ${entry[1]}`).join('\n'));
     }
 
@@ -155,7 +155,7 @@ class Interface {
     }
 
     help() {
-        let helpMenu = `
+        var helpMenu = `
 Commands
 --------
 display         Draws the board
@@ -184,4 +184,4 @@ help            Gets you this magical menu
 
 new Interface();
 
-let board = new Board();
+var board = new Board();

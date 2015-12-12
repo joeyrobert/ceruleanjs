@@ -17,7 +17,7 @@ module.exports = class PieceList {
 
     remove(index) {
         this.length--;
-        let reverseIndex = this.reverse[index];
+        var reverseIndex = this.reverse[index];
         this.indices[reverseIndex] = this.indices[this.length];
         this.reverse[this.indices[reverseIndex]] = reverseIndex;
         this.indices[this.length] = undefined;

@@ -8,7 +8,7 @@ module.exports = class HashTable {
     }
 
     add(key, depth, value) {
-        let oldValue = this.get(key) || {};
+        var oldValue = this.get(key) || {};
         oldValue[depth] = value;
         this.set(key, oldValue);
     }
@@ -18,7 +18,7 @@ module.exports = class HashTable {
     }
 
     get(key) {
-        let value = this.table[key % this.size];
+        var value = this.table[key % this.size];
         return value && value[0] === key ? value[1] : undefined;
     }
 };
