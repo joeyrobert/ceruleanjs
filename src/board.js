@@ -178,28 +178,32 @@ module.exports = class Board {
         var to = this.moveTo(move);
         var opponentTurn = (this.turn + 1) % 2;
         var pawnDirection = this.turn ? -1 : 1;
+        var promotion = this.movePromotion(move);
         this.history.push([move, this.board[to], this.enPassant, this.castling, this.hash]);
 
+        // Capture
         if (this.board[to] !== constants.PIECE_MAP.empty) {
             this.hash -= zobrist.SQUARES[to][this.board[to]];
             this.pieces[opponentTurn].remove(to);
         }
 
-        if (to === this.enPassant && (this.board[from] & constants.JUST_PIECE) === constants.PIECE_MAP.p) {
+        // En passant
+        else if (to === this.enPassant && (this.board[from] & constants.JUST_PIECE) === constants.PIECE_MAP.p) {
             var destroyedPawn = to + -1 * pawnDirection * 15;
             this.pieces[opponentTurn].remove(destroyedPawn);
             this.board[destroyedPawn] = constants.PIECE_MAP.empty;
             this.hash -= zobrist.SQUARES[destroyedPawn][this.board[destroyedPawn]];
         }
 
+        // Regular move
         this.movePiece(from, to);
 
-        var promotion = this.movePromotion(move);
-
+        // Promotion
         if (promotion) {
             this.board[to] = promotion | this.turn;
         }
 
+        // Castling
         var castledThroughCheck = false;
 
         if (constants.CASTLING_MAP[to] === from && (this.board[to] & constants.JUST_PIECE) === constants.PIECE_MAP.k) {
@@ -215,33 +219,41 @@ module.exports = class Board {
             }
         }
 
-        if (this.enPassant) {
-            this.hash -= zobrist.EN_PASSANT[this.enPassant];
+        // If castled through check, no need to update these values, they'll be restored from history
+        if (!castledThroughCheck) {
+            // Update enPassant
+            if (this.enPassant) {
+                this.hash -= zobrist.EN_PASSANT[this.enPassant];
+            }
+
+            if ((this.board[to] & constants.JUST_PIECE) === constants.PIECE_MAP.p && from + 30 * pawnDirection === to) {
+                this.enPassant = from + 15 * pawnDirection;
+                this.hash += zobrist.EN_PASSANT[this.enPassant];
+            } else {
+                this.enPassant = undefined;
+            }
+
+            // Update castling
+            for (var castlingIndex = 0; castlingIndex < constants.CASTLING_INFO.length; castlingIndex++) {
+                var castlingInfo = constants.CASTLING_INFO[castlingIndex];
+                if ((this.castling & castlingInfo[0]) && (from === castlingInfo[1] || to === castlingInfo[3] || from === castlingInfo[3])) {
+                    this.castling -= castlingInfo[0];
+                    this.hash -= zobrist.CASTLING[castlingIndex];
+                }
+            }
         }
 
-        if ((this.board[to] & constants.JUST_PIECE) === constants.PIECE_MAP.p && from + 30 * pawnDirection === to) {
-            this.enPassant = from + 15 * pawnDirection;
-            this.hash += zobrist.EN_PASSANT[this.enPassant];
-        } else {
-            this.enPassant = undefined;
-        }
-
+        // Update kings
         if ((this.board[to] & constants.JUST_PIECE) === constants.PIECE_MAP.k) {
             this.kings[this.turn] = to;
         }
 
-        for (var castlingIndex = 0; castlingIndex < constants.CASTLING_INFO.length; castlingIndex++) {
-            var castlingInfo = constants.CASTLING_INFO[castlingIndex];
-            if ((this.castling & castlingInfo[0]) && (from === castlingInfo[1] || to === castlingInfo[3] || from === castlingInfo[3])) {
-                this.castling -= castlingInfo[0];
-                this.hash -= zobrist.CASTLING[castlingIndex];
-            }
-        }
-
+        // Update turn
+        this.hash += zobrist.TURN * (opponentTurn ? 1 : -1);
         var oldTurn = this.turn;
         this.turn = opponentTurn;
-        this.hash += zobrist.TURN * (this.turn ? 1 : -1);
 
+        // Revert if in check or castled through check
         if (castledThroughCheck || this.isAttacked(this.kings[oldTurn], this.turn)) {
             this.subtractMove();
             return false;
@@ -266,22 +278,23 @@ module.exports = class Board {
             this.board[from] = constants.PIECE_MAP.p | this.turn;
         }
 
-        if (this.board[to] !== constants.PIECE_MAP.empty) {
-            this.pieces[opponentTurn].push(to);
-        }
-
         if ((this.board[from] & constants.JUST_PIECE) === constants.PIECE_MAP.k) {
             this.kings[this.turn] = from;
         }
 
-        if (to === this.enPassant && (this.board[from] & constants.JUST_PIECE) === constants.PIECE_MAP.p) {
+        // Capture
+        if (this.board[to] !== constants.PIECE_MAP.empty) {
+            this.pieces[opponentTurn].push(to);
+        }
+        // En passant
+        else if (to === this.enPassant && (this.board[from] & constants.JUST_PIECE) === constants.PIECE_MAP.p) {
             var pawnDirection = this.turn ? -1 : 1;
             var destroyedPawn = to + -1 * pawnDirection * 15;
             this.pieces[opponentTurn].push(destroyedPawn);
             this.board[destroyedPawn] = constants.PIECE_MAP.p | opponentTurn;
         }
-
-        if (constants.CASTLING_MAP[to] === from && (this.board[from] & constants.JUST_PIECE) === constants.PIECE_MAP.k) {
+        // Castling
+        else if (constants.CASTLING_MAP[to] === from && (this.board[from] & constants.JUST_PIECE) === constants.PIECE_MAP.k) {
             var rookMove = constants.CASTLING_ROOK_MOVES[to];
             this.movePiece(this.moveTo(rookMove), this.moveFrom(rookMove));
         }
