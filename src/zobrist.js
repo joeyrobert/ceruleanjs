@@ -22,15 +22,11 @@ let generateZobristKeys = () => {
                 for (let pieceIndex = 0; pieceIndex < pieceKeys.length; pieceIndex++) {
                     let pieceValue = constants.PIECE_MAP[pieceKeys[pieceIndex]];
 
-                    if (!SQUARES[turn]) {
-                        SQUARES[turn] = [];
+                    if (!SQUARES[index]) {
+                        SQUARES[index] = [];
                     }
 
-                    if (!SQUARES[turn][index]) {
-                        SQUARES[turn][index] = [];
-                    }
-
-                    SQUARES[turn][index][pieceValue] = fortyEightBitFloat();
+                    SQUARES[index][pieceValue | turn] = fortyEightBitFloat();
                 }
             }
 

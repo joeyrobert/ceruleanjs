@@ -178,7 +178,7 @@ module.exports = class Board {
         this.history.push([move, this.board[to], this.enPassant, this.castling, this.hash]);
 
         if (this.board[to] !== constants.PIECE_MAP.empty) {
-            this.hash -= zobrist.SQUARES[opponentTurn][to][this.board[to] & constants.JUST_PIECE];
+            this.hash -= zobrist.SQUARES[to][this.board[to]];
             this.pieces[opponentTurn].remove(to);
         }
 
@@ -186,7 +186,7 @@ module.exports = class Board {
             let destroyedPawn = to + -1 * pawnDirection * 15;
             this.pieces[opponentTurn].remove(destroyedPawn);
             this.board[destroyedPawn] = constants.PIECE_MAP.empty;
-            this.hash -= zobrist.SQUARES[opponentTurn][destroyedPawn][this.board[destroyedPawn] & constants.JUST_PIECE];
+            this.hash -= zobrist.SQUARES[destroyedPawn][this.board[destroyedPawn]];
         }
 
         this.movePiece(from, to);
@@ -285,12 +285,12 @@ module.exports = class Board {
     }
 
     movePiece(from, to) {
-        this.hash -= zobrist.SQUARES[this.turn][from][this.board[from] & constants.JUST_PIECE];
+        this.hash -= zobrist.SQUARES[from][this.board[from]];
         this.pieces[this.turn].remove(from);
         this.pieces[this.turn].push(to);
         this.board[to] = this.board[from];
         this.board[from] = constants.PIECE_MAP.empty;
-        this.hash += zobrist.SQUARES[this.turn][to][this.board[to] & constants.JUST_PIECE];
+        this.hash += zobrist.SQUARES[to][this.board[to]];
     }
 
     rookMovesForCastle(turn, from, to) {
@@ -553,7 +553,7 @@ module.exports = class Board {
             for (let fileIndex = 1; fileIndex <= 8; fileIndex++) {
                 let index = this.rankFileToIndex(rankIndex, fileIndex);
                 if (this.board[index] !== constants.PIECE_MAP.empty) {
-                    hash += zobrist.SQUARES[this.board[index] % 2][index][this.board[index] & constants.JUST_PIECE];
+                    hash += zobrist.SQUARES[index][this.board[index]];
                 }
             }
         }
