@@ -105,10 +105,10 @@ const CASTLING = {
 };
 
 const CASTLING_INFO = [
-    [CASTLING_W_K, 37, 39, 40, 38],
-    [CASTLING_W_Q, 37, 35, 33, 36],
-    [CASTLING_B_K, 142, 144, 145, 143],
-    [CASTLING_B_Q, 142, 140, 138, 141]
+    [CASTLING_W_K, 37, 39, 40, 38, 'K'],
+    [CASTLING_W_Q, 37, 35, 33, 36, 'Q'],
+    [CASTLING_B_K, 142, 144, 145, 143, 'k'],
+    [CASTLING_B_Q, 142, 140, 138, 141, 'q']
 ];
 
 const CASTLING_MAP = {

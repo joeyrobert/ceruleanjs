@@ -2,6 +2,7 @@
 
 const constants = require('./constants');
 const utils = require('./utils');
+const zobrist = require('./zobrist');
 const PieceList = require('./piece_list');
 
 module.exports = class Board {
@@ -20,6 +21,7 @@ module.exports = class Board {
         this.halfMoveClock = 0;
         this.fullMoveNumber = 1;
         this.kings = [];
+        this.hash = 0;
 
         // Set legal board empty
         for (let rankIndex = 1; rankIndex <= 8; rankIndex++) {
@@ -69,10 +71,11 @@ module.exports = class Board {
         let castling = '';
 
         if (this.castling) {
-            if (this.castling & constants.CASTLING_W_K) castling += 'K';
-            if (this.castling & constants.CASTLING_W_Q) castling += 'Q';
-            if (this.castling & constants.CASTLING_B_K) castling += 'k';
-            if (this.castling & constants.CASTLING_B_Q) castling += 'q';
+            constants.CASTLING_INFO.forEach((castlingInfo, castlingIndex) => {
+                if (this.castling & constants.CASTLING_INFO[castlingIndex][0]) {
+                    castling += castlingInfo[5];
+                }
+            });
         } else {
             castling += '-';
         }
@@ -129,6 +132,7 @@ module.exports = class Board {
         this.enPassant = parts[3] === '-' ? null : this.algebraicToIndex(parts[3]);
         this.halfMoveClock = parseInt(parts[4], 10);
         this.fullMoveNumber = parseInt(parts[5], 10);
+        this.hash = this.generateHash();
     }
 
     addPiece(rankIndex, fileIndex, piece, turn) {
@@ -171,9 +175,10 @@ module.exports = class Board {
         let to = move[1];
         let opponentTurn = (this.turn + 1) % 2;
         let pawnDirection = this.turn ? -1 : 1;
-        this.history.push([move, this.board[to], this.enPassant, this.castling]);
+        this.history.push([move, this.board[to], this.enPassant, this.castling, this.hash]);
 
         if (this.board[to] !== constants.PIECE_MAP.empty) {
+            this.hash -= zobrist.SQUARES[to][this.board[to]];
             this.pieces[opponentTurn].remove(to);
         }
 
@@ -181,6 +186,7 @@ module.exports = class Board {
             let destroyedPawn = to + -1 * pawnDirection * 15;
             this.pieces[opponentTurn].remove(destroyedPawn);
             this.board[destroyedPawn] = constants.PIECE_MAP.empty;
+            this.hash -= zobrist.SQUARES[destroyedPawn][this.board[destroyedPawn]];
         }
 
         this.movePiece(from, to);
@@ -204,8 +210,13 @@ module.exports = class Board {
             }
         }
 
+        if (this.enPassant) {
+            this.hash -= zobrist.EN_PASSANT[this.enPassant];
+        }
+
         if ((this.board[to] & constants.JUST_PIECE) === constants.PIECE_MAP.p && from + 30 * pawnDirection === to) {
             this.enPassant = from + 15 * pawnDirection;
+            this.hash += zobrist.EN_PASSANT[this.enPassant];
         } else {
             this.enPassant = undefined;
         }
@@ -214,15 +225,17 @@ module.exports = class Board {
             this.kings[this.turn] = to;
         }
 
-        for (let i = 0; i < 4; i++) {
-            let castlingInfo = constants.CASTLING_INFO[i];
+        for (let castlingIndex = 0; castlingIndex < constants.CASTLING_INFO.length; castlingIndex++) {
+            let castlingInfo = constants.CASTLING_INFO[castlingIndex];
             if ((this.castling & castlingInfo[0]) && (from === castlingInfo[1] || to === castlingInfo[3] || from === castlingInfo[3])) {
                 this.castling -= castlingInfo[0];
+                this.hash -= zobrist.CASTLING[castlingIndex];
             }
         }
 
         let oldTurn = this.turn;
         this.turn = opponentTurn;
+        this.hash += zobrist.TURN * (this.turn ? 1 : -1);
 
         if (castledThroughCheck || this.isInCheck(oldTurn)) {
             this.subtractMove();
@@ -267,13 +280,17 @@ module.exports = class Board {
             let rookMove = this.rookMovesForCastle(this.turn, from, to);
             this.movePiece(rookMove[1], rookMove[0]);
         }
+
+        this.hash = history[4];
     }
 
     movePiece(from, to) {
+        this.hash -= zobrist.SQUARES[from][this.board[from]];
         this.pieces[this.turn].remove(from);
         this.pieces[this.turn].push(to);
         this.board[to] = this.board[from];
         this.board[from] = constants.PIECE_MAP.empty;
+        this.hash += zobrist.SQUARES[to][this.board[to]];
     }
 
     rookMovesForCastle(turn, from, to) {
@@ -527,5 +544,36 @@ module.exports = class Board {
         }
 
         return false;
+    }
+
+    generateHash() {
+        let hash = 0;
+
+        for (let rankIndex = 1; rankIndex <= 8; rankIndex++) {
+            for (let fileIndex = 1; fileIndex <= 8; fileIndex++) {
+                let index = this.rankFileToIndex(rankIndex, fileIndex);
+                if (this.board[index] !== constants.PIECE_MAP.empty) {
+                    hash += zobrist.SQUARES[index][this.board[index]];
+                }
+            }
+        }
+
+        if (this.enPassant) {
+            hash += zobrist.EN_PASSANT[this.enPassant];
+        }
+
+        if (this.castling) {
+            constants.CASTLING_INFO.forEach((castlingInfo, castlingIndex) => {
+                if (this.castling & constants.CASTLING_INFO[castlingIndex][0]) {
+                    hash += zobrist.CASTLING[castlingIndex];
+                }
+            });
+        }
+
+        if (this.turn) {
+            hash += zobrist.TURN;
+        }
+
+        return hash;
     }
 };

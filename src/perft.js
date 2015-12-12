@@ -1,8 +1,17 @@
 'use strict';
 
+const HashTable = require('./hash_table');
+let perftTable = new HashTable(16);
+
 module.exports = function perft(board, depth) {
     if (depth === 0) {
         return 1;
+    }
+
+    let savedPerft = perftTable.get(board.hash);
+
+    if (savedPerft && savedPerft[depth]) {
+        return savedPerft[depth];
     }
 
     let moves = board.generateMoves();
@@ -14,6 +23,8 @@ module.exports = function perft(board, depth) {
             board.subtractMove();
         }
     }
+
+    perftTable.add(board.hash, depth, total);
 
     return total;
 };
