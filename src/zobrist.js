@@ -7,42 +7,42 @@ let rankFileToIndex = (rankIndex, fileIndex) => rankIndex * 15 + fileIndex + 17;
 let generateZobristKeys = () => {
     let mt = new MersenneTwister(3141592654);
     let fortyEightBitFloat = number => Math.floor(mt.rndHiRes() * 0.75 * Math.pow(2, 48));
-    let zobristSquares = [];
-    let zobristEnPassant = [];
-    let zobristCastling = []
-    let zobristTurn = fortyEightBitFloat();
+    let SQUARES = [];
+    let EN_PASSANT = [];
+    let CASTLING = []
+    let TURN = fortyEightBitFloat();
 
     for (let rankIndex = 1; rankIndex <= 8; rankIndex++) {
         for (let fileIndex = 1; fileIndex <= 8; fileIndex++) {
             let index = rankFileToIndex(fileIndex, rankIndex);
 
             for (let turn = 0; turn < 2; turn++) {
-                for (let pieceIndex = 0; pieceIndex < 6; pieceIndex++) {
-                    if (!zobristSquares[turn]) {
-                        zobristSquares[turn] = [];
+                for (let piece = 0; piece < 6; piece++) {
+                    if (!SQUARES[turn]) {
+                        SQUARES[turn] = [];
                     }
 
-                    if (!zobristSquares[turn][index]) {
-                        zobristSquares[turn][index] = [];
+                    if (!SQUARES[turn][index]) {
+                        SQUARES[turn][index] = [];
                     }
 
-                    zobristSquares[turn][index][pieceIndex] = fortyEightBitFloat();
+                    SQUARES[turn][index][piece] = fortyEightBitFloat();
                 }
             }
 
-            zobristEnPassant[index] = fortyEightBitFloat();
+            EN_PASSANT[index] = fortyEightBitFloat();
         }
     }
 
     for (let castling = 0; castling < 4; castling++) {
-        zobristCastling.push(fortyEightBitFloat());
+        CASTLING.push(fortyEightBitFloat());
     }
 
     return {
-        zobristSquares,
-        zobristEnPassant,
-        zobristCastling,
-        zobristTurn
+        SQUARES,
+        EN_PASSANT,
+        CASTLING,
+        TURN
     };
 };
 

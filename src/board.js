@@ -2,6 +2,7 @@
 
 const constants = require('./constants');
 const utils = require('./utils');
+const zobrist = require('./zobrist');
 const PieceList = require('./piece_list');
 
 module.exports = class Board {
@@ -20,6 +21,7 @@ module.exports = class Board {
         this.halfMoveClock = 0;
         this.fullMoveNumber = 1;
         this.kings = [];
+        this.zobrist = 0;
 
         // Set legal board empty
         for (let rankIndex = 1; rankIndex <= 8; rankIndex++) {
@@ -174,6 +176,7 @@ module.exports = class Board {
         this.history.push([move, this.board[to], this.enPassant, this.castling]);
 
         if (this.board[to] !== constants.PIECE_MAP.empty) {
+            this.zobrist -= zobrist.SQUARES[opponentTurn][to][this.board[to]];
             this.pieces[opponentTurn].remove(to);
         }
 
@@ -270,10 +273,12 @@ module.exports = class Board {
     }
 
     movePiece(from, to) {
+        this.zobrist -= zobrist.SQUARES[this.turn][from][this.board[from]];
         this.pieces[this.turn].remove(from);
         this.pieces[this.turn].push(to);
         this.board[to] = this.board[from];
         this.board[from] = constants.PIECE_MAP.empty;
+        this.zobrist += zobrist.SQUARES[this.turn][to][this.board[to]];
     }
 
     rookMovesForCastle(turn, from, to) {
