@@ -118,6 +118,16 @@ const CASTLING_MAP = {
     140: 142
 };
 
+const PAWN_FIRST_RANK = [
+    [48, 55],
+    [123, 130]
+];
+
+const PAWN_LAST_RANK = [
+    [138, 145],
+    [33, 40]
+];
+
 module.exports = {
     WHITE,
     BLACK,
@@ -140,5 +150,7 @@ module.exports = {
     CASTLING_B_K,
     CASTLING_B_Q,
     CASTLING_INFO,
-    CASTLING_MAP
+    CASTLING_MAP,
+    PAWN_FIRST_RANK,
+    PAWN_LAST_RANK
 };
