@@ -118,6 +118,13 @@ const CASTLING_MAP = {
     140: 142
 };
 
+const CASTLING_ROOK_MOVES = {
+    39: [40, 38],
+    35: [33, 36],
+    144: [145, 143],
+    140: [138, 141]
+};
+
 const PAWN_FIRST_RANK = [
     [48, 55],
     [123, 130]

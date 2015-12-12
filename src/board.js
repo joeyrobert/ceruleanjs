@@ -198,7 +198,7 @@ module.exports = class Board {
         let castledThroughCheck = false;
 
         if (move[3]) {
-            let rookMove = this.rookMovesForCastle(this.turn, from, to);
+            let rookMove = constants.CASTLING_ROOK_MOVES[to];
             this.movePiece(rookMove[0], rookMove[1]);
             let direction = to > from ? 1 : -1;
 
@@ -277,7 +277,7 @@ module.exports = class Board {
         }
 
         if (move[3]) {
-            let rookMove = this.rookMovesForCastle(this.turn, from, to);
+            let rookMove = constants.CASTLING_ROOK_MOVES[to];
             this.movePiece(rookMove[1], rookMove[0]);
         }
 
@@ -291,19 +291,6 @@ module.exports = class Board {
         this.board[to] = this.board[from];
         this.board[from] = constants.PIECE_MAP.empty;
         this.hash += zobrist.SQUARES[to][this.board[to]];
-    }
-
-    rookMovesForCastle(turn, from, to) {
-        for (let i = 0; i < 2; i++) {
-            let castlingIndex = i + turn * 2;
-            let castlingTo = constants.CASTLING_INFO[castlingIndex][2];
-
-            if (to === castlingTo && from === constants.CASTLING_MAP[castlingTo]) {
-                let rookTo = to + (to > from ? -1 : 1);
-                let rookFrom = to + (to > from ? 1 : -2);
-                return [rookFrom, rookTo];
-            }
-        }
     }
 
     addMoveString(moveString) {
