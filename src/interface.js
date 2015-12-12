@@ -4,7 +4,6 @@ const stdio = require('stdio');
 const colors = require('colors');
 const constants = require('./constants');
 const Board = require('./board');
-const divide = require('./divide');
 const perft = require('./perft');
 const packageInfo = require('../package.json');
 
@@ -65,7 +64,7 @@ class Interface {
             return;
         }
 
-        let division = divide(this.board, parseInt(depth, 10));
+        let division = perft.divide(this.board, parseInt(depth, 10));
         console.log(division.map(entry => `${entry[0]} ${entry[1]}`).join('\n'));
     }
 
@@ -75,7 +74,7 @@ class Interface {
             return;
         }
 
-        console.log(perft(this.board, parseInt(depth, 10)));
+        console.log(perft.perft(this.board, parseInt(depth, 10)));
     }
 
     moves() {

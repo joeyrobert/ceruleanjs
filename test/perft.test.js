@@ -3,7 +3,7 @@
 const expect = require('chai').expect;
 const fs = require('fs');
 const Board = require('../src/board');
-const perft = require('../src/perft');
+const perft = require('../src/perft').perft;
 
 describe('perft', () => {
     let board;
