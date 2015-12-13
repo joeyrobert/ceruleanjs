@@ -21,7 +21,7 @@ function iterativeDeepening(board, totalTime) {
                 moveStrings.push(board.moveToString(moveHistory[i]));
             }
 
-            console.log(`${depth} ${score} ${timeDiff / 10 || 0} ${evaluate.getEvalCount()} ${moveStrings.join(' ')}`);
+            console.log(`${depth} ${score} ${Math.round(timeDiff / 10)} ${evaluate.getEvalCount()} ${moveStrings.join(' ')}`);
         }
 
         timeDiff = new Date() - startTime;
