@@ -84,20 +84,25 @@ class Xboard {
             display += ` ${colors.bold(String.fromCharCode(96 + fileIndex))} `;
         }
 
-        display += '\n\n' + this.board.fen;
-        display += '\n\n' + this.board.hash;
+        display += '\n\nFEN:  ' + this.board.fen;
+        display += '\nHash: ' + this.board.hash;
 
         console.log(display);
     }
 
     divide(depth) {
-        if (!depth) {
-            console.log('Error (divide [INT] parameter not provided):', line);
+        if (!depth || !utils.isNumeric(depth)) {
+            console.log('Error (divide depth not provided): divide', depth);
             return;
         }
 
+        var startTime = new Date();
         var division = perft.divide(this.board, parseInt(depth, 10));
+        var total = division.reduce((memo, entry) => memo + entry[1], 0);
+        var timeDiff = new Date() - startTime;
+
         console.log(division.map(entry => `${entry[0]} ${entry[1]}`).join('\n'));
+        console.log(`\ntotal ${total}\ntime ${timeDiff} ms\nfreq ${Math.floor(total / timeDiff * 1000)} Hz`);
     }
 
     evaluate() {
@@ -105,8 +110,8 @@ class Xboard {
     }
 
     perft(depth) {
-        if (!depth) {
-            console.log('Error (perft [INT] parameter not provided):', line);
+        if (!depth || !utils.isNumeric(depth)) {
+            console.log('Error (perft depth not provided): perft', depth);
             return;
         }
 

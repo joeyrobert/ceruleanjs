@@ -14,6 +14,7 @@ function iterativeDeepening(board, totalTime) {
         moveHistory = [];
         evaluate.resetEvalCount();
         score = search.search(board, -Infinity, +Infinity, depth, moveHistory);
+        timeDiff = new Date() - startTime;
 
         if (utils.isNumeric(score)) {
             moveStrings = [];
@@ -24,7 +25,6 @@ function iterativeDeepening(board, totalTime) {
             console.log(`${depth} ${score} ${Math.round(timeDiff / 10)} ${evaluate.getEvalCount()} ${moveStrings.join(' ')}`);
         }
 
-        timeDiff = new Date() - startTime;
         if (timeDiff >= timeThreshold) {
             break;
         }
