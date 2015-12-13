@@ -41,7 +41,7 @@ class Xboard {
         });
     }
 
-    result() {
+    result(hideDisplay) {
         var perftScore = perft.perft(this.board, 1);
         var result = false;
 
@@ -53,7 +53,7 @@ class Xboard {
             }
         }
 
-        if (result) {
+        if (result && !hideDisplay) {
             console.log(`result ${result}`);
         }
 
