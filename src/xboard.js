@@ -15,7 +15,7 @@ class Xboard {
         this.board = new Board();
         this.engineTime = 60*100;
         this.opponentTime = 60*100;
-        this.xboard = false;
+        this.xboardSet = false;
 
         this.features = {
             myname: ['CeruleanJS', packageInfo.version, 'by', packageInfo.author].join(' '),
@@ -119,7 +119,7 @@ class Xboard {
 
     xboard() {
         console.log('');
-        this.xboard = true;
+        this.xboardSet = true;
     }
 
     move(moveString) {
@@ -134,17 +134,17 @@ class Xboard {
 
         if (!legalMove) {
             console.log('Illegal move:', moveString);
-        } else if (!this.force) {
+        } else if (!this.forceSet) {
             this.go();
         }
     }
 
     force() {
-        this.force = true;
+        this.forceSet = true;
     }
 
     go() {
-        this.force = false;
+        this.forceSet = false;
         var move = iterativeDeepening(this.board, this.engineTime);
         this.board.addMove(move);
         console.log(`move ${this.board.moveToString(move)}`);
@@ -156,7 +156,7 @@ class Xboard {
     }
 
     new() {
-        this.force = false;
+        this.forceSet = false;
         this.board = new Board();
     }
 
@@ -193,6 +193,30 @@ class Xboard {
     }
 
     sd(depth) {
+
+    }
+
+    random() {
+
+    }
+
+    post() {
+
+    }
+
+    hard() {
+
+    }
+
+    easy() {
+
+    }
+
+    protover(number) {
+
+    }
+
+    accepted() {
 
     }
 
