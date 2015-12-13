@@ -17,7 +17,15 @@ class Xboard {
         this.opponentTime = 60*100;
         this.xboard = false;
 
-        console.log('CeruleanJS', packageInfo.version, 'by', packageInfo.author);
+        this.features = {
+            myname: ['CeruleanJS', packageInfo.version, 'by', packageInfo.author].join(' '),
+            setboard: 1,
+            memory: 0,
+            time: 1
+        };
+
+        var featureString = 'feature ' + Object.keys(this.features).map(name => `${name}=${this.features[name]}`).join(' ');
+        console.log(featureString);
 
         stdio.readByLines(line => {
             var parts = line.split(' ');
