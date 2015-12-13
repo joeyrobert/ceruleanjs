@@ -8,11 +8,15 @@
      \/____/\/____/ \/_/   \/___/  \/____/\/____/\/__/\/_/\/_/\/_/
 
 
-Official Site: http://ceruleanjs.joeyrobert.org/
+Official Website: http://ceruleanjs.joeyrobert.org/
+
+[![Build Status](https://travis-ci.org/joeyrobert/ceruleanjs.svg?branch=master)](https://travis-ci.org/joeyrobert/ceruleanjs)
 
 ## Introduction
 
-CeruleanJS is a chess engine for NodeJS. The goal of CeruleanJS is threefold:
+CeruleanJS is an XBoard chess engine for NodeJS, written by [Joey Robert](https://joeyrobert.org/).
+
+The goals of CeruleanJS are threefold:
 
 * Correctness
 * Performance
@@ -55,7 +59,7 @@ This will generate a binary executable `ceruleanjs` in `dist`.
 
 ## Interface
 
-CeruleanJS supports the xboard/winboard/CECP format for communicating with
+CeruleanJS supports the XBoard/winboard/CECP format for communicating with
 interfaces or other chess engines. It's also usable directly through
 STDIN/OUT. Here's the list of commands:
 
