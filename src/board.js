@@ -28,7 +28,7 @@ module.exports = class Board {
 
         for (rankIndex = 1; rankIndex <= 8; rankIndex++) {
             for (fileIndex = 1; fileIndex <= 8; fileIndex++) {
-                index = this.rankFileToIndex(rankIndex, fileIndex);
+                index = utils.rankFileToIndex(rankIndex, fileIndex);
                 this.board[index] = constants.PIECE_MAP.empty;
             }
         }
@@ -43,7 +43,7 @@ module.exports = class Board {
             rankBoard = '';
 
             for (fileIndex = 1; fileIndex <= 8; fileIndex++) {
-                index = this.rankFileToIndex(rankIndex, fileIndex);
+                index = utils.rankFileToIndex(rankIndex, fileIndex);
 
                 if (this.board[index] !== constants.PIECE_MAP.empty) {
                     if (fileOffset > 0) {
@@ -83,7 +83,7 @@ module.exports = class Board {
             castling += '-';
         }
 
-        var enPassant = this.enPassant ? this.indexToAlgebraic(this.enPassant) : '-';
+        var enPassant = this.enPassant ? utils.indexToAlgebraic(this.enPassant) : '-';
 
         return [
             board,
@@ -132,45 +132,20 @@ module.exports = class Board {
             this.castling += constants.CASTLING[castling];
         });
 
-        this.enPassant = parts[3] === '-' ? null : this.algebraicToIndex(parts[3]);
+        this.enPassant = parts[3] === '-' ? null : utils.algebraicToIndex(parts[3]);
         this.halfMoveClock = parseInt(parts[4], 10);
         this.fullMoveNumber = parseInt(parts[5], 10);
         this.hash = this.generateHash();
     }
 
     addPiece(rankIndex, fileIndex, piece, turn) {
-        var index = this.rankFileToIndex(rankIndex, fileIndex);
+        var index = utils.rankFileToIndex(rankIndex, fileIndex);
         var pieceValue = constants.PIECE_MAP[piece.toLowerCase()];
         this.pieces[turn].push(index);
         this.board[index] = pieceValue | turn;
         if (pieceValue === constants.PIECE_MAP.k) {
             this.kings[turn] = index;
         }
-    }
-
-    rankFileToIndex(rankIndex, fileIndex) {
-        return rankIndex * 15 + fileIndex + 17;
-    }
-
-    indexToRank(index) {
-        return Math.floor(index / 15 - 1);
-    }
-
-    indexToFile(index) {
-        return (index - 3) % 15 + 1;
-    }
-
-    algebraicToIndex(algebraic) {
-        var splitted = algebraic.split('');
-        var fileIndex = splitted[0].charCodeAt(0) - 96;
-        var rankIndex = parseInt(splitted[1], 10);
-        return this.rankFileToIndex(rankIndex, fileIndex);
-    }
-
-    indexToAlgebraic(index) {
-        var fileIndex = this.indexToFile(index);
-        var rankIndex = this.indexToRank(index);
-        return String.fromCharCode(96 + fileIndex) + rankIndex;
     }
 
     addMove(move) {
@@ -312,8 +287,8 @@ module.exports = class Board {
     }
 
     addMoveString(moveString) {
-        var from = this.algebraicToIndex(moveString.slice(0, 2));
-        var to = this.algebraicToIndex(moveString.slice(2, 4));
+        var from = utils.algebraicToIndex(moveString.slice(0, 2));
+        var to = utils.algebraicToIndex(moveString.slice(2, 4));
         var promotion = constants.PIECE_MAP[moveString[5]];
         this.addMove(this.createMove(from, to, promotion));
     }
@@ -362,8 +337,8 @@ module.exports = class Board {
     }
 
     moveToString(move) {
-        return this.indexToAlgebraic(this.moveFrom(move)) +
-            this.indexToAlgebraic(this.moveTo(move)) +
+        return utils.indexToAlgebraic(this.moveFrom(move)) +
+            utils.indexToAlgebraic(this.moveTo(move)) +
             (this.movePromotion(move) ? constants.INVERSE_PIECE_MAP[this.movePromotion(move)] : '');
     }
 
@@ -543,7 +518,7 @@ module.exports = class Board {
 
         for (rankIndex = 1; rankIndex <= 8; rankIndex++) {
             for (fileIndex = 1; fileIndex <= 8; fileIndex++) {
-                index = this.rankFileToIndex(rankIndex, fileIndex);
+                index = utils.rankFileToIndex(rankIndex, fileIndex);
                 if (this.board[index] !== constants.PIECE_MAP.empty) {
                     hash += zobrist.SQUARES[index][this.board[index]];
                 }

@@ -4,6 +4,7 @@ const stdio = require('stdio');
 const colors = require('colors');
 const constants = require('./constants');
 const Board = require('./board');
+const evaluate = require('./evaluate');
 const perft = require('./perft');
 const packageInfo = require('../package.json');
 
@@ -68,13 +69,17 @@ class Interface {
         console.log(division.map(entry => `${entry[0]} ${entry[1]}`).join('\n'));
     }
 
+    evaluate() {
+        console.log(evaluate(this.board));
+    }
+
     perft(depth) {
         if (!depth) {
             console.log('Usage: perft [INT]     Perfts the current board to specified depth');
             return;
         }
 
-        console.log(perft.perft(this.board, parseInt(depth, 10)));
+        console.log(perft.perftHashed(this.board, parseInt(depth, 10)));
     }
 
     moves() {
