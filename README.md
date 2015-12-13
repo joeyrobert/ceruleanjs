@@ -92,4 +92,4 @@ docs/TECHNICAL.md](docs/TECHNICAL.md)
 
 ## License
 
-CeruleanJS is licensed under the GNU GPL v2.
+CeruleanJS is licensed under the [GNU GPL v2](LICENSE).
