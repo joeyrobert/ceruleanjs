@@ -93,3 +93,17 @@ docs/TECHNICAL.md](docs/TECHNICAL.md)
 ## License
 
 CeruleanJS is licensed under the [GNU GPL v2](LICENSE).
+
+## Changelog
+
+* v0.0.1 (Azure) - 2015-12-13
+    * 15x12 board representation
+    * Black and White piece lists
+    * Move generation passing 100% perft test suite
+    * 53-bit zobrist hash
+    * Hash table
+    * PVS Search with quiescence
+    * Iterative deepening with basic move ordering
+    * Simplified evaluation function (material + piece square tables)
+    * Windows EXE generation
+    * XBoard support
