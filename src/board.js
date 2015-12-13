@@ -28,7 +28,7 @@ module.exports = class Board {
 
         for (rankIndex = 1; rankIndex <= 8; rankIndex++) {
             for (fileIndex = 1; fileIndex <= 8; fileIndex++) {
-                index = this.rankFileToIndex(rankIndex, fileIndex);
+                index = utils.rankFileToIndex(rankIndex, fileIndex);
                 this.board[index] = constants.PIECE_MAP.empty;
             }
         }
@@ -43,7 +43,7 @@ module.exports = class Board {
             rankBoard = '';
 
             for (fileIndex = 1; fileIndex <= 8; fileIndex++) {
-                index = this.rankFileToIndex(rankIndex, fileIndex);
+                index = utils.rankFileToIndex(rankIndex, fileIndex);
 
                 if (this.board[index] !== constants.PIECE_MAP.empty) {
                     if (fileOffset > 0) {
@@ -83,7 +83,7 @@ module.exports = class Board {
             castling += '-';
         }
 
-        var enPassant = this.enPassant ? this.indexToAlgebraic(this.enPassant) : '-';
+        var enPassant = this.enPassant ? utils.indexToAlgebraic(this.enPassant) : '-';
 
         return [
             board,
@@ -132,45 +132,20 @@ module.exports = class Board {
             this.castling += constants.CASTLING[castling];
         });
 
-        this.enPassant = parts[3] === '-' ? null : this.algebraicToIndex(parts[3]);
+        this.enPassant = parts[3] === '-' ? null : utils.algebraicToIndex(parts[3]);
         this.halfMoveClock = parseInt(parts[4], 10);
         this.fullMoveNumber = parseInt(parts[5], 10);
         this.hash = this.generateHash();
     }
 
     addPiece(rankIndex, fileIndex, piece, turn) {
-        var index = this.rankFileToIndex(rankIndex, fileIndex);
+        var index = utils.rankFileToIndex(rankIndex, fileIndex);
         var pieceValue = constants.PIECE_MAP[piece.toLowerCase()];
         this.pieces[turn].push(index);
         this.board[index] = pieceValue | turn;
         if (pieceValue === constants.PIECE_MAP.k) {
             this.kings[turn] = index;
         }
-    }
-
-    rankFileToIndex(rankIndex, fileIndex) {
-        return rankIndex * 15 + fileIndex + 17;
-    }
-
-    indexToRank(index) {
-        return Math.floor(index / 15 - 1);
-    }
-
-    indexToFile(index) {
-        return (index - 3) % 15 + 1;
-    }
-
-    algebraicToIndex(algebraic) {
-        var splitted = algebraic.split('');
-        var fileIndex = splitted[0].charCodeAt(0) - 96;
-        var rankIndex = parseInt(splitted[1], 10);
-        return this.rankFileToIndex(rankIndex, fileIndex);
-    }
-
-    indexToAlgebraic(index) {
-        var fileIndex = this.indexToFile(index);
-        var rankIndex = this.indexToRank(index);
-        return String.fromCharCode(96 + fileIndex) + rankIndex;
     }
 
     addMove(move) {
@@ -287,14 +262,16 @@ module.exports = class Board {
             this.pieces[opponentTurn].push(to);
         }
         // En passant
-        else if (to === this.enPassant && (this.board[from] & constants.JUST_PIECE) === constants.PIECE_MAP.p) {
+        else if (to === this.enPassant &&
+            (this.board[from] & constants.JUST_PIECE) === constants.PIECE_MAP.p) {
             var pawnDirection = this.turn ? -1 : 1;
             var destroyedPawn = to + -1 * pawnDirection * 15;
             this.pieces[opponentTurn].push(destroyedPawn);
             this.board[destroyedPawn] = constants.PIECE_MAP.p | opponentTurn;
         }
         // Castling
-        else if (constants.CASTLING_MAP[to] === from && (this.board[from] & constants.JUST_PIECE) === constants.PIECE_MAP.k) {
+        else if (constants.CASTLING_MAP[to] === from &&
+            (this.board[from] & constants.JUST_PIECE) === constants.PIECE_MAP.k) {
             var rookMove = constants.CASTLING_ROOK_MOVES[to];
             this.movePiece(this.moveTo(rookMove), this.moveFrom(rookMove));
         }
@@ -311,11 +288,11 @@ module.exports = class Board {
         this.hash += zobrist.SQUARES[to][this.board[to]];
     }
 
-    addMoveString(moveString) {
-        var from = this.algebraicToIndex(moveString.slice(0, 2));
-        var to = this.algebraicToIndex(moveString.slice(2, 4));
+    moveStringToMove(moveString) {
+        var from = utils.algebraicToIndex(moveString.slice(0, 2));
+        var to = utils.algebraicToIndex(moveString.slice(2, 4));
         var promotion = constants.PIECE_MAP[moveString[5]];
-        this.addMove(this.createMove(from, to, promotion));
+        this.createMove(from, to, promotion);
     }
 
     generateMoves() {
@@ -342,7 +319,8 @@ module.exports = class Board {
                     moves = moves.concat(this.slidingMoves(constants.DELTA_ROOK, index));
                     break;
                 case constants.PIECE_MAP.q:
-                    moves = moves.concat(this.slidingMoves(constants.DELTA_BISHOP, index)).concat(this.slidingMoves(constants.DELTA_ROOK, index));
+                    moves = moves.concat(this.slidingMoves(constants.DELTA_BISHOP, index))
+                        .concat(this.slidingMoves(constants.DELTA_ROOK, index));
                     break;
                 case constants.PIECE_MAP.k:
                     moves = moves.concat(this.deltaMoves(constants.DELTA_KING, index));
@@ -356,14 +334,50 @@ module.exports = class Board {
         return moves;
     }
 
+    generateCaptures() {
+        var pieces = this.pieces[this.turn];
+        var moves = [];
+        var i, index, piece;
+
+        // Piece moves
+        for (i = 0; i < pieces.length; i++) {
+            index = pieces.indices[i];
+            piece = this.board[index] & constants.JUST_PIECE;
+
+            switch (piece) {
+                case constants.PIECE_MAP.p:
+                    moves = moves.concat(this.pawnCaptures(index));
+                    break;
+                case constants.PIECE_MAP.n:
+                    moves = moves.concat(this.deltaCaptures(constants.DELTA_KNIGHT, index));
+                    break;
+                case constants.PIECE_MAP.b:
+                    moves = moves.concat(this.slidingCaptures(constants.DELTA_BISHOP, index));
+                    break;
+                case constants.PIECE_MAP.r:
+                    moves = moves.concat(this.slidingCaptures(constants.DELTA_ROOK, index));
+                    break;
+                case constants.PIECE_MAP.q:
+                    moves = moves.concat(this.slidingCaptures(constants.DELTA_BISHOP, index))
+                        .concat(this.slidingCaptures(constants.DELTA_ROOK, index));
+                    break;
+                case constants.PIECE_MAP.k:
+                    moves = moves.concat(this.deltaCaptures(constants.DELTA_KING, index));
+                    break;
+            }
+        }
+
+        return moves;
+    }
+
     movesString() {
         var moves = this.generateMoves();
         return moves.map(move => this.moveToString(move)).join('\n');
     }
 
     moveToString(move) {
-        return this.indexToAlgebraic(this.moveFrom(move)) +
-            this.indexToAlgebraic(this.moveTo(move)) +
+        return utils.indexToAlgebraic(this.moveFrom(move)) +
+            utils.indexToAlgebraic(this.moveTo(move)) +
             (this.movePromotion(move) ? constants.INVERSE_PIECE_MAP[this.movePromotion(move)] : '');
     }
 
@@ -393,6 +407,16 @@ module.exports = class Board {
             index >= firstRank[0] && index <= firstRank[1]) {
             moves.push(this.createMove(index, newMove));
         }
+
+        moves = moves.concat(this.pawnCaptures(index));
+
+        return moves;
+    }
+
+    pawnCaptures(index) {
+        var moves = [];
+        let j, newMove;
+        var lastRank = constants.PAWN_LAST_RANK[this.turn];
 
         for (j = 0; j < 2; j++) {
             // Captures
@@ -433,6 +457,22 @@ module.exports = class Board {
         return moves;
     }
 
+    deltaCaptures(deltas, index) {
+        var moves = [];
+        var newMove;
+
+        for (var j = 0; j < deltas.length; j++) {
+            newMove = index + deltas[j];
+            if (this.board[newMove] &&
+                this.board[newMove] !== constants.PIECE_MAP.empty &&
+                (this.board[newMove] % 2) !== this.turn) {
+                moves.push(this.createMove(index, newMove));
+            }
+        }
+
+        return moves;
+    }
+
     slidingMoves(deltas, index) {
         var moves = [];
         var newMove, i;
@@ -449,6 +489,25 @@ module.exports = class Board {
                     moves.push(this.createMove(index, newMove));
                 }
             } while (this.board[newMove] === constants.PIECE_MAP.empty);
+        }
+
+        return moves;
+    }
+
+    slidingCaptures(deltas, index) {
+        var moves = [];
+        var newMove, i;
+
+        for (i = 0; i < deltas.length; i++) {
+            newMove = index;
+
+            do {
+                newMove += deltas[i];
+            } while (this.board[newMove] && this.board[newMove] === constants.PIECE_MAP.empty);
+
+            if (this.board[newMove] && (this.board[newMove] % 2) !== this.turn) {
+                moves.push(this.createMove(index, newMove));
+            }
         }
 
         return moves;
@@ -537,13 +596,17 @@ module.exports = class Board {
         return false;
     }
 
+    isInCheck(turn) {
+        return this.isAttacked(this.kings[turn], (turn + 1) % 2);
+    }
+
     generateHash() {
         var hash = 0;
         var rankIndex, fileIndex, index;
 
         for (rankIndex = 1; rankIndex <= 8; rankIndex++) {
             for (fileIndex = 1; fileIndex <= 8; fileIndex++) {
-                index = this.rankFileToIndex(rankIndex, fileIndex);
+                index = utils.rankFileToIndex(rankIndex, fileIndex);
                 if (this.board[index] !== constants.PIECE_MAP.empty) {
                     hash += zobrist.SQUARES[index][this.board[index]];
                 }

@@ -4,12 +4,17 @@ const stdio = require('stdio');
 const colors = require('colors');
 const constants = require('./constants');
 const Board = require('./board');
+const evaluate = require('./evaluate');
+const iterativeDeepening = require('./iterative_deepening');
 const perft = require('./perft');
+const utils = require('./utils');
 const packageInfo = require('../package.json');
 
-class Interface {
+class Xboard {
     constructor() {
         this.board = new Board();
+        this.engineTime = 60*100;
+        this.opponentTime = 60*100;
         this.xboard = false;
 
         console.log('CeruleanJS', packageInfo.version, 'by', packageInfo.author);
@@ -22,10 +27,29 @@ class Interface {
                 this.move(action);
             } else if (this[action]) {
                 this[action].call(this, parts.slice(1).join(' '));
-            } else if (!this.xboard) {
-                console.log('Invalid command:', line);
+            } else {
+                console.log('Error (invalid command):', line);
             }
         });
+    }
+
+    result() {
+        var perftScore = perft.perft(this.board, 1);
+        var result = false;
+
+        if (perftScore === 0) {
+            if (this.board.isInCheck(this.board.turn)) {
+                result = this.board.turn ? '1-0' : '0-1';
+            } else {
+                result = '1/2-1/2';
+            }
+        }
+
+        if (result) {
+            console.log(`result ${result}`);
+        }
+
+        return result;
     }
 
     display() {
@@ -35,7 +59,7 @@ class Interface {
             display += ` ${colors.bold(rankIndex)} `;
 
             for (var fileIndex = 1; fileIndex <= 8; fileIndex++) {
-                var index = this.board.rankFileToIndex(rankIndex, fileIndex);
+                var index = utils.rankFileToIndex(rankIndex, fileIndex);
                 var turn = this.board.board[index] % 2;
                 var square = index % 2 === 0;
                 var value = ` ${constants.PIECE_DISPLAY_MAP[this.board.board[index] - turn]} `;
@@ -60,7 +84,7 @@ class Interface {
 
     divide(depth) {
         if (!depth) {
-            console.log('Usage: divide [INT]    Divides the current board to specified depth');
+            console.log('Error (divide [INT] parameter not provided):', line);
             return;
         }
 
@@ -68,13 +92,17 @@ class Interface {
         console.log(division.map(entry => `${entry[0]} ${entry[1]}`).join('\n'));
     }
 
+    evaluate() {
+        console.log(evaluate.evaluate(this.board));
+    }
+
     perft(depth) {
         if (!depth) {
-            console.log('Usage: perft [INT]     Perfts the current board to specified depth');
+            console.log('Error (perft [INT] parameter not provided):', line);
             return;
         }
 
-        console.log(perft.perft(this.board, parseInt(depth, 10)));
+        console.log(perft.perftHashed(this.board, parseInt(depth, 10)));
     }
 
     moves() {
@@ -86,16 +114,33 @@ class Interface {
         this.xboard = true;
     }
 
-    move(move) {
-        this.board.addMoveString(move);
+    move(moveString) {
+        var move = this.board.moveStringToMove(moveString);
+        var moves = this.board.generateMoves();
+        var legalMove = false;
+
+        if (moves.indexOf(moves) < 0) {
+            legalMove = this.board.addMove(move);
+            this.result();
+        }
+
+        if (!legalMove) {
+            console.log('Illegal move:', moveString);
+        } else if (!this.force) {
+            this.go();
+        }
     }
 
     force() {
-
+        this.force = true;
     }
 
     go() {
-
+        this.force = false;
+        var move = iterativeDeepening(this.board, this.engineTime);
+        this.board.addMove(move);
+        console.log(`move ${this.board.moveToString(move)}`);
+        this.result();
     }
 
     undo() {
@@ -103,15 +148,12 @@ class Interface {
     }
 
     new() {
+        this.force = false;
         this.board = new Board();
     }
 
     setboard(fen) {
         this.board.fen = fen;
-    }
-
-    eval() {
-
     }
 
     white() {
@@ -123,11 +165,11 @@ class Interface {
     }
 
     time(time) {
-
+        this.engineTime = time;
     }
 
     otim(otim) {
-
+        this.opponentTime = otim;
     }
 
     level(mps, base, inc) {
@@ -143,6 +185,7 @@ class Interface {
     }
 
     sd(depth) {
+
     }
 
     quit() {
@@ -167,7 +210,7 @@ go              Forces the engine to think
 undo            Subtracts the previous move
 new             Sets up the default board position
 setboard [FEN]  Sets the board using Forsyth-Edwards Notation
-eval            Performs a static evaluation of the board and prints info
+evaluate        Performs a static evaluation of the board
 white           Sets the active colour to WHITE
 black           Sets the active colour to BLACK
 time [INT]      Sets engine's time (in centiseconds)
@@ -182,6 +225,4 @@ help            Gets you this magical menu
     }
 }
 
-new Interface();
-
-var board = new Board();
+module.exports = new Xboard();

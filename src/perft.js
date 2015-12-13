@@ -1,7 +1,7 @@
 'use strict';
 
 const HashTable = require('./hash_table');
-var perftTable = new HashTable(16);
+var perftTable = new HashTable(10);
 
 function perft(board, depth) {
     if (depth === 0) {
