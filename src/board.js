@@ -292,7 +292,7 @@ module.exports = class Board {
         var from = utils.algebraicToIndex(moveString.slice(0, 2));
         var to = utils.algebraicToIndex(moveString.slice(2, 4));
         var promotion = constants.PIECE_MAP[moveString[5]];
-        this.createMove(from, to, promotion);
+        return this.createMove(from, to, promotion);
     }
 
     generateMoves() {
