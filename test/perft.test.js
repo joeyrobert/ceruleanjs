@@ -7,7 +7,7 @@ const perft = require('../src/perft').perft;
 
 describe('perft', () => {
     let board;
-    let epd = fs.readFileSync('suites/epd/perftsuite.epd', 'utf8');
+    let epd = fs.readFileSync('suites/epd/perftsuite-fast.epd', 'utf8');
     let perftTests = epd.split('\n').map(line => line.split(';'));
 
     beforeEach(() => {
