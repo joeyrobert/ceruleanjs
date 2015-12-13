@@ -10,11 +10,11 @@ const perft = require('./perft');
 const utils = require('./utils');
 const packageInfo = require('../package.json');
 
-class Interface {
+class Xboard {
     constructor() {
         this.board = new Board();
-        this.engineTime = 60*100;
-        this.opponentTime = 60*100;
+        this.engineTime = 5*60*100;
+        this.opponentTime = 5*60*100;
         this.xboard = false;
 
         console.log('CeruleanJS', packageInfo.version, 'by', packageInfo.author);
@@ -31,6 +31,25 @@ class Interface {
                 console.log('Error (invalid command):', line);
             }
         });
+    }
+
+    result() {
+        var perftScore = perft.perft(this.board, 1);
+        var result = false;
+
+        if (perftScore === 0) {
+            if (this.board.isInCheck(this.board.turn)) {
+                result = this.board.turn ? '1-0' : '0-1';
+            } else {
+                result = '1/2-1/2';
+            }
+        }
+
+        if (result) {
+            console.log(`result ${result}`);
+        }
+
+        return result;
     }
 
     display() {
@@ -74,7 +93,7 @@ class Interface {
     }
 
     evaluate() {
-        console.log(evaluate(this.board));
+        console.log(evaluate.evaluate(this.board));
     }
 
     perft(depth) {
@@ -102,6 +121,7 @@ class Interface {
 
         if (moves.indexOf(moves) < 0) {
             legalMove = this.board.addMove(move);
+            this.result();
         }
 
         if (!legalMove) {
@@ -117,7 +137,8 @@ class Interface {
 
     go() {
         this.force = false;
-        iterativeDeepening(this.board, this.engineTime);
+        this.board.addMove(iterativeDeepening(this.board, this.engineTime));
+        this.result();
     }
 
     undo() {
@@ -131,10 +152,6 @@ class Interface {
 
     setboard(fen) {
         this.board.fen = fen;
-    }
-
-    eval() {
-
     }
 
     white() {
@@ -166,6 +183,7 @@ class Interface {
     }
 
     sd(depth) {
+
     }
 
     quit() {
@@ -190,7 +208,7 @@ go              Forces the engine to think
 undo            Subtracts the previous move
 new             Sets up the default board position
 setboard [FEN]  Sets the board using Forsyth-Edwards Notation
-eval            Performs a static evaluation of the board and prints info
+evaluate        Performs a static evaluation of the board
 white           Sets the active colour to WHITE
 black           Sets the active colour to BLACK
 time [INT]      Sets engine's time (in centiseconds)
@@ -205,6 +223,4 @@ help            Gets you this magical menu
     }
 }
 
-new Interface();
-
-var board = new Board();
+module.exports = new Xboard();

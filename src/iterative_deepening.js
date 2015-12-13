@@ -6,7 +6,7 @@ const utils = require('./utils');
 
 function iterativeDeepening(board, totalTime) {
     var startTime = new Date();
-    var timeThreshold = totalTime / 2; // time threshold in ms
+    var timeThreshold = totalTime / 4; // time threshold in ms
     var timeDiff, moveHistory, moveStrings, score;
     search.setTimes(startTime, totalTime);
 
@@ -21,7 +21,7 @@ function iterativeDeepening(board, totalTime) {
                 moveStrings.push(board.moveToString(moveHistory[i]));
             }
 
-            console.log(`${depth} ${score} ${timeDiff / 10} ${evaluate.getEvalCount()} ${moveStrings.join(' ')}`);
+            console.log(`${depth} ${score} ${timeDiff / 10 || 0} ${evaluate.getEvalCount()} ${moveStrings.join(' ')}`);
         }
 
         timeDiff = new Date() - startTime;
@@ -30,8 +30,7 @@ function iterativeDeepening(board, totalTime) {
         }
     }
 
-    board.addMove(moveHistory[depth]);
-    return console.log(`move ${board.moveToString(moveHistory[depth])}`);
+    return moveHistory[depth];
 }
 
 module.exports = iterativeDeepening;

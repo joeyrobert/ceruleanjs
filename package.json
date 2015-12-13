@@ -12,7 +12,7 @@
   },
   "scripts": {
     "test": "mocha --no-timeouts",
-    "start": "node src/interface.js"
+    "start": "node src/xboard.js"
   },
   "engines": {
     "node": ">=4.0.0"

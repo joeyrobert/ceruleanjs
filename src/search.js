@@ -23,13 +23,24 @@ function search(board, alpha, beta, depth, moveHistory) {
         return qsearch(board, alpha, beta);
     }
 
-    var score, alphaMove, searchResult, searchPv = true;
+    var score, alphaMove, searchResult;
     var move, moves = board.generateMoves();
+
+    // Move ordering
+    if (moveHistory.length) {
+        var movesIndex = moves.indexOf(moveHistory[moveHistory.length - 1]);
+
+        if (movesIndex > 0) {
+            var swap = moves[0]
+            moves[0] = moves[movesIndex];
+            moves[movesIndex] = swap;
+        }
+    }
 
     for (var i = 0; i < moves.length; i++) {
         move = moves[i];
         if (board.addMove(move)) {
-            if (searchPv) {
+            if (!alphaMove) {
                 score = -search(board, -beta, -alpha, depth - 1, moveHistory);
             } else {
                 score = -search(board, -alpha - 1, -alpha, depth - 1, moveHistory);
@@ -48,7 +59,6 @@ function search(board, alpha, beta, depth, moveHistory) {
             if (score > alpha) {
                 alpha = score;
                 alphaMove = move;
-                searchPv = false;
             }
         }
     }

@@ -596,6 +596,10 @@ module.exports = class Board {
         return false;
     }
 
+    isInCheck(turn) {
+        return this.isAttacked(this.kings[turn], (turn + 1) % 2);
+    }
+
     generateHash() {
         var hash = 0;
         var rankIndex, fileIndex, index;
