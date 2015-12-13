@@ -18,13 +18,15 @@ class Xboard {
         this.xboardSet = false;
 
         this.features = {
-            myname: ['CeruleanJS', packageInfo.version, 'by', packageInfo.author].join(' '),
+            myname: `"CeruleanJS ${packageInfo.version} by ${packageInfo.author}"`,
             setboard: 1,
             memory: 0,
             time: 1
         };
 
-        var featureString = 'feature ' + Object.keys(this.features).map(name => `${name}=${this.features[name]}`).join(' ');
+        var featureString = 'feature ' + Object.keys(this.features).map(name => {
+            return `${name}=${this.features[name]}`;
+        }).join(' ');
         console.log(featureString);
 
         stdio.readByLines(line => {
