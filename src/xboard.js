@@ -13,8 +13,8 @@ const packageInfo = require('../package.json');
 class Xboard {
     constructor() {
         this.board = new Board();
-        this.engineTime = 5*60*100;
-        this.opponentTime = 5*60*100;
+        this.engineTime = 60*100;
+        this.opponentTime = 60*100;
         this.xboard = false;
 
         console.log('CeruleanJS', packageInfo.version, 'by', packageInfo.author);
@@ -137,7 +137,9 @@ class Xboard {
 
     go() {
         this.force = false;
-        this.board.addMove(iterativeDeepening(this.board, this.engineTime));
+        var move = iterativeDeepening(this.board, this.engineTime);
+        this.board.addMove(move);
+        console.log(`move ${this.board.moveToString(move)}`);
         this.result();
     }
 

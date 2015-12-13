@@ -11,7 +11,7 @@ function setTimes(start, total) {
 }
 
 function search(board, alpha, beta, depth, moveHistory) {
-    if (evaluate.getEvalCount() % 10000) {
+    if (evaluate.getEvalCount() % 500 === 0) {
         var timeDiff = new Date() - startTime;
 
         if (timeDiff >= totalTime) {
