@@ -4,3 +4,5 @@ node_modules
 Thumbs.db
 .~lock.*
 npm-debug.log
+tmp
+dist

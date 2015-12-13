@@ -8,11 +8,8 @@
   "dependencies": {
     "colors": "^1.1.2",
     "mersennetwister": "^0.2.2",
+    "nexe": "^0.4.2",
     "stdio": "^0.2.7"
-  },
-  "scripts": {
-    "test": "mocha --no-timeouts",
-    "start": "node src/xboard.js"
   },
   "engines": {
     "node": ">=4.0.0"
@@ -24,5 +21,13 @@
   "repository": {
     "type": "git",
     "url": "https://joeyrobert@bitbucket.org/joeyrobert/ceruleanjs.git"
+  },
+  "bin": {
+    "ceruleanjs": "./src/xboard.js"
+  },
+  "scripts": {
+    "build": "nexe -i src/xboard.js -o ./dist/ceruleanjs -r 4.2.3",
+    "test": "mocha --no-timeouts",
+    "start": "node src/xboard.js"
   }
 }

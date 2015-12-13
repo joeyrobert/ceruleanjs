@@ -12,6 +12,6 @@ describe('evaluate', () => {
 
     fens.forEach(fen => {
         board.fen = fen;
-        it(`can run eval on (${fen} = ${evaluate.evaluate(board)})`, () => {});
+        it(`can run eval on (${fen} = '${evaluate.evaluate(board)})'`, () => {});
     });
 });
