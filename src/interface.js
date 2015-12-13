@@ -5,12 +5,16 @@ const colors = require('colors');
 const constants = require('./constants');
 const Board = require('./board');
 const evaluate = require('./evaluate');
+const iterativeDeepening = require('./iterative_deepening');
 const perft = require('./perft');
+const utils = require('./utils');
 const packageInfo = require('../package.json');
 
 class Interface {
     constructor() {
         this.board = new Board();
+        this.engineTime = 60*100;
+        this.opponentTime = 60*100;
         this.xboard = false;
 
         console.log('CeruleanJS', packageInfo.version, 'by', packageInfo.author);
@@ -23,8 +27,8 @@ class Interface {
                 this.move(action);
             } else if (this[action]) {
                 this[action].call(this, parts.slice(1).join(' '));
-            } else if (!this.xboard) {
-                console.log('Invalid command:', line);
+            } else {
+                console.log('Error (invalid command):', line);
             }
         });
     }
@@ -36,7 +40,7 @@ class Interface {
             display += ` ${colors.bold(rankIndex)} `;
 
             for (var fileIndex = 1; fileIndex <= 8; fileIndex++) {
-                var index = this.board.rankFileToIndex(rankIndex, fileIndex);
+                var index = utils.rankFileToIndex(rankIndex, fileIndex);
                 var turn = this.board.board[index] % 2;
                 var square = index % 2 === 0;
                 var value = ` ${constants.PIECE_DISPLAY_MAP[this.board.board[index] - turn]} `;
@@ -61,7 +65,7 @@ class Interface {
 
     divide(depth) {
         if (!depth) {
-            console.log('Usage: divide [INT]    Divides the current board to specified depth');
+            console.log('Error (divide [INT] parameter not provided):', line);
             return;
         }
 
@@ -75,7 +79,7 @@ class Interface {
 
     perft(depth) {
         if (!depth) {
-            console.log('Usage: perft [INT]     Perfts the current board to specified depth');
+            console.log('Error (perft [INT] parameter not provided):', line);
             return;
         }
 
@@ -91,16 +95,29 @@ class Interface {
         this.xboard = true;
     }
 
-    move(move) {
-        this.board.addMoveString(move);
+    move(moveString) {
+        var move = this.board.moveStringToMove(moveString);
+        var moves = this.board.generateMoves();
+        var legalMove = false;
+
+        if (moves.indexOf(moves) < 0) {
+            legalMove = this.board.addMove(move);
+        }
+
+        if (!legalMove) {
+            console.log('Illegal move:', moveString);
+        } else if (!this.force) {
+            this.go();
+        }
     }
 
     force() {
-
+        this.force = true;
     }
 
     go() {
-
+        this.force = false;
+        iterativeDeepening(this.board, this.engineTime);
     }
 
     undo() {
@@ -108,6 +125,7 @@ class Interface {
     }
 
     new() {
+        this.force = false;
         this.board = new Board();
     }
 
@@ -128,11 +146,11 @@ class Interface {
     }
 
     time(time) {
-
+        this.engineTime = time;
     }
 
     otim(otim) {
-
+        this.opponentTime = otim;
     }
 
     level(mps, base, inc) {

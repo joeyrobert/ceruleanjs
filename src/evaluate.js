@@ -98,7 +98,10 @@ Object.keys(PIECE_SQUARE_TABLES).forEach(piece => {
     PADDED_PIECE_SQUARE_TABLES[piece] = padIndices(PIECE_SQUARE_TABLES[piece]);
 });
 
-module.exports = function evaluate(board) {
+var evalCount = 0;
+
+function evaluate(board) {
+    evalCount++;
     var i, index, pieces, piece, turn, turnCoefficient;
     var material = 0, pieceMaps = 0;
 
@@ -114,4 +117,18 @@ module.exports = function evaluate(board) {
     }
 
     return material + pieceMaps;
+}
+
+function resetEvalCount() {
+    evalCount = 0;
+}
+
+function getEvalCount() {
+    return evalCount;
+}
+
+module.exports = {
+    evaluate,
+    resetEvalCount,
+    getEvalCount
 };

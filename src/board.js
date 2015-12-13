@@ -262,14 +262,16 @@ module.exports = class Board {
             this.pieces[opponentTurn].push(to);
         }
         // En passant
-        else if (to === this.enPassant && (this.board[from] & constants.JUST_PIECE) === constants.PIECE_MAP.p) {
+        else if (to === this.enPassant &&
+            (this.board[from] & constants.JUST_PIECE) === constants.PIECE_MAP.p) {
             var pawnDirection = this.turn ? -1 : 1;
             var destroyedPawn = to + -1 * pawnDirection * 15;
             this.pieces[opponentTurn].push(destroyedPawn);
             this.board[destroyedPawn] = constants.PIECE_MAP.p | opponentTurn;
         }
         // Castling
-        else if (constants.CASTLING_MAP[to] === from && (this.board[from] & constants.JUST_PIECE) === constants.PIECE_MAP.k) {
+        else if (constants.CASTLING_MAP[to] === from &&
+            (this.board[from] & constants.JUST_PIECE) === constants.PIECE_MAP.k) {
             var rookMove = constants.CASTLING_ROOK_MOVES[to];
             this.movePiece(this.moveTo(rookMove), this.moveFrom(rookMove));
         }
@@ -286,11 +288,11 @@ module.exports = class Board {
         this.hash += zobrist.SQUARES[to][this.board[to]];
     }
 
-    addMoveString(moveString) {
+    moveStringToMove(moveString) {
         var from = utils.algebraicToIndex(moveString.slice(0, 2));
         var to = utils.algebraicToIndex(moveString.slice(2, 4));
         var promotion = constants.PIECE_MAP[moveString[5]];
-        this.addMove(this.createMove(from, to, promotion));
+        this.createMove(from, to, promotion);
     }
 
     generateMoves() {
@@ -317,7 +319,8 @@ module.exports = class Board {
                     moves = moves.concat(this.slidingMoves(constants.DELTA_ROOK, index));
                     break;
                 case constants.PIECE_MAP.q:
-                    moves = moves.concat(this.slidingMoves(constants.DELTA_BISHOP, index)).concat(this.slidingMoves(constants.DELTA_ROOK, index));
+                    moves = moves.concat(this.slidingMoves(constants.DELTA_BISHOP, index))
+                        .concat(this.slidingMoves(constants.DELTA_ROOK, index));
                     break;
                 case constants.PIECE_MAP.k:
                     moves = moves.concat(this.deltaMoves(constants.DELTA_KING, index));
@@ -327,6 +330,42 @@ module.exports = class Board {
 
         // Castling
         moves = moves.concat(this.castlingMoves());
+
+        return moves;
+    }
+
+    generateCaptures() {
+        var pieces = this.pieces[this.turn];
+        var moves = [];
+        var i, index, piece;
+
+        // Piece moves
+        for (i = 0; i < pieces.length; i++) {
+            index = pieces.indices[i];
+            piece = this.board[index] & constants.JUST_PIECE;
+
+            switch (piece) {
+                case constants.PIECE_MAP.p:
+                    moves = moves.concat(this.pawnCaptures(index));
+                    break;
+                case constants.PIECE_MAP.n:
+                    moves = moves.concat(this.deltaCaptures(constants.DELTA_KNIGHT, index));
+                    break;
+                case constants.PIECE_MAP.b:
+                    moves = moves.concat(this.slidingCaptures(constants.DELTA_BISHOP, index));
+                    break;
+                case constants.PIECE_MAP.r:
+                    moves = moves.concat(this.slidingCaptures(constants.DELTA_ROOK, index));
+                    break;
+                case constants.PIECE_MAP.q:
+                    moves = moves.concat(this.slidingCaptures(constants.DELTA_BISHOP, index))
+                        .concat(this.slidingCaptures(constants.DELTA_ROOK, index));
+                    break;
+                case constants.PIECE_MAP.k:
+                    moves = moves.concat(this.deltaCaptures(constants.DELTA_KING, index));
+                    break;
+            }
+        }
 
         return moves;
     }
@@ -369,6 +408,16 @@ module.exports = class Board {
             moves.push(this.createMove(index, newMove));
         }
 
+        moves = moves.concat(this.pawnCaptures(index));
+
+        return moves;
+    }
+
+    pawnCaptures(index) {
+        var moves = [];
+        let j, newMove;
+        var lastRank = constants.PAWN_LAST_RANK[this.turn];
+
         for (j = 0; j < 2; j++) {
             // Captures
             newMove = index + (14 + 2 * j) * (this.turn ? -1 : 1);
@@ -408,6 +457,22 @@ module.exports = class Board {
         return moves;
     }
 
+    deltaCaptures(deltas, index) {
+        var moves = [];
+        var newMove;
+
+        for (var j = 0; j < deltas.length; j++) {
+            newMove = index + deltas[j];
+            if (this.board[newMove] &&
+                this.board[newMove] !== constants.PIECE_MAP.empty &&
+                (this.board[newMove] % 2) !== this.turn) {
+                moves.push(this.createMove(index, newMove));
+            }
+        }
+
+        return moves;
+    }
+
     slidingMoves(deltas, index) {
         var moves = [];
         var newMove, i;
@@ -424,6 +489,25 @@ module.exports = class Board {
                     moves.push(this.createMove(index, newMove));
                 }
             } while (this.board[newMove] === constants.PIECE_MAP.empty);
+        }
+
+        return moves;
+    }
+
+    slidingCaptures(deltas, index) {
+        var moves = [];
+        var newMove, i;
+
+        for (i = 0; i < deltas.length; i++) {
+            newMove = index;
+
+            do {
+                newMove += deltas[i];
+            } while (this.board[newMove] && this.board[newMove] === constants.PIECE_MAP.empty);
+
+            if (this.board[newMove] && (this.board[newMove] % 2) !== this.turn) {
+                moves.push(this.createMove(index, newMove));
+            }
         }
 
         return moves;
