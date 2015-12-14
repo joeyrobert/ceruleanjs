@@ -104,6 +104,7 @@ CeruleanJS is licensed under the [GNU GPL v2](LICENSE).
     * 15x12 board representation
     * Black and White piece lists
     * Move generation passing 100% perft test suite
+    * FEN board getter and setter
     * 53-bit zobrist hash
     * Hash table
     * PVS Search with quiescence

@@ -239,7 +239,7 @@ class Xboard {
     help() {
         var helpMenu = `
 Commands
---------
+
 display         Draws the board
 perft [INT]     Perfts the current board to specified depth
 divide [INT]    Divides the current board to specified depth
