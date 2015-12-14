@@ -307,29 +307,29 @@ module.exports = class Board {
 
             switch (piece) {
                 case constants.PIECE_MAP.p:
-                    moves = moves.concat(this.pawnMoves(index));
+                    this.pawnMoves(moves, index);
                     break;
                 case constants.PIECE_MAP.n:
-                    moves = moves.concat(this.deltaMoves(constants.DELTA_KNIGHT, index));
+                    this.deltaMoves(moves, constants.DELTA_KNIGHT, index);
                     break;
                 case constants.PIECE_MAP.b:
-                    moves = moves.concat(this.slidingMoves(constants.DELTA_BISHOP, index));
+                    this.slidingMoves(moves, constants.DELTA_BISHOP, index);
                     break;
                 case constants.PIECE_MAP.r:
-                    moves = moves.concat(this.slidingMoves(constants.DELTA_ROOK, index));
+                    this.slidingMoves(moves, constants.DELTA_ROOK, index);
                     break;
                 case constants.PIECE_MAP.q:
-                    moves = moves.concat(this.slidingMoves(constants.DELTA_BISHOP, index))
-                        .concat(this.slidingMoves(constants.DELTA_ROOK, index));
+                    this.slidingMoves(moves, constants.DELTA_BISHOP, index);
+                    this.slidingMoves(moves, constants.DELTA_ROOK, index);
                     break;
                 case constants.PIECE_MAP.k:
-                    moves = moves.concat(this.deltaMoves(constants.DELTA_KING, index));
+                    this.deltaMoves(moves, constants.DELTA_KING, index);
                     break;
             }
         }
 
         // Castling
-        moves = moves.concat(this.castlingMoves());
+        this.castlingMoves(moves);
 
         return moves;
     }
@@ -346,23 +346,23 @@ module.exports = class Board {
 
             switch (piece) {
                 case constants.PIECE_MAP.p:
-                    moves = moves.concat(this.pawnCaptures(index));
+                    this.pawnCaptures(index);
                     break;
                 case constants.PIECE_MAP.n:
-                    moves = moves.concat(this.deltaCaptures(constants.DELTA_KNIGHT, index));
+                    this.deltaCaptures(constants.DELTA_KNIGHT, index);
                     break;
                 case constants.PIECE_MAP.b:
-                    moves = moves.concat(this.slidingCaptures(constants.DELTA_BISHOP, index));
+                    this.slidingCaptures(constants.DELTA_BISHOP, index);
                     break;
                 case constants.PIECE_MAP.r:
-                    moves = moves.concat(this.slidingCaptures(constants.DELTA_ROOK, index));
+                    this.slidingCaptures(constants.DELTA_ROOK, index);
                     break;
                 case constants.PIECE_MAP.q:
-                    moves = moves.concat(this.slidingCaptures(constants.DELTA_BISHOP, index))
-                        .concat(this.slidingCaptures(constants.DELTA_ROOK, index));
+                    this.slidingCaptures(constants.DELTA_BISHOP, index);
+                    this.slidingCaptures(constants.DELTA_ROOK, index);
                     break;
                 case constants.PIECE_MAP.k:
-                    moves = moves.concat(this.deltaCaptures(constants.DELTA_KING, index));
+                    this.deltaCaptures(constants.DELTA_KING, index);
                     break;
             }
         }
@@ -381,8 +381,7 @@ module.exports = class Board {
             (this.movePromotion(move) ? constants.INVERSE_PIECE_MAP[this.movePromotion(move)] : '');
     }
 
-    pawnMoves(index) {
-        var moves = [];
+    pawnMoves(moves, index) {
         var lastRank = constants.PAWN_LAST_RANK[this.turn];
         var firstRank = constants.PAWN_FIRST_RANK[this.turn]
         var j;
@@ -408,13 +407,10 @@ module.exports = class Board {
             moves.push(this.createMove(index, newMove));
         }
 
-        moves = moves.concat(this.pawnCaptures(index));
-
-        return moves;
+        this.pawnCaptures(moves, index);
     }
 
-    pawnCaptures(index) {
-        var moves = [];
+    pawnCaptures(moves, index) {
         let j, newMove;
         var lastRank = constants.PAWN_LAST_RANK[this.turn];
 
@@ -437,12 +433,9 @@ module.exports = class Board {
                 moves.push(this.createMove(index, newMove));
             }
         }
-
-        return moves;
     }
 
-    deltaMoves(deltas, index) {
-        var moves = [];
+    deltaMoves(moves, deltas, index) {
         var newMove;
 
         for (var j = 0; j < deltas.length; j++) {
@@ -453,12 +446,9 @@ module.exports = class Board {
                 moves.push(this.createMove(index, newMove));
             }
         }
-
-        return moves;
     }
 
-    deltaCaptures(deltas, index) {
-        var moves = [];
+    deltaCaptures(moves, deltas, index) {
         var newMove;
 
         for (var j = 0; j < deltas.length; j++) {
@@ -469,12 +459,9 @@ module.exports = class Board {
                 moves.push(this.createMove(index, newMove));
             }
         }
-
-        return moves;
     }
 
-    slidingMoves(deltas, index) {
-        var moves = [];
+    slidingMoves(moves, deltas, index) {
         var newMove, i;
 
         for (i = 0; i < deltas.length; i++) {
@@ -490,12 +477,9 @@ module.exports = class Board {
                 }
             } while (this.board[newMove] === constants.PIECE_MAP.empty);
         }
-
-        return moves;
     }
 
-    slidingCaptures(deltas, index) {
-        var moves = [];
+    slidingCaptures(moves, deltas, index) {
         var newMove, i;
 
         for (i = 0; i < deltas.length; i++) {
@@ -509,12 +493,9 @@ module.exports = class Board {
                 moves.push(this.createMove(index, newMove));
             }
         }
-
-        return moves;
     }
 
-    castlingMoves() {
-        var moves = [];
+    castlingMoves(moves) {
         var index = this.turn ? 142 : 37;
         var i, j, castlingIndex, castlingInfo, newMove, numberOffset, direction, indexToCheck;
 
@@ -538,8 +519,6 @@ module.exports = class Board {
                 moves.push(this.createMove(index, newMove));
             }
         }
-
-        return moves;
     }
 
     isAttacked(index, turn) {
