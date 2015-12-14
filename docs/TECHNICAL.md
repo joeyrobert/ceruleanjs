@@ -22,9 +22,9 @@ An interactive form of this visualization is available in board.ods.
 Board indices, rank and file can be converted to one another using the
 following functions:
 
-        index = rank * 15 + file + 17
-        rank = floor(index / 15 - 1)
-        file - (index - 3) % 15 + 1
+    index = rank * 15 + file + 17
+    rank = floor(index / 15 - 1)
+    file - (index - 3) % 15 + 1
 
 ## Move representation
 
