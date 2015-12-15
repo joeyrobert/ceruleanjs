@@ -208,6 +208,14 @@ module.exports = class Board {
                 var promotion = this.movePromotion(move);
                 this.board[to] = promotion | this.turn;
                 break;
+            case constants.MOVE_BITS_PROMOTION_CAPTURE:
+                this.hash -= zobrist.SQUARES[to][this.board[to]];
+                this.pieces[opponentTurn].remove(to);
+                this.movePiece(from, to);
+                var promotion = this.movePromotion(move);
+                this.board[to] = promotion | this.turn;
+                this.updateCastlingAndKings(from, to);
+                break;
         }
 
         // Update turn
@@ -256,6 +264,10 @@ module.exports = class Board {
                 this.board[destroyedPawn] = constants.PIECE_MAP.p | opponentTurn;
                 break;
             case constants.MOVE_BITS_PROMOTION:
+                this.board[from] = constants.PIECE_MAP.p | this.turn;
+                break;
+            case constants.MOVE_BITS_PROMOTION_CAPTURE:
+                this.pieces[opponentTurn].push(to);
                 this.board[from] = constants.PIECE_MAP.p | this.turn;
                 break;
         }
@@ -417,10 +429,10 @@ module.exports = class Board {
             newMove = index + (14 + 2 * j) * (this.turn ? -1 : 1);
             if (this.board[newMove] && this.board[newMove] !== constants.PIECE_MAP.empty && this.board[newMove] % 2 !== this.turn) {
                 if (newMove >= lastRank[0] && newMove <= lastRank[1]) {
-                    moves.push(this.createMove(index, newMove, constants.MOVE_BITS_PROMOTION, constants.PIECE_MAP.q));
-                    moves.push(this.createMove(index, newMove, constants.MOVE_BITS_PROMOTION, constants.PIECE_MAP.r));
-                    moves.push(this.createMove(index, newMove, constants.MOVE_BITS_PROMOTION, constants.PIECE_MAP.b));
-                    moves.push(this.createMove(index, newMove, constants.MOVE_BITS_PROMOTION, constants.PIECE_MAP.n));
+                    moves.push(this.createMove(index, newMove, constants.MOVE_BITS_PROMOTION_CAPTURE, constants.PIECE_MAP.q));
+                    moves.push(this.createMove(index, newMove, constants.MOVE_BITS_PROMOTION_CAPTURE, constants.PIECE_MAP.r));
+                    moves.push(this.createMove(index, newMove, constants.MOVE_BITS_PROMOTION_CAPTURE, constants.PIECE_MAP.b));
+                    moves.push(this.createMove(index, newMove, constants.MOVE_BITS_PROMOTION_CAPTURE, constants.PIECE_MAP.n));
                 } else {
                     moves.push(this.createMove(index, newMove, constants.MOVE_BITS_CAPTURE));
                 }

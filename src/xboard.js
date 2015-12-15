@@ -88,6 +88,8 @@ class Xboard {
 
         display += '\n\nFEN:  ' + this.board.fen;
         display += '\nHash: ' + this.board.hash;
+        // display += '\nPiece List: ' + JSON.stringify(this.board.pieces[0].indices);
+        // display += '\nPiece List: ' + JSON.stringify(this.board.pieces[1].indices);
 
         console.log(display);
     }
@@ -117,7 +119,7 @@ class Xboard {
             return;
         }
 
-        console.log(perft.perftHashed(this.board, parseInt(depth, 10)));
+        console.log(perft.perft(this.board, parseInt(depth, 10)));
     }
 
     moves() {
