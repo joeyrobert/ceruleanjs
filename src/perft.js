@@ -1,15 +1,19 @@
 'use strict';
 
 const HashTable = require('./hash_table');
-var perftTable = new HashTable(12);
+var perftTable = new HashTable(10);
 
 function perft(board, depth) {
+    if (depth === 0) {
+        return 1;
+    }
+
     var moves = board.generateMoves();
     var total = 0;
 
     for (var i = 0; i < moves.length; i++) {
         if (board.addMove(moves[i])) {
-            total += depth > 1 ? perft(board, depth - 1) : 1;
+            total += perft(board, depth - 1);
             board.subtractMove();
         }
     }
@@ -18,6 +22,10 @@ function perft(board, depth) {
 }
 
 function perftHashed(board, depth) {
+    if (depth === 0) {
+        return 1;
+    }
+
     var savedPerft = perftTable.get(board.hash);
 
     if (savedPerft && savedPerft[depth]) {
@@ -29,7 +37,7 @@ function perftHashed(board, depth) {
 
     for (var i = 0; i < moves.length; i++) {
         if (board.addMove(moves[i])) {
-            total += depth > 1 ? perftHashed(board, depth - 1) : 1;
+            total += perftHashed(board, depth - 1);
             board.subtractMove();
         }
     }
