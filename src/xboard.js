@@ -130,18 +130,19 @@ class Xboard {
     }
 
     move(moveString) {
-        var move = this.board.moveStringToMove(moveString);
         var moves = this.board.generateMoves();
+        var move = moves.filter(move => moveString === this.board.moveToString(move))[0];
         var legalMove = false;
+        var result = false;
 
-        if (moves.indexOf(moves) < 0) {
+        if (move) {
             legalMove = this.board.addMove(move);
-            this.result();
+            result = this.result();
         }
 
         if (!legalMove) {
             console.log('Illegal move:', moveString);
-        } else if (!this.forceSet) {
+        } else if (!this.forceSet && !result) {
             this.go();
         }
     }

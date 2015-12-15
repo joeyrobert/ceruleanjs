@@ -133,6 +133,13 @@ const PAWN_LAST_RANK = [
     [33, 40]
 ];
 
+const MOVE_BITS_CAPTURE     = 1;
+const MOVE_BITS_CASTLING    = 2;
+const MOVE_BITS_EN_PASSANT  = 4;
+const MOVE_BITS_PAWN        = 8;
+const MOVE_BITS_DOUBLE_PAWN = 16;
+const MOVE_BITS_PROMOTION   = 32;
+
 module.exports = {
     WHITE,
     BLACK,
@@ -158,5 +165,11 @@ module.exports = {
     CASTLING_MAP,
     CASTLING_ROOK_MOVES,
     PAWN_FIRST_RANK,
-    PAWN_LAST_RANK
+    PAWN_LAST_RANK,
+    MOVE_BITS_CAPTURE,
+    MOVE_BITS_CASTLING,
+    MOVE_BITS_EN_PASSANT,
+    MOVE_BITS_PAWN,
+    MOVE_BITS_DOUBLE_PAWN,
+    MOVE_BITS_PROMOTION
 };
