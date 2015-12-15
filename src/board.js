@@ -16,7 +16,7 @@ module.exports = class Board {
         this.pieces = [new PieceList(), new PieceList()];
         this.board = new Array(constants.WIDTH * constants.HEIGHT);
         this.castling = 0;
-        this.enPassant = false;
+        this.enPassant = null;
         this.turn = constants.WHITE;
         this.halfMoveClock = 0;
         this.fullMoveNumber = 1;
@@ -151,76 +151,71 @@ module.exports = class Board {
     addMove(move) {
         var from = this.moveFrom(move);
         var to = this.moveTo(move);
+        var bits = this.moveBits(move);
         var opponentTurn = (this.turn + 1) % 2;
-        var pawnDirection = this.turn ? -1 : 1;
-        var promotion = this.movePromotion(move);
+        var castledThroughCheck = false;
         this.history.push([move, this.board[to], this.enPassant, this.castling, this.hash]);
 
-        // Capture
-        if (this.board[to] !== constants.PIECE_MAP.empty) {
-            this.hash -= zobrist.SQUARES[to][this.board[to]];
-            this.pieces[opponentTurn].remove(to);
+        if (this.enPassant) {
+            this.hash -= zobrist.EN_PASSANT[this.enPassant];
         }
+        this.enPassant = null;
 
-        // En passant
-        else if (to === this.enPassant && (this.board[from] & constants.JUST_PIECE) === constants.PIECE_MAP.p) {
-            var destroyedPawn = to + -1 * pawnDirection * 15;
-            this.pieces[opponentTurn].remove(destroyedPawn);
-            this.board[destroyedPawn] = constants.PIECE_MAP.empty;
-            this.hash -= zobrist.SQUARES[destroyedPawn][this.board[destroyedPawn]];
-        }
+        switch (bits) {
+            case constants.MOVE_BITS_EMPTY:
+                this.movePiece(from, to);
+                this.updateCastlingAndKings(from, to);
+                break;
+            case constants.MOVE_BITS_CAPTURE:
+                this.hash -= zobrist.SQUARES[to][this.board[to]];
+                this.pieces[opponentTurn].remove(to);
+                this.movePiece(from, to);
+                this.updateCastlingAndKings(from, to);
+                break;
+            case constants.MOVE_BITS_CASTLING:
+                this.movePiece(from, to);
+                var rookMove = constants.CASTLING_ROOK_MOVES[to];
+                var direction = to > from ? 1 : -1;
+                this.movePiece(this.moveFrom(rookMove), this.moveTo(rookMove));
+                this.updateCastlingAndKings(from, to);
 
-        // Regular move
-        this.movePiece(from, to);
-
-        // Promotion
-        if (promotion) {
-            this.board[to] = promotion | this.turn;
-        }
-
-        // Castling
-        var castledThroughCheck = false;
-
-        if (constants.CASTLING_MAP[to] === from && (this.board[to] & constants.JUST_PIECE) === constants.PIECE_MAP.k) {
-            var rookMove = constants.CASTLING_ROOK_MOVES[to];
-            this.movePiece(this.moveFrom(rookMove), this.moveTo(rookMove));
-            var direction = to > from ? 1 : -1;
-
-            for (var kingIndex = from; kingIndex !== to; kingIndex += direction) {
-                if (this.isAttacked(kingIndex, opponentTurn)) {
-                    castledThroughCheck = true;
-                    break;
+                for (var kingIndex = from; kingIndex !== to; kingIndex += direction) {
+                    if (this.isAttacked(kingIndex, opponentTurn)) {
+                        castledThroughCheck = true;
+                        break;
+                    }
                 }
-            }
-        }
-
-        // If castled through check, no need to update these values, they'll be restored from history
-        if (!castledThroughCheck) {
-            // Update enPassant
-            if (this.enPassant) {
-                this.hash -= zobrist.EN_PASSANT[this.enPassant];
-            }
-
-            if ((this.board[to] & constants.JUST_PIECE) === constants.PIECE_MAP.p && from + 30 * pawnDirection === to) {
-                this.enPassant = from + 15 * pawnDirection;
+                break;
+            case constants.MOVE_BITS_EN_PASSANT:
+                this.movePiece(from, to);
+                var pawnIncrement = this.turn ? -15 : 15;
+                var destroyedPawn = to + -1 * pawnIncrement;
+                this.pieces[opponentTurn].remove(destroyedPawn);
+                this.board[destroyedPawn] = constants.PIECE_MAP.empty;
+                this.hash -= zobrist.SQUARES[destroyedPawn][this.board[destroyedPawn]];
+                break;
+            case constants.MOVE_BITS_PAWN:
+                this.movePiece(from, to);
+                break;
+            case constants.MOVE_BITS_DOUBLE_PAWN:
+                this.movePiece(from, to);
+                var pawnIncrement = this.turn ? -15 : 15;
+                this.enPassant = from + pawnIncrement;
                 this.hash += zobrist.EN_PASSANT[this.enPassant];
-            } else {
-                this.enPassant = undefined;
-            }
-
-            // Update castling
-            for (var castlingIndex = 0; castlingIndex < constants.CASTLING_INFO.length; castlingIndex++) {
-                var castlingInfo = constants.CASTLING_INFO[castlingIndex];
-                if ((this.castling & castlingInfo[0]) && (from === castlingInfo[1] || to === castlingInfo[3] || from === castlingInfo[3])) {
-                    this.castling -= castlingInfo[0];
-                    this.hash -= zobrist.CASTLING[castlingIndex];
-                }
-            }
-        }
-
-        // Update kings
-        if ((this.board[to] & constants.JUST_PIECE) === constants.PIECE_MAP.k) {
-            this.kings[this.turn] = to;
+                break;
+            case constants.MOVE_BITS_PROMOTION:
+                this.movePiece(from, to);
+                var promotion = this.movePromotion(move);
+                this.board[to] = promotion | this.turn;
+                break;
+            case constants.MOVE_BITS_PROMOTION_CAPTURE:
+                this.hash -= zobrist.SQUARES[to][this.board[to]];
+                this.pieces[opponentTurn].remove(to);
+                this.movePiece(from, to);
+                var promotion = this.movePromotion(move);
+                this.board[to] = promotion | this.turn;
+                this.updateCastlingAndKings(from, to);
+                break;
         }
 
         // Update turn
@@ -242,41 +237,56 @@ module.exports = class Board {
         var move = history[0];
         var from = this.moveFrom(move);
         var to = this.moveTo(move);
+        var bits = this.moveBits(move);
         var opponentTurn = this.turn;
         this.turn = (this.turn + 1) % 2;
-        this.movePiece(to, from);
+        this.movePieceNoHash(to, from);
         this.board[to] = history[1];
         this.enPassant = history[2];
         this.castling = history[3];
-
-        if (this.movePromotion(move)) {
-            this.board[from] = constants.PIECE_MAP.p | this.turn;
-        }
 
         if ((this.board[from] & constants.JUST_PIECE) === constants.PIECE_MAP.k) {
             this.kings[this.turn] = from;
         }
 
-        // Capture
-        if (this.board[to] !== constants.PIECE_MAP.empty) {
-            this.pieces[opponentTurn].push(to);
-        }
-        // En passant
-        else if (to === this.enPassant &&
-            (this.board[from] & constants.JUST_PIECE) === constants.PIECE_MAP.p) {
-            var pawnDirection = this.turn ? -1 : 1;
-            var destroyedPawn = to + -1 * pawnDirection * 15;
-            this.pieces[opponentTurn].push(destroyedPawn);
-            this.board[destroyedPawn] = constants.PIECE_MAP.p | opponentTurn;
-        }
-        // Castling
-        else if (constants.CASTLING_MAP[to] === from &&
-            (this.board[from] & constants.JUST_PIECE) === constants.PIECE_MAP.k) {
-            var rookMove = constants.CASTLING_ROOK_MOVES[to];
-            this.movePiece(this.moveTo(rookMove), this.moveFrom(rookMove));
+        switch (bits) {
+            case constants.MOVE_BITS_CAPTURE:
+                this.pieces[opponentTurn].push(to);
+                break;
+            case constants.MOVE_BITS_CASTLING:
+                var rookMove = constants.CASTLING_ROOK_MOVES[to];
+                this.movePieceNoHash(this.moveTo(rookMove), this.moveFrom(rookMove));
+                break;
+            case constants.MOVE_BITS_EN_PASSANT:
+                var pawnIncrement = this.turn ? -15 : 15;
+                var destroyedPawn = to + -1 * pawnIncrement;
+                this.pieces[opponentTurn].push(destroyedPawn);
+                this.board[destroyedPawn] = constants.PIECE_MAP.p | opponentTurn;
+                break;
+            case constants.MOVE_BITS_PROMOTION:
+                this.board[from] = constants.PIECE_MAP.p | this.turn;
+                break;
+            case constants.MOVE_BITS_PROMOTION_CAPTURE:
+                this.pieces[opponentTurn].push(to);
+                this.board[from] = constants.PIECE_MAP.p | this.turn;
+                break;
         }
 
         this.hash = history[4];
+    }
+
+    updateCastlingAndKings(from, to) {
+        for (var castlingIndex = 0; castlingIndex < constants.CASTLING_INFO.length; castlingIndex++) {
+            var castlingInfo = constants.CASTLING_INFO[castlingIndex];
+            if ((this.castling & castlingInfo[0]) && (from === castlingInfo[1] || to === castlingInfo[3] || from === castlingInfo[3])) {
+                this.castling -= castlingInfo[0];
+                this.hash -= zobrist.CASTLING[castlingIndex];
+            }
+        }
+
+        if ((this.board[to] & constants.JUST_PIECE) === constants.PIECE_MAP.k) {
+            this.kings[this.turn] = to;
+        }
     }
 
     movePiece(from, to) {
@@ -288,11 +298,11 @@ module.exports = class Board {
         this.hash += zobrist.SQUARES[to][this.board[to]];
     }
 
-    moveStringToMove(moveString) {
-        var from = utils.algebraicToIndex(moveString.slice(0, 2));
-        var to = utils.algebraicToIndex(moveString.slice(2, 4));
-        var promotion = constants.PIECE_MAP[moveString[5]];
-        return this.createMove(from, to, promotion);
+    movePieceNoHash(from, to) {
+        this.pieces[this.turn].remove(from);
+        this.pieces[this.turn].push(to);
+        this.board[to] = this.board[from];
+        this.board[from] = constants.PIECE_MAP.empty;
     }
 
     generateMoves() {
@@ -390,12 +400,12 @@ module.exports = class Board {
         var newMove = index + 15 - 30 * this.turn;
         if (this.board[newMove] === constants.PIECE_MAP.empty) {
             if (newMove >= lastRank[0] && newMove <= lastRank[1]) {
-                moves.push(this.createMove(index, newMove, constants.PIECE_MAP.q));
-                moves.push(this.createMove(index, newMove, constants.PIECE_MAP.r));
-                moves.push(this.createMove(index, newMove, constants.PIECE_MAP.b));
-                moves.push(this.createMove(index, newMove, constants.PIECE_MAP.n));
+                moves.push(this.createMove(index, newMove, constants.MOVE_BITS_PROMOTION, constants.PIECE_MAP.q));
+                moves.push(this.createMove(index, newMove, constants.MOVE_BITS_PROMOTION, constants.PIECE_MAP.r));
+                moves.push(this.createMove(index, newMove, constants.MOVE_BITS_PROMOTION, constants.PIECE_MAP.b));
+                moves.push(this.createMove(index, newMove, constants.MOVE_BITS_PROMOTION, constants.PIECE_MAP.n));
             } else {
-                moves.push(this.createMove(index, newMove));
+                moves.push(this.createMove(index, newMove, constants.MOVE_BITS_PAWN));
             }
         }
 
@@ -404,7 +414,7 @@ module.exports = class Board {
         if (this.board[newMove] === constants.PIECE_MAP.empty &&
             this.board[index + 15  - 30 * this.turn] === constants.PIECE_MAP.empty &&
             index >= firstRank[0] && index <= firstRank[1]) {
-            moves.push(this.createMove(index, newMove));
+            moves.push(this.createMove(index, newMove, constants.MOVE_BITS_DOUBLE_PAWN));
         }
 
         this.pawnCaptures(moves, index);
@@ -419,18 +429,18 @@ module.exports = class Board {
             newMove = index + (14 + 2 * j) * (this.turn ? -1 : 1);
             if (this.board[newMove] && this.board[newMove] !== constants.PIECE_MAP.empty && this.board[newMove] % 2 !== this.turn) {
                 if (newMove >= lastRank[0] && newMove <= lastRank[1]) {
-                    moves.push(this.createMove(index, newMove, constants.PIECE_MAP.q));
-                    moves.push(this.createMove(index, newMove, constants.PIECE_MAP.r));
-                    moves.push(this.createMove(index, newMove, constants.PIECE_MAP.b));
-                    moves.push(this.createMove(index, newMove, constants.PIECE_MAP.n));
+                    moves.push(this.createMove(index, newMove, constants.MOVE_BITS_PROMOTION_CAPTURE, constants.PIECE_MAP.q));
+                    moves.push(this.createMove(index, newMove, constants.MOVE_BITS_PROMOTION_CAPTURE, constants.PIECE_MAP.r));
+                    moves.push(this.createMove(index, newMove, constants.MOVE_BITS_PROMOTION_CAPTURE, constants.PIECE_MAP.b));
+                    moves.push(this.createMove(index, newMove, constants.MOVE_BITS_PROMOTION_CAPTURE, constants.PIECE_MAP.n));
                 } else {
-                    moves.push(this.createMove(index, newMove));
+                    moves.push(this.createMove(index, newMove, constants.MOVE_BITS_CAPTURE));
                 }
             }
 
             // En passant
             if (newMove === this.enPassant) {
-                moves.push(this.createMove(index, newMove));
+                moves.push(this.createMove(index, newMove, constants.MOVE_BITS_EN_PASSANT));
             }
         }
     }
@@ -440,10 +450,12 @@ module.exports = class Board {
 
         for (var j = 0; j < deltas.length; j++) {
             newMove = index + deltas[j];
-            if (this.board[newMove] &&
-                (this.board[newMove] === constants.PIECE_MAP.empty ||
-                this.board[newMove] % 2 !== this.turn)) {
-                moves.push(this.createMove(index, newMove));
+            if (this.board[newMove]) {
+                if(this.board[newMove] === constants.PIECE_MAP.empty) {
+                    moves.push(this.createMove(index, newMove));
+                } else if (this.board[newMove] % 2 !== this.turn) {
+                    moves.push(this.createMove(index, newMove, constants.MOVE_BITS_CAPTURE));
+                }
             }
         }
     }
@@ -456,7 +468,7 @@ module.exports = class Board {
             if (this.board[newMove] &&
                 this.board[newMove] !== constants.PIECE_MAP.empty &&
                 (this.board[newMove] % 2) !== this.turn) {
-                moves.push(this.createMove(index, newMove));
+                moves.push(this.createMove(index, newMove, constants.MOVE_BITS_CAPTURE));
             }
         }
     }
@@ -469,11 +481,12 @@ module.exports = class Board {
 
             do {
                 newMove += deltas[i];
-
-                if (this.board[newMove] &&
-                    (this.board[newMove] === constants.PIECE_MAP.empty ||
-                    this.board[newMove] % 2 !== this.turn)) {
-                    moves.push(this.createMove(index, newMove));
+                if (this.board[newMove]) {
+                    if(this.board[newMove] === constants.PIECE_MAP.empty) {
+                        moves.push(this.createMove(index, newMove));
+                    } else if (this.board[newMove] % 2 !== this.turn) {
+                        moves.push(this.createMove(index, newMove, constants.MOVE_BITS_CAPTURE));
+                    }
                 }
             } while (this.board[newMove] === constants.PIECE_MAP.empty);
         }
@@ -490,7 +503,7 @@ module.exports = class Board {
             } while (this.board[newMove] && this.board[newMove] === constants.PIECE_MAP.empty);
 
             if (this.board[newMove] && (this.board[newMove] % 2) !== this.turn) {
-                moves.push(this.createMove(index, newMove));
+                moves.push(this.createMove(index, newMove, constants.MOVE_BITS_CAPTURE));
             }
         }
     }
@@ -516,7 +529,7 @@ module.exports = class Board {
                     }
                 }
 
-                moves.push(this.createMove(index, newMove));
+                moves.push(this.createMove(index, newMove, constants.MOVE_BITS_CASTLING));
             }
         }
     }
@@ -548,12 +561,7 @@ module.exports = class Board {
                             (this.board[newMove] & constants.JUST_PIECE) === constants.PIECE_MAP.q)) {
                         return true;
                     }
-
-                    if (this.board[newMove] !== constants.PIECE_MAP.empty) {
-                        break;
-                    }
-
-                } while (true);
+                } while (this.board[newMove] === constants.PIECE_MAP.empty);
             }
         }
 
@@ -611,8 +619,8 @@ module.exports = class Board {
         return hash;
     }
 
-    createMove(from, to, promotion) {
-        return from + (to << 8) + (promotion << 16);
+    createMove(from, to, bits, promotion) {
+        return from + (to << 8) + (promotion << 16) + (bits << 24);
     }
 
     moveFrom(move) {
@@ -624,6 +632,10 @@ module.exports = class Board {
     }
 
     movePromotion(move) {
-        return move >> 16;
+        return (move >> 16) & 0b11111111;
+    }
+
+    moveBits(move) {
+        return move >> 24;
     }
 };

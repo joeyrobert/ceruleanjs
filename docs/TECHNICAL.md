@@ -30,11 +30,20 @@ following functions:
 
 Moves are represented as a 32-bit integer with the following fields:
 
-    [EMPTY]  PROMO    TO       FROM
+    BITS     PROMO    TO       FROM
     00000000 00000000 00000000 00000000
     ^ MSB                         LSB ^
 
-TO/FROM are board indices, and PROMO is the promotion piece type.
+TO/FROM are board indices, PROMO is the promotion piece type and BITS is
+metadata set by the move generate about what type of move this is. The BITS
+property is defined as follows (influenced by TSCP):
+
+    1  capture            (000001)
+    2  castling           (000010)
+    4  en passant         (000100)
+    8  pawn move          (001000)
+    16 double pawn move   (010000)
+    32 promote            (100000)
 
 ## Zobrist hashing
 

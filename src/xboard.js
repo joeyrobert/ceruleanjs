@@ -88,6 +88,8 @@ class Xboard {
 
         display += '\n\nFEN:  ' + this.board.fen;
         display += '\nHash: ' + this.board.hash;
+        // display += '\nPiece List: ' + JSON.stringify(this.board.pieces[0].indices);
+        // display += '\nPiece List: ' + JSON.stringify(this.board.pieces[1].indices);
 
         console.log(display);
     }
@@ -117,7 +119,7 @@ class Xboard {
             return;
         }
 
-        console.log(perft.perftHashed(this.board, parseInt(depth, 10)));
+        console.log(perft.perft(this.board, parseInt(depth, 10)));
     }
 
     moves() {
@@ -130,18 +132,19 @@ class Xboard {
     }
 
     move(moveString) {
-        var move = this.board.moveStringToMove(moveString);
         var moves = this.board.generateMoves();
+        var move = moves.filter(move => moveString === this.board.moveToString(move))[0];
         var legalMove = false;
+        var result = false;
 
-        if (moves.indexOf(moves) < 0) {
+        if (move) {
             legalMove = this.board.addMove(move);
-            this.result();
+            result = this.result();
         }
 
         if (!legalMove) {
             console.log('Illegal move:', moveString);
-        } else if (!this.forceSet) {
+        } else if (!this.forceSet && !result) {
             this.go();
         }
     }
