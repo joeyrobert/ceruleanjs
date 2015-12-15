@@ -133,6 +133,7 @@ const PAWN_LAST_RANK = [
     [33, 40]
 ];
 
+const MOVE_BITS_EMPTY       = 0;
 const MOVE_BITS_CAPTURE     = 1;
 const MOVE_BITS_CASTLING    = 2;
 const MOVE_BITS_EN_PASSANT  = 4;
@@ -166,6 +167,7 @@ module.exports = {
     CASTLING_ROOK_MOVES,
     PAWN_FIRST_RANK,
     PAWN_LAST_RANK,
+    MOVE_BITS_EMPTY,
     MOVE_BITS_CAPTURE,
     MOVE_BITS_CASTLING,
     MOVE_BITS_EN_PASSANT,
