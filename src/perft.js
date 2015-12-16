@@ -20,15 +20,20 @@ module.exports = class Perft {
             }
         }
 
-        var moves = board.generateMoves();
+        var move, moves = board.generateMoves();
         var total = 0;
 
+        board.addHistory();
+
         for (var i = 0; i < moves.length; i++) {
-            if (board.addMove(moves[i])) {
+            move = moves[i];
+            if (board.addMove(move)) {
                 total += this.perft(board, depth - 1);
-                board.subtractMove();
+                board.subtractMove(move);
             }
         }
+
+        board.subtractHistory();
 
         if (this.perftTable) {
             var value = this.perftTable.get(board.loHash, board.hiHash) || {};
@@ -40,15 +45,20 @@ module.exports = class Perft {
     }
 
     divide(board, depth) {
-        var moves = board.generateMoves();
+        var move, moves = board.generateMoves();
         var movePerfts = [];
 
+        board.addHistory();
+
         for (var i = 0; i < moves.length; i++) {
-            if (board.addMove(moves[i])) {
-                movePerfts.push([board.moveToString(moves[i]), this.perft(board, depth - 1)]);
-                board.subtractMove();
+            move = moves[i];
+            if (board.addMove(move)) {
+                movePerfts.push([board.moveToString(move), this.perft(board, depth - 1)]);
+                board.subtractMove(move);
             }
         }
+
+        board.subtractHistory();
 
         return movePerfts;
     }

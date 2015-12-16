@@ -16,6 +16,7 @@ function qsearch(board, alpha, beta) {
     }
 
     var moves = board.generateCaptures();
+    board.addHistory();
 
     for (var i = 0; i < moves.length; i++) {
         if (board.addMove(moves[i])) {
@@ -24,6 +25,7 @@ function qsearch(board, alpha, beta) {
             board.subtractMove();
 
             if (score >= beta) {
+                board.subtractHistory();
                 return beta;
             }
 
@@ -32,6 +34,8 @@ function qsearch(board, alpha, beta) {
             }
         }
     }
+
+    board.subtractHistory();
     return alpha;
 }
 

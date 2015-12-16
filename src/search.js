@@ -25,6 +25,7 @@ function search(board, alpha, beta, depth, moveHistory) {
 
     var score, alphaMove, searchResult;
     var move, moves = board.generateMoves();
+    board.addHistory();
 
     // Move ordering
     if (moveHistory.length) {
@@ -50,9 +51,10 @@ function search(board, alpha, beta, depth, moveHistory) {
                 }
             }
 
-            board.subtractMove();
+            board.subtractMove(move);
 
             if (score >= beta) {
+                board.subtractHistory();
                 return beta;
             }
 
@@ -67,6 +69,7 @@ function search(board, alpha, beta, depth, moveHistory) {
         moveHistory[depth] = alphaMove;
     }
 
+    board.subtractHistory();
     return alpha;
 }
 
