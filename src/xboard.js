@@ -145,20 +145,18 @@ class Xboard {
     }
 
     move(moveString) {
-        var moves = this.board.generateMoves();
-        var move = moves.filter(move => moveString === this.board.moveToString(move))[0];
-        var legalMove = false;
-        var result = false;
+        var legalMove = this.board.addMoveString(moveString);
 
-        if (move) {
-            legalMove = this.board.addMove(move);
-            result = this.result();
-        }
+        if (legalMove) {
+            var result = this.result();
 
-        if (!legalMove) {
+            if (result) {
+                console.log(result);
+            } else if (!this.forceSet) {
+                this.go();
+            }
+        } else {
             console.log('Illegal move:', moveString);
-        } else if (!this.forceSet && !result) {
-            this.go();
         }
     }
 

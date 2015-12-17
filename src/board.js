@@ -391,6 +391,13 @@ module.exports = class Board {
         return moves;
     }
 
+    addMoveString(moveString) {
+        var moves = this.generateMoves();
+        var move = moves.filter(move => moveString === this.moveToString(move))[0];
+        var legalMove = false;
+        return move && this.addMove(move);
+    }
+
     movesString() {
         var moves = this.generateMoves();
         return moves.map(move => this.moveToString(move)).join('\n');
