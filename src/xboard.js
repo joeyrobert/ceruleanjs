@@ -7,7 +7,7 @@ const Board = require('./board');
 const evaluate = require('./evaluate');
 const iterativeDeepening = require('./iterative_deepening');
 const Opening = require('./opening');
-const perft = require('./perft');
+const Perft = require('./perft');
 const utils = require('./utils');
 const packageInfo = require('../package.json');
 
@@ -15,6 +15,7 @@ class Xboard {
     constructor() {
         this.board = new Board();
         this.opening = new Opening();
+        this.perft = new Perft();
         this.engineTime = 60*100;
         this.opponentTime = 60*100;
         this.xboardSet = false;
@@ -46,7 +47,7 @@ class Xboard {
     }
 
     result(hideDisplay) {
-        var perftScore = perft.perft(this.board, 1);
+        var perftScore = this.perft.perft(this.board, 1);
         var result = false;
 
         if (perftScore === 0) {
@@ -104,7 +105,7 @@ class Xboard {
         }
 
         var startTime = new Date();
-        var division = perft.divide(this.board, parseInt(depth, 10));
+        var division = this.perft.divide(this.board, parseInt(depth, 10));
         var total = division.reduce((memo, entry) => memo + entry[1], 0);
         var timeDiff = new Date() - startTime;
 
@@ -123,14 +124,14 @@ class Xboard {
         }
 
         var startTime = new Date();
-        var total = perft.perft(this.board, parseInt(depth, 10));
+        var total = this.perft.perft(this.board, parseInt(depth, 10));
         var timeDiff = new Date() - startTime;
 
         console.log(`${total}\ntime ${timeDiff} ms\nfreq ${Math.floor(total / timeDiff * 1000)} Hz`);
     }
 
     perfthash(exponent) {
-        perft.hashSize = exponent || 0;
+        this.perft.hashSize = exponent || 0;
         console.log(exponent ? `Perft hash size set to 2^${exponent} = ${Math.pow(2, exponent)}` : 'Perft hash table removed');
     }
 

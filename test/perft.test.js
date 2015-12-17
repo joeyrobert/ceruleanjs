@@ -3,15 +3,17 @@
 const expect = require('chai').expect;
 const fs = require('fs');
 const Board = require('../src/board');
-const perft = require('../src/perft');
+const Perft = require('../src/perft');
 
 describe('perft', () => {
     let board;
+    let perft;
     let epd = fs.readFileSync('suites/epd/perftsuite-fast.epd', 'utf8');
     let perftTests = epd.split('\n').map(line => line.split(';'));
 
     beforeEach(() => {
         board = new Board();
+        perft = new Perft();
     });
 
     perftTests.forEach(perftTest => {

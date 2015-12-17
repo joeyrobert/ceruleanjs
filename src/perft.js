@@ -2,7 +2,7 @@
 
 const HashTable = require('./hash_table');
 
-class Perft {
+module.exports = class Perft {
     set hashSize(exponent) {
         this.perftTable = exponent ? new HashTable(exponent) : undefined;
     }
@@ -50,6 +50,4 @@ class Perft {
 
         return movePerfts;
     }
-}
-
-module.exports = new Perft();
+};
