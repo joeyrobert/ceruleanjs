@@ -3,7 +3,7 @@
 const expect = require('chai').expect;
 const fs = require('fs');
 const Board = require('../src/board');
-const perft = require('../src/perft').perft;
+const perft = require('../src/perft');
 
 describe('perft', () => {
     let board;
@@ -23,7 +23,7 @@ describe('perft', () => {
             let count = parseInt(parts[1], 10);
             it(`verify perft('${fen}', ${depth}) equals ${count}`, () => {
                 board.fen = fen;
-                expect(perft(board, depth)).to.equal(count);
+                expect(perft.perft(board, depth)).to.equal(count);
             });
         }
     });
