@@ -410,13 +410,21 @@ module.exports = class Board {
         return move && this.addMove(move);
     }
 
-    addMoveStringShort(moveString) {
+    movesToShortString(moves) {
+        // Needs to have unique IDENTIFIER + TO
+        // If not unique, add FILE
+        // If still not unique, remove FILE add RANK
+        var longMoves = moves.map(move => {
+            var from = this.moveFrom(move);
+            var to = this.moveTo(move);
+            var bits = this.moveBits(move);
+            var capture = this.board[to] === constants.PIECE_MAP.empty ? '' : 'x';
+            var piece = (this.board[from] & constants.JUST_PIECE);
+            var identifier = piece === constants.PIECE_MAP.p ? '' : constants.INVERSE_PIECE_MAP[piece].toUpperCase();
+            return identifier + utils.indexToAlgebraic(from) + capture + utils.indexToAlgebraic(to);
+        });
 
-    }
-
-    movesString() {
-        var moves = this.generateMoves();
-        return moves.map(move => this.moveToString(move)).join('\n');
+        return longMoves;
     }
 
     moveToString(move) {
