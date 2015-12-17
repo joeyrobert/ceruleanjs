@@ -6,6 +6,7 @@ const constants = require('./constants');
 const Board = require('./board');
 const evaluate = require('./evaluate');
 const iterativeDeepening = require('./iterative_deepening');
+const Opening = require('./opening');
 const perft = require('./perft');
 const utils = require('./utils');
 const packageInfo = require('../package.json');
@@ -13,6 +14,7 @@ const packageInfo = require('../package.json');
 class Xboard {
     constructor() {
         this.board = new Board();
+        this.opening = new Opening();
         this.engineTime = 60*100;
         this.opponentTime = 60*100;
         this.xboardSet = false;
