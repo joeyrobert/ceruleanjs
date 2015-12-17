@@ -24,20 +24,16 @@ class Xboard {
             myname: `"CeruleanJS ${packageInfo.version} by ${packageInfo.author}"`,
             setboard: 1,
             memory: 0,
-            time: 1
+            time: 1,
+            usermove: 1
         };
-
-        var featureString = 'feature ' + Object.keys(this.features).map(name => {
-            return `${name}=${this.features[name]}`;
-        }).join(' ');
-        console.log(featureString);
 
         stdio.readByLines(line => {
             var parts = line.split(' ');
             var action = parts[0];
 
             if (constants.MOVE_REGEX.test(action)) {
-                this.move(action);
+                this.usermove(action);
             } else if (this[action]) {
                 this[action].call(this, parts.slice(1).join(' '));
             } else {
@@ -144,7 +140,7 @@ class Xboard {
         this.xboardSet = true;
     }
 
-    move(moveString) {
+    usermove(moveString) {
         var legalMove = this.board.addMoveString(moveString);
 
         if (legalMove) {
@@ -166,9 +162,17 @@ class Xboard {
 
     go() {
         this.forceSet = false;
-        var move = iterativeDeepening(this.board, this.engineTime);
-        this.board.addMove(move);
-        console.log(`move ${this.board.moveToString(move)}`);
+        var moveString = this.opening.lookupRandom(this.board.loHash, this.board.hiHash);
+
+        if (moveString) {
+            this.board.addMoveString(moveString);
+        } else {
+            var move = iterativeDeepening(this.board, this.engineTime);
+            this.board.addMove(move);
+            moveString = this.board.moveToString(move);
+        }
+
+        console.log(`move ${moveString}`);
         this.result();
     }
 
@@ -234,7 +238,9 @@ class Xboard {
     }
 
     protover(number) {
-
+        console.log(Object.keys(this.features).map(name => {
+            return `feature ${name}=${this.features[name]}`;
+        }).join('\n'));
     }
 
     accepted() {

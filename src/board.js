@@ -404,9 +404,14 @@ module.exports = class Board {
         });
     }
 
-    addMoveString(moveString) {
+    moveStringToMove(moveString) {
         var moves = this.generateLegalMoves();
         var move = moves.filter(move => moveString === this.moveToString(move))[0];
+        return move;
+    }
+
+    addMoveString(moveString) {
+        var move = this.moveStringToMove(moveString);
         return move && this.addMove(move);
     }
 
