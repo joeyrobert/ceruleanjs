@@ -12,5 +12,8 @@ module.exports = class Opening {
 
     addPgn(pgnText) {
         var pgn = new PGN(pgnText);
+        pgn.games.forEach(game => {
+
+        });
     }
 };
