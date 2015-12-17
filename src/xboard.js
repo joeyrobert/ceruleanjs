@@ -86,8 +86,9 @@ class Xboard {
             display += ` ${colors.bold(String.fromCharCode(96 + fileIndex))} `;
         }
 
-        display += '\n\nFEN:  ' + this.board.fen;
-        display += '\nHash: ' + this.board.hash;
+        display += '\n';
+        display += `\nFEN:  ${this.board.fen}`;
+        display += `\nHash: ${this.board.loHash.toString(16)} ${this.board.hiHash.toString(16)}`;
         // display += '\nPiece List: ' + JSON.stringify(this.board.pieces[0].indices);
         // display += '\nPiece List: ' + JSON.stringify(this.board.pieces[1].indices);
 
@@ -119,7 +120,16 @@ class Xboard {
             return;
         }
 
-        console.log(perft.perft(this.board, parseInt(depth, 10)));
+        var startTime = new Date();
+        var total = perft.perft(this.board, parseInt(depth, 10));
+        var timeDiff = new Date() - startTime;
+
+        console.log(`${total}\ntime ${timeDiff} ms\nfreq ${Math.floor(total / timeDiff * 1000)} Hz`);
+    }
+
+    perfthash(exponent) {
+        perft.hashSize = exponent || 0;
+        console.log(exponent ? `Perft hash size set to 2^${exponent} = ${Math.pow(2, exponent)}` : 'Perft hash table removed');
     }
 
     moves() {
@@ -245,6 +255,7 @@ Commands
 
 display         Draws the board
 perft [INT]     Perfts the current board to specified depth
+perfthash [INT] Sets perft hashtable exponent (size 2^exponent)
 divide [INT]    Divides the current board to specified depth
 moves           Lists valid moves for this position
 e2e4            Moves from the current position and thinks

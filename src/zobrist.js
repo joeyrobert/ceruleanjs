@@ -7,7 +7,7 @@ var rankFileToIndex = (rankIndex, fileIndex) => rankIndex * 15 + fileIndex + 17;
 
 var generateZobristKeys = () => {
     var mt = new MersenneTwister(3141592654);
-    var randomZobrist = () => mt.int();
+    var randomZobrist = () => mt.int31();
     var SQUARES = [];
     var EN_PASSANT = [];
     var CASTLING = []

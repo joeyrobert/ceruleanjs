@@ -4,7 +4,11 @@ module.exports = class HashTable {
     constructor(exponent) {
         this.exponent = exponent || 16;
         this.size = Math.pow(2, this.exponent);
-        this.table = new Array(this.size);
+        this.table = [];
+
+        for (var i = 0; i < this.size; i++) {
+            this.table.push([0, 0, undefined]);
+        }
     }
 
     add(loHash, hiHash, depth, value) {
@@ -14,7 +18,10 @@ module.exports = class HashTable {
     }
 
     set(loHash, hiHash, value) {
-        this.table[loHash % this.size] = [loHash, hiHash, value];
+        var entry = this.table[loHash % this.size];
+        entry[0] = loHash;
+        entry[1] = hiHash;
+        entry[2] = value;
     }
 
     get(loHash, hiHash) {
