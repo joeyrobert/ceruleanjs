@@ -24,12 +24,15 @@ module.exports = class PGN {
             } else if (/\d+./.test(line)) {
                 moveMode = true;
                 var lineWithoutNumbers = line
-                    .trim()
-                    .replace(/  [0-1](\/2)?-[0-1](\/2)?$/, '')
-                    .replace(/\d+\./g, '');
+                    .replace(/{.*?}/g, '')
+                    .replace(/\d+\./g, '')
+                    .replace(/  +/g, ' ')
+                    .trim();
+
                 lineWithoutNumbers.split(' ').forEach(move => moves.push(move));
             } else if (moveMode) {
                 // Going out of move mode;
+                moves.pop(); // remove last move (result)
                 game.moves = moves;
                 games.push(game);
                 game = {};
@@ -37,6 +40,11 @@ module.exports = class PGN {
                 moveMode = false;
             }
         });
+
+        if (moves.length > 0) {
+            game.moves = moves;
+            games.push(game);
+        }
 
         this.games = games;
 
