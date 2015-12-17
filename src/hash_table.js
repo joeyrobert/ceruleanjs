@@ -7,18 +7,18 @@ module.exports = class HashTable {
         this.table = new Array(this.size);
     }
 
-    add(key, depth, value) {
-        var oldValue = this.get(key) || {};
+    add(loHash, hiHash, depth, value) {
+        var oldValue = this.get(loHash, hiHash) || {};
         oldValue[depth] = value;
-        this.set(key, oldValue);
+        this.set(loHash, hiHash, oldValue);
     }
 
-    set(key, value) {
-        this.table[key % this.size] = [key, value];
+    set(loHash, hiHash, value) {
+        this.table[loHash % this.size] = [loHash, hiHash, value];
     }
 
-    get(key) {
-        var value = this.table[key % this.size];
-        return value && value[0] === key ? value[1] : undefined;
+    get(loHash, hiHash) {
+        var value = this.table[loHash % this.size];
+        return value && value[0] === loHash && value[1] === hiHash ? value[2] : undefined;
     }
 };
