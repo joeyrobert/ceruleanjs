@@ -127,8 +127,9 @@ class Xboard {
     }
 
     perfthash(exponent) {
-        this.perft.hashSize = exponent || 0;
-        console.log(exponent ? `Perft hash size set to 2^${exponent} = ${Math.pow(2, exponent)}` : 'Perft hash table removed');
+        exponent = parseInt(exponent, 10) || 0;
+        this.perft.hashSize = exponent;
+        console.log(exponent ? `Perft hash size set to 2^${exponent} = ${(1 << exponent)}` : 'Perft hash table removed');
     }
 
     moves() {

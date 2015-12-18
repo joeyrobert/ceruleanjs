@@ -31,7 +31,9 @@ module.exports = class Perft {
         }
 
         if (this.perftTable) {
-            this.perftTable.add(board.loHash, board.hiHash, depth, total);
+            var value = this.perftTable.get(board.loHash, board.hiHash) || {};
+            value[depth] = total;
+            this.perftTable.set(board.loHash, board.hiHash, value);
         }
 
         return total;
