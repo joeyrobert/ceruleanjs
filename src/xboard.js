@@ -170,7 +170,7 @@ class Xboard {
         } else {
             var move = iterativeDeepening(this.board, this.engineTime);
             this.board.addMove(move);
-            moveString = this.board.moveToString(move);
+            moveString = utils.moveToString(move);
         }
 
         console.log(`move ${moveString}`);

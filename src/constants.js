@@ -12,6 +12,14 @@ const HEIGHT = 12;
 const FEN_BOARD_REGEX = /^\s*([rnbqkpRNBQKP1-8]+\/){7}([rnbqkpRNBQKP1-8]+)\s[bw]\s(-|K?Q?k?q?)\s(-|[a-h‌​][36])/;
 const MOVE_REGEX = /^[a-h][1-8][a-h][1-8][bnrq]?$/;
 const JUST_PIECE = 0b1111110;
+const MOVE_BITS_EMPTY               = 0;
+const MOVE_BITS_CAPTURE             = 1;
+const MOVE_BITS_CASTLING            = 2;
+const MOVE_BITS_EN_PASSANT          = 4;
+const MOVE_BITS_PAWN                = 8;
+const MOVE_BITS_DOUBLE_PAWN         = 16;
+const MOVE_BITS_PROMOTION           = 32;
+const MOVE_BITS_PROMOTION_CAPTURE   = MOVE_BITS_PROMOTION | MOVE_BITS_CAPTURE;
 
 const PIECE_MAP = {
     p: 2,
@@ -118,10 +126,12 @@ CASTLING_MAP[144] = 142;
 CASTLING_MAP[140] = 142;
 
 var CASTLING_ROOK_MOVES = [];
-CASTLING_ROOK_MOVES[39] = 9768;
-CASTLING_ROOK_MOVES[35] = 9249;
-CASTLING_ROOK_MOVES[144] = 36753;
-CASTLING_ROOK_MOVES[140] = 36234;
+CASTLING_ROOK_MOVES[35] = 384; //utils.createMove(33, 36, MOVE_BITS_EMPTY);
+CASTLING_ROOK_MOVES[39] = 647; //utils.createMove(40, 38, MOVE_BITS_EMPTY);
+CASTLING_ROOK_MOVES[140] = 13929; //utils.createMove(138, 141, MOVE_BITS_EMPTY);
+CASTLING_ROOK_MOVES[144] = 14192; //utils.createMove(145, 143, MOVE_BITS_EMPTY);
+
+console.log('CASTLING ROOK MOVES', CASTLING_ROOK_MOVES);
 
 const PAWN_FIRST_RANK = [
     [48, 55],
@@ -132,15 +142,6 @@ const PAWN_LAST_RANK = [
     [138, 145],
     [33, 40]
 ];
-
-const MOVE_BITS_EMPTY               = 0;
-const MOVE_BITS_CAPTURE             = 1;
-const MOVE_BITS_CASTLING            = 2;
-const MOVE_BITS_EN_PASSANT          = 4;
-const MOVE_BITS_PAWN                = 8;
-const MOVE_BITS_DOUBLE_PAWN         = 16;
-const MOVE_BITS_PROMOTION           = 32;
-const MOVE_BITS_PROMOTION_CAPTURE   = MOVE_BITS_PROMOTION | MOVE_BITS_CAPTURE;
 
 module.exports = {
     WHITE,

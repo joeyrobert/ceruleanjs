@@ -53,7 +53,7 @@ module.exports = class Perft {
         for (var i = 0; i < moves.length; i++) {
             move = moves[i];
             if (board.addMove(move)) {
-                movePerfts.push([board.moveToString(move), this.perft(board, depth - 1)]);
+                movePerfts.push([utils.moveToString(move), this.perft(board, depth - 1)]);
                 board.subtractMove(move);
             }
         }
