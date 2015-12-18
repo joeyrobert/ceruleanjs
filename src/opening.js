@@ -27,7 +27,7 @@ module.exports = class Opening {
         var moveCount = 0;
 
         lines.forEach(line => {
-            var moveStrings = this.chunkString(line, 4);
+            var moveStrings = this.chunkString(line.trim(), 4);
 
             moveStrings.forEach(moveString => {
                 var moves = this.openingTable.get(this.board.loHash, this.board.hiHash) || [];
