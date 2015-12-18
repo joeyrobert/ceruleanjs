@@ -52,33 +52,31 @@ function moveToString(move) {
 }
 
 function createMove(from, to, bits, captured, promotion) {
-    var move =  (from - 33) + ((to - 33) << 7) + ((promotion >> 1) << 14) + (((captured >> 1) & 0b111111) << 20) + (bits << 26);
-    console.log(from, to, bits, captured, promotion, move);
-
-    if (!captured && moveCaptured(move) !== 128) {
-        debugger;
-    }
-    return move;
+    return  (from - 33) +
+            ((to - 33) << 7) +
+            (promotion >> 1 << 14) +
+            (captured >> 1 << 20) +
+            (bits >> 1 << 1);
 }
 
 function moveFrom(move) {
-    return (move & 0b1111111) + 33;
+    return  (move & 0b00000000000000000000000001111111) + 33;
 }
 
 function moveTo(move) {
-    return ((move >> 7) & 0b1111111) + 33;
+    return ((move & 0b00000000000000000011111110000000) >> 7) + 33;
 }
 
 function movePromotion(move) {
-    return ((move >> 14) << 1) & 0b1111111;
+    return ((move & 0b00000000000011111100000000000000) >> 13);
 }
 
 function moveCaptured(move) {
-    return (((move >> 20) & 0b1111111) << 1) || constants.PIECE_MAP.empty;
+    return ((move & 0b00000011111100000000000000000000) >> 19) || constants.PIECE_MAP.empty;
 }
 
 function moveBits(move) {
-    return move >> 26;
+    return   move & 0b11111100000000000000000000000000;
 }
 
 module.exports = {
