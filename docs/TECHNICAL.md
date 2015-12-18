@@ -47,6 +47,8 @@ property is defined as follows (influenced by TSCP):
 
 ## Zobrist hashing
 
+### Version 0.0.1 (Azure)
+
 JavaScript lacks a 64-bit integer type. It does contain a 64 bit floating
 point number, of which 53 bits can be used to precisely save an integer.
 Bitwise operations in JavaScript only work on 32-bit integers, meaning no XOR
@@ -74,3 +76,11 @@ This architecture was inspired by [this
 paragraph](https://chessprogramming.wikispaces.com/Zobrist+Hashing#Collisions-
 When you lack a true integer type) on zobrist keys in the Chess Programming
 Wiki.
+
+### Version 0.0.2 (Blizzard)
+
+CeruleanJS 0.0.2 uses 2 32-bit integers. The reasons for switching from 1
+64-bit floating point number are:
+
+* Integer operations remain
+* Improved resilience against collisions (One collision every ~2^32 vs. ~2^24 for float)

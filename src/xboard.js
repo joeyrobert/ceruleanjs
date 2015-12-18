@@ -6,13 +6,16 @@ const constants = require('./constants');
 const Board = require('./board');
 const evaluate = require('./evaluate');
 const iterativeDeepening = require('./iterative_deepening');
-const perft = require('./perft');
+const Opening = require('./opening');
+const Perft = require('./perft');
 const utils = require('./utils');
 const packageInfo = require('../package.json');
 
 class Xboard {
     constructor() {
         this.board = new Board();
+        this.opening = new Opening();
+        this.perft = new Perft();
         this.engineTime = 60*100;
         this.opponentTime = 60*100;
         this.xboardSet = false;
@@ -21,20 +24,16 @@ class Xboard {
             myname: `"CeruleanJS ${packageInfo.version} by ${packageInfo.author}"`,
             setboard: 1,
             memory: 0,
-            time: 1
+            time: 1,
+            usermove: 1
         };
-
-        var featureString = 'feature ' + Object.keys(this.features).map(name => {
-            return `${name}=${this.features[name]}`;
-        }).join(' ');
-        console.log(featureString);
 
         stdio.readByLines(line => {
             var parts = line.split(' ');
             var action = parts[0];
 
             if (constants.MOVE_REGEX.test(action)) {
-                this.move(action);
+                this.usermove(action);
             } else if (this[action]) {
                 this[action].call(this, parts.slice(1).join(' '));
             } else {
@@ -44,7 +43,7 @@ class Xboard {
     }
 
     result(hideDisplay) {
-        var perftScore = perft.perft(this.board, 1);
+        var perftScore = this.perft.perft(this.board, 1);
         var result = false;
 
         if (perftScore === 0) {
@@ -86,8 +85,9 @@ class Xboard {
             display += ` ${colors.bold(String.fromCharCode(96 + fileIndex))} `;
         }
 
-        display += '\n\nFEN:  ' + this.board.fen;
-        display += '\nHash: ' + this.board.hash;
+        display += '\n';
+        display += `\nFEN:  ${this.board.fen}`;
+        display += `\nHash: ${this.board.loHash.toString(16)} ${this.board.hiHash.toString(16)}`;
         // display += '\nPiece List: ' + JSON.stringify(this.board.pieces[0].indices);
         // display += '\nPiece List: ' + JSON.stringify(this.board.pieces[1].indices);
 
@@ -101,7 +101,7 @@ class Xboard {
         }
 
         var startTime = new Date();
-        var division = perft.divide(this.board, parseInt(depth, 10));
+        var division = this.perft.divide(this.board, parseInt(depth, 10));
         var total = division.reduce((memo, entry) => memo + entry[1], 0);
         var timeDiff = new Date() - startTime;
 
@@ -119,11 +119,21 @@ class Xboard {
             return;
         }
 
-        console.log(perft.perft(this.board, parseInt(depth, 10)));
+        var startTime = new Date();
+        var total = this.perft.perft(this.board, parseInt(depth, 10));
+        var timeDiff = new Date() - startTime;
+
+        console.log(`${total}\ntime ${timeDiff} ms\nfreq ${Math.floor(total / timeDiff * 1000)} Hz`);
+    }
+
+    perfthash(exponent) {
+        exponent = parseInt(exponent, 10) || 0;
+        this.perft.hashSize = exponent;
+        console.log(exponent ? `Perft hash size set to 2^${exponent} = ${(1 << exponent)}` : 'Perft hash table removed');
     }
 
     moves() {
-        console.log(this.board.movesString());
+        console.log(this.board.movesToShortString(this.board.generateLegalMoves()).join('\n'));
     }
 
     xboard() {
@@ -131,21 +141,19 @@ class Xboard {
         this.xboardSet = true;
     }
 
-    move(moveString) {
-        var moves = this.board.generateMoves();
-        var move = moves.filter(move => moveString === this.board.moveToString(move))[0];
-        var legalMove = false;
-        var result = false;
+    usermove(moveString) {
+        var legalMove = this.board.addMoveString(moveString);
 
-        if (move) {
-            legalMove = this.board.addMove(move);
-            result = this.result();
-        }
+        if (legalMove) {
+            var result = this.result();
 
-        if (!legalMove) {
+            if (result) {
+                console.log(result);
+            } else if (!this.forceSet) {
+                this.go();
+            }
+        } else {
             console.log('Illegal move:', moveString);
-        } else if (!this.forceSet && !result) {
-            this.go();
         }
     }
 
@@ -155,9 +163,17 @@ class Xboard {
 
     go() {
         this.forceSet = false;
-        var move = iterativeDeepening(this.board, this.engineTime);
-        this.board.addMove(move);
-        console.log(`move ${this.board.moveToString(move)}`);
+        var moveString = this.opening.lookupRandom(this.board.loHash, this.board.hiHash);
+
+        if (moveString) {
+            this.board.addMoveString(moveString);
+        } else {
+            var move = iterativeDeepening(this.board, this.engineTime);
+            this.board.addMove(move);
+            moveString = this.board.moveToString(move);
+        }
+
+        console.log(`move ${moveString}`);
         this.result();
     }
 
@@ -223,7 +239,9 @@ class Xboard {
     }
 
     protover(number) {
-
+        console.log(Object.keys(this.features).map(name => {
+            return `feature ${name}=${this.features[name]}`;
+        }).join('\n'));
     }
 
     accepted() {
@@ -245,6 +263,7 @@ Commands
 
 display         Draws the board
 perft [INT]     Perfts the current board to specified depth
+perfthash [INT] Sets perft hashtable exponent (size 2^exponent)
 divide [INT]    Divides the current board to specified depth
 moves           Lists valid moves for this position
 e2e4            Moves from the current position and thinks

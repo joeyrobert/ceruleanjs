@@ -3,15 +3,17 @@
 const expect = require('chai').expect;
 const fs = require('fs');
 const Board = require('../src/board');
-const perft = require('../src/perft').perft;
+const Perft = require('../src/perft');
 
 describe('perft', () => {
     let board;
+    let perft;
     let epd = fs.readFileSync('suites/epd/perftsuite-fast.epd', 'utf8');
     let perftTests = epd.split('\n').map(line => line.split(';'));
 
     beforeEach(() => {
         board = new Board();
+        perft = new Perft();
     });
 
     perftTests.forEach(perftTest => {
@@ -23,7 +25,7 @@ describe('perft', () => {
             let count = parseInt(parts[1], 10);
             it(`verify perft('${fen}', ${depth}) equals ${count}`, () => {
                 board.fen = fen;
-                expect(perft(board, depth)).to.equal(count);
+                expect(perft.perft(board, depth)).to.equal(count);
             });
         }
     });

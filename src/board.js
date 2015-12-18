@@ -21,7 +21,8 @@ module.exports = class Board {
         this.halfMoveClock = 0;
         this.fullMoveNumber = 1;
         this.kings = [];
-        this.hash = 0;
+        this.hiHash = 0;
+        this.loHash = 0;
 
         // Set legal board empty
         var rankIndex, fileIndex, index;
@@ -135,7 +136,7 @@ module.exports = class Board {
         this.enPassant = parts[3] === '-' ? null : utils.algebraicToIndex(parts[3]);
         this.halfMoveClock = parseInt(parts[4], 10);
         this.fullMoveNumber = parseInt(parts[5], 10);
-        this.hash = this.generateHash();
+        this.initialHash();
     }
 
     addPiece(rankIndex, fileIndex, piece, turn) {
@@ -154,10 +155,11 @@ module.exports = class Board {
         var bits = this.moveBits(move);
         var opponentTurn = (this.turn + 1) % 2;
         var castledThroughCheck = false;
-        this.history.push([move, this.board[to], this.enPassant, this.castling, this.hash]);
+        this.history.push([move, this.board[to], this.enPassant, this.castling, this.loHash, this.hiHash]);
 
         if (this.enPassant) {
-            this.hash -= zobrist.EN_PASSANT[this.enPassant];
+            this.loHash ^= zobrist.EN_PASSANT[this.enPassant][0];
+            this.hiHash ^= zobrist.EN_PASSANT[this.enPassant][1];
         }
         this.enPassant = null;
 
@@ -167,7 +169,8 @@ module.exports = class Board {
                 this.updateCastlingAndKings(from, to);
                 break;
             case constants.MOVE_BITS_CAPTURE:
-                this.hash -= zobrist.SQUARES[to][this.board[to]];
+                this.loHash ^= zobrist.SQUARES[to][this.board[to]][0];
+                this.hiHash ^= zobrist.SQUARES[to][this.board[to]][1];
                 this.pieces[opponentTurn].remove(to);
                 this.movePiece(from, to);
                 this.updateCastlingAndKings(from, to);
@@ -191,8 +194,9 @@ module.exports = class Board {
                 var pawnIncrement = this.turn ? -15 : 15;
                 var destroyedPawn = to + -1 * pawnIncrement;
                 this.pieces[opponentTurn].remove(destroyedPawn);
+                this.loHash ^= zobrist.SQUARES[destroyedPawn][this.board[destroyedPawn]][0];
+                this.hiHash ^= zobrist.SQUARES[destroyedPawn][this.board[destroyedPawn]][1];
                 this.board[destroyedPawn] = constants.PIECE_MAP.empty;
-                this.hash -= zobrist.SQUARES[destroyedPawn][this.board[destroyedPawn]];
                 break;
             case constants.MOVE_BITS_PAWN:
                 this.movePiece(from, to);
@@ -201,7 +205,8 @@ module.exports = class Board {
                 this.movePiece(from, to);
                 var pawnIncrement = this.turn ? -15 : 15;
                 this.enPassant = from + pawnIncrement;
-                this.hash += zobrist.EN_PASSANT[this.enPassant];
+                this.loHash ^= zobrist.EN_PASSANT[this.enPassant][0];
+                this.hiHash ^= zobrist.EN_PASSANT[this.enPassant][1];
                 break;
             case constants.MOVE_BITS_PROMOTION:
                 this.movePiece(from, to);
@@ -209,7 +214,8 @@ module.exports = class Board {
                 this.board[to] = promotion | this.turn;
                 break;
             case constants.MOVE_BITS_PROMOTION_CAPTURE:
-                this.hash -= zobrist.SQUARES[to][this.board[to]];
+                this.loHash ^= zobrist.SQUARES[to][this.board[to]][0];
+                this.hiHash ^= zobrist.SQUARES[to][this.board[to]][1];
                 this.pieces[opponentTurn].remove(to);
                 this.movePiece(from, to);
                 var promotion = this.movePromotion(move);
@@ -219,7 +225,8 @@ module.exports = class Board {
         }
 
         // Update turn
-        this.hash += zobrist.TURN * (opponentTurn ? 1 : -1);
+        this.loHash ^= zobrist.TURN[0];
+        this.hiHash ^= zobrist.TURN[1];
         var oldTurn = this.turn;
         this.turn = opponentTurn;
 
@@ -272,7 +279,8 @@ module.exports = class Board {
                 break;
         }
 
-        this.hash = history[4];
+        this.loHash = history[4];
+        this.hiHash = history[5];
     }
 
     updateCastlingAndKings(from, to) {
@@ -280,7 +288,8 @@ module.exports = class Board {
             var castlingInfo = constants.CASTLING_INFO[castlingIndex];
             if ((this.castling & castlingInfo[0]) && (from === castlingInfo[1] || to === castlingInfo[3] || from === castlingInfo[3])) {
                 this.castling -= castlingInfo[0];
-                this.hash -= zobrist.CASTLING[castlingIndex];
+                this.loHash ^= zobrist.CASTLING[castlingIndex][0];
+                this.hiHash ^= zobrist.CASTLING[castlingIndex][1];
             }
         }
 
@@ -290,12 +299,14 @@ module.exports = class Board {
     }
 
     movePiece(from, to) {
-        this.hash -= zobrist.SQUARES[from][this.board[from]];
+        this.loHash ^= zobrist.SQUARES[from][this.board[from]][0];
+        this.loHash ^= zobrist.SQUARES[from][this.board[from]][1];
         this.pieces[this.turn].remove(from);
         this.pieces[this.turn].push(to);
         this.board[to] = this.board[from];
         this.board[from] = constants.PIECE_MAP.empty;
-        this.hash += zobrist.SQUARES[to][this.board[to]];
+        this.loHash ^= zobrist.SQUARES[to][this.board[to]][0];
+        this.hiHash ^= zobrist.SQUARES[to][this.board[to]][1];
     }
 
     movePieceNoHash(from, to) {
@@ -380,9 +391,45 @@ module.exports = class Board {
         return moves;
     }
 
-    movesString() {
+    generateLegalMoves() {
         var moves = this.generateMoves();
-        return moves.map(move => this.moveToString(move)).join('\n');
+
+        return moves.filter(move => {
+            if (this.addMove(move)) {
+                this.subtractMove();
+                return true;
+            }
+
+            return false;
+        });
+    }
+
+    moveStringToMove(moveString) {
+        var moves = this.generateLegalMoves();
+        var move = moves.filter(move => moveString === this.moveToString(move))[0];
+        return move;
+    }
+
+    addMoveString(moveString) {
+        var move = this.moveStringToMove(moveString);
+        return move && this.addMove(move);
+    }
+
+    movesToShortString(moves) {
+        // Needs to have unique IDENTIFIER + TO
+        // If not unique, add FILE
+        // If still not unique, remove FILE add RANK
+        var longMoves = moves.map(move => {
+            var from = this.moveFrom(move);
+            var to = this.moveTo(move);
+            var bits = this.moveBits(move);
+            var capture = this.board[to] === constants.PIECE_MAP.empty ? '' : 'x';
+            var piece = (this.board[from] & constants.JUST_PIECE);
+            var identifier = piece === constants.PIECE_MAP.p ? '' : constants.INVERSE_PIECE_MAP[piece].toUpperCase();
+            return identifier + utils.indexToAlgebraic(from) + capture + utils.indexToAlgebraic(to);
+        });
+
+        return longMoves;
     }
 
     moveToString(move) {
@@ -587,36 +634,39 @@ module.exports = class Board {
         return this.isAttacked(this.kings[turn], (turn + 1) % 2);
     }
 
-    generateHash() {
-        var hash = 0;
+    initialHash() {
+        this.loHash = 0;
+        this.hiHash = 0;
         var rankIndex, fileIndex, index;
 
         for (rankIndex = 1; rankIndex <= 8; rankIndex++) {
             for (fileIndex = 1; fileIndex <= 8; fileIndex++) {
                 index = utils.rankFileToIndex(rankIndex, fileIndex);
                 if (this.board[index] !== constants.PIECE_MAP.empty) {
-                    hash += zobrist.SQUARES[index][this.board[index]];
+                    this.loHash ^= zobrist.SQUARES[index][this.board[index]][0];
+                    this.hiHash ^= zobrist.SQUARES[index][this.board[index]][1];
                 }
             }
         }
 
         if (this.enPassant) {
-            hash += zobrist.EN_PASSANT[this.enPassant];
+            this.loHash ^= zobrist.EN_PASSANT[this.enPassant][0];
+            this.hiHash ^= zobrist.EN_PASSANT[this.enPassant][1];
         }
 
         if (this.castling) {
             constants.CASTLING_INFO.forEach((castlingInfo, castlingIndex) => {
                 if (this.castling & constants.CASTLING_INFO[castlingIndex][0]) {
-                    hash += zobrist.CASTLING[castlingIndex];
+                    this.loHash ^= zobrist.CASTLING[castlingIndex][0];
+                    this.hiHash ^= zobrist.CASTLING[castlingIndex][1];
                 }
             });
         }
 
         if (this.turn) {
-            hash += zobrist.TURN;
+            this.loHash ^= zobrist.TURN[0];
+            this.hiHash ^= zobrist.TURN[1];
         }
-
-        return hash;
     }
 
     createMove(from, to, bits, promotion) {

@@ -7,11 +7,11 @@ var rankFileToIndex = (rankIndex, fileIndex) => rankIndex * 15 + fileIndex + 17;
 
 var generateZobristKeys = () => {
     var mt = new MersenneTwister(3141592654);
-    var fortyEightBitFloat = number => Math.floor(mt.rndHiRes() * Math.pow(2, 48));
+    var randomZobrist = () => mt.int();
     var SQUARES = [];
     var EN_PASSANT = [];
     var CASTLING = []
-    var TURN = fortyEightBitFloat();
+    var TURN = [randomZobrist(), randomZobrist()];
     var pieceKeys = ['p', 'n', 'b', 'r', 'q', 'k'];
     var rankIndex, fileIndex, index, turn, pieceIndex, pieceValue, castling;
 
@@ -27,16 +27,16 @@ var generateZobristKeys = () => {
                         SQUARES[index] = [];
                     }
 
-                    SQUARES[index][pieceValue | turn] = fortyEightBitFloat();
+                    SQUARES[index][pieceValue | turn] = [randomZobrist(), randomZobrist()];
                 }
             }
 
-            EN_PASSANT[index] = fortyEightBitFloat();
+            EN_PASSANT[index] = [randomZobrist(), randomZobrist()];
         }
     }
 
     for (castling = 0; castling < 4; castling++) {
-        CASTLING.push(fortyEightBitFloat());
+        CASTLING.push([randomZobrist(), randomZobrist()]);
     }
 
     return {

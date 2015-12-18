@@ -1,68 +1,55 @@
 'use strict';
 
 const HashTable = require('./hash_table');
-var perftTable = new HashTable(10);
 
-function perft(board, depth) {
-    if (depth === 0) {
-        return 1;
+module.exports = class Perft {
+    set hashSize(exponent) {
+        this.perftTable = exponent ? new HashTable(exponent) : undefined;
     }
 
-    var moves = board.generateMoves();
-    var total = 0;
-
-    for (var i = 0; i < moves.length; i++) {
-        if (board.addMove(moves[i])) {
-            total += perft(board, depth - 1);
-            board.subtractMove();
+    perft(board, depth) {
+        if (depth === 0) {
+            return 1;
         }
-    }
 
-    return total;
-}
+        if (this.perftTable) {
+            var savedPerft = this.perftTable.get(board.loHash, board.hiHash);
 
-function perftHashed(board, depth) {
-    if (depth === 0) {
-        return 1;
-    }
-
-    var savedPerft = perftTable.get(board.hash);
-
-    if (savedPerft && savedPerft[depth]) {
-        return savedPerft[depth];
-    }
-
-    var moves = board.generateMoves();
-    var total = 0;
-
-    for (var i = 0; i < moves.length; i++) {
-        if (board.addMove(moves[i])) {
-            total += perftHashed(board, depth - 1);
-            board.subtractMove();
+            if (savedPerft && savedPerft[depth]) {
+                return savedPerft[depth];
+            }
         }
-    }
 
-    perftTable.add(board.hash, depth, total);
+        var moves = board.generateMoves();
+        var total = 0;
 
-    return total;
-}
-
-function divide(board, depth) {
-    var moves = board.generateMoves();
-    var movePerfts = [];
-
-    for (var i = 0; i < moves.length; i++) {
-        if (board.addMove(moves[i])) {
-            movePerfts.push([board.moveToString(moves[i]), perft(board, depth - 1)]);
-            board.subtractMove();
+        for (var i = 0; i < moves.length; i++) {
+            if (board.addMove(moves[i])) {
+                total += this.perft(board, depth - 1);
+                board.subtractMove();
+            }
         }
+
+        if (this.perftTable) {
+            var value = this.perftTable.get(board.loHash, board.hiHash) || {};
+            value[depth] = total;
+            this.perftTable.set(board.loHash, board.hiHash, value);
+        }
+
+        return total;
     }
 
-    return movePerfts;
-}
+    divide(board, depth) {
+        var moves = board.generateMoves();
+        var movePerfts = [];
 
-module.exports = {
-    perft,
-    perftHashed,
-    divide
+        for (var i = 0; i < moves.length; i++) {
+            if (board.addMove(moves[i])) {
+                movePerfts.push([board.moveToString(moves[i]), this.perft(board, depth - 1)]);
+                board.subtractMove();
+            }
+        }
+
+        return movePerfts;
+    }
 };
