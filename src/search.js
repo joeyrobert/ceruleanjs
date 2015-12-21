@@ -38,12 +38,12 @@ function search(board, alpha, beta, depth) {
         move = moves[i];
         if (board.addMove(move)) {
             if (!alphaMove) {
-                score = -search(board, -beta, -alpha, depth - 1, moveHistory);
+                score = -search(board, -beta, -alpha, depth - 1);
             } else {
-                score = -search(board, -alpha - 1, -alpha, depth - 1, moveHistory);
+                score = -search(board, -alpha - 1, -alpha, depth - 1);
 
                 if (score > alpha) {
-                    score = -search(board, -beta, -alpha, depth - 1, moveHistory);
+                    score = -search(board, -beta, -alpha, depth - 1);
                 }
             }
 

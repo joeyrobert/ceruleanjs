@@ -120,7 +120,7 @@ function evaluate(board) {
         }
     }
 
-    return material + pieceMaps;
+    return (board.turn ? -1 : 1) * (material + pieceMaps);
 }
 
 function resetEvalCount() {
