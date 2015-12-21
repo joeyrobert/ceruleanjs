@@ -30,13 +30,23 @@ following functions:
 
 Moves are represented as a 32-bit integer with the following fields:
 
-    BITS     PROMO    TO       FROM
-    00000000 00000000 00000000 00000000
+    BITS   CAPTUR PROMO  TO      FROM
+    000000 000000 000000 0000000 0000000
     ^ MSB                         LSB ^
 
-TO/FROM are board indices, PROMO is the promotion piece type and BITS is
-metadata set by the move generate about what type of move this is. The BITS
-property is defined as follows (influenced by TSCP):
+This breaksdown to the following distribution:
+
+* 7 bits for FROM index
+* 7 bits for TO index
+* 6 bits for promotion piece (Q/R/B/N)
+* 6 bits for captured piece (any or empty)
+* 6 bits for bits!
+
+This dense move structure requires less data to be saved on the board's
+internal history array.
+
+BITS is metadata set by the move generate about what type of move this is. The
+BITS property is defined as follows (influenced by TSCP):
 
     1  capture            (000001)
     2  castling           (000010)
