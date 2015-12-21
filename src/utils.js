@@ -52,11 +52,11 @@ function moveToString(move) {
 }
 
 function createMove(from, to, bits, captured, promotion) {
-    return  (from - 33) +
-            ((to - 33) << 7) +
-            (promotion >> 1 << 14) +
-            (captured >> 1 << 20) +
-            (bits >> 1 << 1);
+    return (from - 33) +
+           ((to - 33) << 7) +
+           (promotion >> 1 << 14) +
+           ((captured % 128) >> 1 << 20) +
+           (bits >> 1 << 1);
 }
 
 function moveFrom(move) {
@@ -72,7 +72,7 @@ function movePromotion(move) {
 }
 
 function moveCaptured(move) {
-    return ((move & 0b00000011111100000000000000000000) >> 19) || constants.PIECE_MAP.empty;
+    return ((move & 0b00000011111100000000000000000000) >> 19) || constants.PIECE_EMPTY;
 }
 
 function moveBits(move) {
