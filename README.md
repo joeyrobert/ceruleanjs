@@ -1,4 +1,7 @@
 # CeruleanJS by Joey Robert
+
+JavaScript Chess Engine
+
                                  ___
                                 /\_ \
       ___     __   _ __   __  __\//\ \      __     __      ___
@@ -96,7 +99,7 @@ docs/TECHNICAL.md](docs/TECHNICAL.md)
 
 ## License
 
-CeruleanJS is licensed under the [GNU GPL v2](LICENSE).
+CeruleanJS is licensed under the [GNU GPL v3](LICENSE).
 
 ## Changelog
 
