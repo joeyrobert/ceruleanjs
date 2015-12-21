@@ -19,6 +19,7 @@ class Xboard {
         this.engineTime = 60*100;
         this.opponentTime = 60*100;
         this.xboardSet = false;
+        this.moves = [];
 
         this.features = {
             myname: `"CeruleanJS ${packageInfo.version} by ${packageInfo.author}"`,
@@ -145,6 +146,7 @@ class Xboard {
         var legalMove = this.board.addMoveString(moveString);
 
         if (legalMove) {
+            this.moves.push(legalMove);
             var result = this.result();
 
             if (result) {
@@ -164,21 +166,32 @@ class Xboard {
     go() {
         this.forceSet = false;
         var moveString = this.opening.lookupRandom(this.board.loHash, this.board.hiHash);
+        var move;
 
         if (moveString) {
-            this.board.addMoveString(moveString);
+            move = this.board.addMoveString(moveString);
         } else {
-            var move = iterativeDeepening(this.board, this.engineTime);
+            move = iterativeDeepening(this.board, this.engineTime);
             this.board.addMove(move);
-            moveString = this.board.moveToString(move);
+            moveString = utils.moveToString(move);
         }
+
+        this.moves.push(move);
 
         console.log(`move ${moveString}`);
         this.result();
     }
 
     undo() {
-        this.board.subtractMove();
+        var move = this.moves.pop();
+        if (move) {
+            this.board.subtractMove(move);
+        }
+    }
+
+    remove() {
+        this.undo();
+        this.undo();
     }
 
     new() {

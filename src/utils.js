@@ -1,5 +1,7 @@
 'use strict';
 
+const constants = require('./constants');
+
 function isNumeric(n) {
     return !isNaN(parseFloat(n)) && isFinite(n);
 }
@@ -44,6 +46,39 @@ function index64ToFile(index64) {
     return index64 % 8 + 1;
 }
 
+function moveToString(move) {
+    return indexToAlgebraic(moveFrom(move)) + indexToAlgebraic(moveTo(move)) +
+        (movePromotion(move) ? constants.INVERSE_PIECE_MAP[movePromotion(move)] : '');
+}
+
+function createMove(from, to, bits, captured, promotion) {
+    return (from - 33) +
+           ((to - 33) << 7) +
+           (promotion >> 1 << 14) +
+           ((captured % 128) >> 1 << 20) +
+           (bits >> 1 << 1);
+}
+
+function moveFrom(move) {
+    return  (move & 0b00000000000000000000000001111111) + 33;
+}
+
+function moveTo(move) {
+    return ((move & 0b00000000000000000011111110000000) >> 7) + 33;
+}
+
+function movePromotion(move) {
+    return ((move & 0b00000000000011111100000000000000) >> 13);
+}
+
+function moveCaptured(move) {
+    return ((move & 0b00000011111100000000000000000000) >> 19) || constants.PIECE_EMPTY;
+}
+
+function moveBits(move) {
+    return   move & 0b11111100000000000000000000000000;
+}
+
 module.exports = {
     isNumeric,
     rankFileToIndex,
@@ -53,5 +88,12 @@ module.exports = {
     indexToAlgebraic,
     index64ToIndex180,
     index64ToRank,
-    index64ToFile
+    index64ToFile,
+    moveToString,
+    createMove,
+    moveFrom,
+    moveTo,
+    movePromotion,
+    moveCaptured,
+    moveBits
 };

@@ -28,17 +28,21 @@ module.exports = class Opening {
 
         lines.forEach(line => {
             var moveStrings = this.chunkString(line.trim(), 4);
+            var moveInts = [];
 
             moveStrings.forEach(moveString => {
                 var moves = this.openingTable.get(this.board.loHash, this.board.hiHash) || [];
                 moves.push(moveString);
                 moves = moves.filter(this.onlyUnique);
                 this.openingTable.set(this.board.loHash, this.board.hiHash, moves);
-                this.board.addMoveString(moveString);
+                moveInts.push(this.board.addMoveString(moveString));
                 moveCount++;
             });
 
-            moveStrings.forEach(() => this.board.subtractMove());
+            moveStrings.forEach(() => {
+                this.board.subtractMove(moveInts.pop());
+                this.board.subtractHistory();
+            });
         });
     }
 

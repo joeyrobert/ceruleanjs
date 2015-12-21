@@ -15,15 +15,18 @@ function qsearch(board, alpha, beta) {
         alpha = standPat;
     }
 
-    var moves = board.generateCaptures();
+    var move, moves = board.generateCaptures();
+    board.addHistory();
 
     for (var i = 0; i < moves.length; i++) {
-        if (board.addMove(moves[i])) {
+        move = moves[i];
+        if (board.addMove(move)) {
 
             score = -qsearch(board, -beta, -alpha);
-            board.subtractMove();
+            board.subtractMove(move);
 
             if (score >= beta) {
+                board.subtractHistory();
                 return beta;
             }
 
@@ -32,6 +35,8 @@ function qsearch(board, alpha, beta) {
             }
         }
     }
+
+    board.subtractHistory();
     return alpha;
 }
 

@@ -19,7 +19,7 @@ function iterativeDeepening(board, totalTime) {
         if (utils.isNumeric(score)) {
             moveStrings = [];
             for (var i = depth; i >= 1; i--) {
-                moveStrings.push(board.moveToString(moveHistory[i]));
+                moveStrings.push(utils.moveToString(moveHistory[i]));
             }
 
             console.log(`${depth} ${score} ${Math.round(timeDiff / 10)} ${evaluate.getEvalCount()} ${moveStrings.join(' ')}`);
