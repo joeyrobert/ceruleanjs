@@ -168,7 +168,7 @@ module.exports = class Board {
         var from = utils.moveFrom(move);
         var to = utils.moveTo(move);
         var bits = utils.moveBits(move);
-        var opponentTurn = (this.turn + 1) % 2;
+        var opponentTurn = this.turn ^ 1;
         var castledThroughCheck = false;
 
         if (this.enPassant) {
@@ -259,7 +259,7 @@ module.exports = class Board {
         var bits = utils.moveBits(move);
         var captured = utils.moveCaptured(move);
         var opponentTurn = this.turn;
-        this.turn = (this.turn + 1) % 2;
+        this.turn = this.turn ^ 1;
         this.movePieceNoHash(to, from);
         this.board[to] = captured === constants.PIECE_EMPTY ? captured : (captured | opponentTurn);
         this.enPassant = this.currentHistory[0];
@@ -651,7 +651,7 @@ module.exports = class Board {
     }
 
     isInCheck(turn) {
-        return this.isAttacked(this.kings[turn], (turn + 1) % 2);
+        return this.isAttacked(this.kings[turn], turn ^ 1);
     }
 
     initialHash() {
