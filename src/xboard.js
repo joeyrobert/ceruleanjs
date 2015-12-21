@@ -183,7 +183,15 @@ class Xboard {
     }
 
     undo() {
-        this.board.subtractMove(this.moves.pop());
+        var move = this.moves.pop();
+        if (move) {
+            this.board.subtractMove(move);
+        }
+    }
+
+    remove() {
+        this.undo();
+        this.undo();
     }
 
     new() {
