@@ -12,7 +12,7 @@ module.exports = class Board {
     }
 
     emptyBoard() {
-        this.history = [];
+        this.resetHistory();
         this.pieces = [new PieceList(), new PieceList()];
         this.board = new Array(constants.WIDTH * constants.HEIGHT);
         this.castling = 0;
@@ -157,6 +157,11 @@ module.exports = class Board {
     subtractHistory() {
         this.history.pop();
         this.currentHistory = this.history[this.history.length - 1];
+    }
+
+    resetHistory() {
+        this.history = [];
+        this.currentHistory = undefined;
     }
 
     addMove(move) {
