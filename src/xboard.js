@@ -5,9 +5,9 @@ const colors = require('colors');
 const constants = require('./constants');
 const Board = require('./board');
 const evaluate = require('./evaluate');
-const iterativeDeepening = require('./iterative_deepening');
 const Opening = require('./opening');
 const Perft = require('./perft');
+const search = require('./search');
 const utils = require('./utils');
 const packageInfo = require('../package.json');
 
@@ -171,7 +171,7 @@ class Xboard {
         if (moveString) {
             move = this.board.addMoveString(moveString);
         } else {
-            move = iterativeDeepening(this.board, this.engineTime);
+            move = search.iterativeDeepening(this.board, this.engineTime);
             this.board.addMove(move);
             moveString = utils.moveToString(move);
         }

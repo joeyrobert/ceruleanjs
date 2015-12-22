@@ -2,16 +2,12 @@
 
 const qsearch = require('./qsearch');
 const evaluate = require('./evaluate');
+const utils = require('./utils');
 
-var startTime, totalTime;
+var startTime, totalTime, moveHistory;
 
-function setTimes(start, total) {
-    startTime = start;
-    totalTime = total;
-}
-
-function search(board, alpha, beta, depth, moveHistory) {
-    if (evaluate.getEvalCount() % 500 === 0) {
+function search(board, alpha, beta, depth) {
+    if (evaluate.getEvalCount() % 10000 === 0) {
         var timeDiff = new Date() - startTime;
 
         if (timeDiff >= totalTime) {
@@ -42,12 +38,12 @@ function search(board, alpha, beta, depth, moveHistory) {
         move = moves[i];
         if (board.addMove(move)) {
             if (!alphaMove) {
-                score = -search(board, -beta, -alpha, depth - 1, moveHistory);
+                score = -search(board, -beta, -alpha, depth - 1);
             } else {
-                score = -search(board, -alpha - 1, -alpha, depth - 1, moveHistory);
+                score = -search(board, -alpha - 1, -alpha, depth - 1);
 
                 if (score > alpha) {
-                    score = -search(board, -beta, -alpha, depth - 1, moveHistory);
+                    score = -search(board, -beta, -alpha, depth - 1);
                 }
             }
 
@@ -73,7 +69,36 @@ function search(board, alpha, beta, depth, moveHistory) {
     return alpha;
 }
 
+function iterativeDeepening(board, total) {
+    startTime = new Date();
+    totalTime = total;
+    var timeThreshold = totalTime / 4; // time threshold in ms
+    var timeDiff, moveStrings, score;
+
+    for (var depth = 1; ; depth++) {
+        moveHistory = [];
+        evaluate.resetEvalCount();
+        score = search(board, -Infinity, +Infinity, depth);
+        timeDiff = new Date() - startTime;
+
+        if (utils.isNumeric(score)) {
+            moveStrings = [];
+            for (var i = depth; i >= 1; i--) {
+                moveStrings.push(utils.moveToString(moveHistory[i]));
+            }
+
+            console.log(`${depth} ${score} ${Math.round(timeDiff / 10)} ${evaluate.getEvalCount()} ${moveStrings.join(' ')}`);
+        }
+
+        if (timeDiff >= timeThreshold) {
+            break;
+        }
+    }
+
+    return moveHistory[depth];
+}
+
 module.exports = {
-    setTimes,
-    search
+    search,
+    iterativeDeepening
 };
