@@ -1,6 +1,5 @@
 'use strict';
 
-const qsearch = require('./qsearch');
 const evaluate = require('./evaluate');
 const utils = require('./utils');
 
@@ -69,6 +68,51 @@ function search(board, alpha, beta, depth) {
     return alpha;
 }
 
+function qsearch(board, alpha, beta) {
+    if (evaluate.getEvalCount() % 10000 === 0) {
+        var timeDiff = new Date() - startTime;
+
+        if (timeDiff >= totalTime) {
+            return;
+        }
+    }
+
+    var standPat = evaluate.evaluate(board);
+    var score;
+
+    if (standPat >= beta) {
+        return beta;
+    }
+
+    if (alpha < standPat) {
+        alpha = standPat;
+    }
+
+    var move, moves = board.generateCaptures();
+    board.addHistory();
+
+    for (var i = 0; i < moves.length; i++) {
+        move = moves[i];
+
+        if (board.addMove(move)) {
+            score = -qsearch(board, -beta, -alpha);
+            board.subtractMove(move);
+
+            if (score >= beta) {
+                board.subtractHistory();
+                return beta;
+            }
+
+            if (score > alpha) {
+                alpha = score;
+            }
+        }
+    }
+
+    board.subtractHistory();
+    return alpha;
+}
+
 function iterativeDeepening(board, total) {
     startTime = new Date();
     totalTime = total;
@@ -99,6 +143,5 @@ function iterativeDeepening(board, total) {
 }
 
 module.exports = {
-    search,
     iterativeDeepening
 };
