@@ -614,24 +614,6 @@ module.exports = class Board {
             }
         }
 
-        // Sliding attacks
-        for (k = 0; k < 2; k++) {
-            deltas = constants.DELTA_MAP[k][0];
-            deltaPiece = constants.DELTA_MAP[k][1];
-
-            for (j = 0; j < 4; j++) {
-                newMove = index;
-                do {
-                    newMove += deltas[j];
-                    if (this.board[newMove] % 2 === turn &&
-                        ((this.board[newMove] & constants.JUST_PIECE) === deltaPiece ||
-                            (this.board[newMove] & constants.JUST_PIECE) === constants.PIECE_Q)) {
-                        return true;
-                    }
-                } while (this.board[newMove] === constants.PIECE_EMPTY);
-            }
-        }
-
         // Delta attacks
         for (k = 2; k < 4; k++) {
             deltas = constants.DELTA_MAP[k][0];
@@ -642,6 +624,26 @@ module.exports = class Board {
                 if (this.board[newMove] &&
                     this.board[newMove] % 2 === turn &&
                     (this.board[newMove] & constants.JUST_PIECE) === deltaPiece) {
+                    return true;
+                }
+            }
+        }
+
+        // Sliding attacks
+        for (k = 0; k < 2; k++) {
+            deltas = constants.DELTA_MAP[k][0];
+            deltaPiece = constants.DELTA_MAP[k][1];
+
+            for (j = 0; j < 4; j++) {
+                newMove = index + deltas[j];
+
+                while (this.board[newMove] && this.board[newMove] === constants.PIECE_EMPTY) {
+                    newMove += deltas[j];
+                }
+
+                if (this.board[newMove] % 2 === turn &&
+                    ((this.board[newMove] & constants.JUST_PIECE) === deltaPiece ||
+                        (this.board[newMove] & constants.JUST_PIECE) === constants.PIECE_Q)) {
                     return true;
                 }
             }
