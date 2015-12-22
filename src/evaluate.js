@@ -3,17 +3,23 @@
 const constants = require('./constants');
 const utils = require('./utils');
 
+/*
+ * Piece values
+ */
 var PIECE_VALUES = [];
-PIECE_VALUES[constants.PIECE_MAP.p] = 100;
-PIECE_VALUES[constants.PIECE_MAP.n] = 320;
-PIECE_VALUES[constants.PIECE_MAP.b] = 330;
-PIECE_VALUES[constants.PIECE_MAP.r] = 500;
-PIECE_VALUES[constants.PIECE_MAP.q] = 900;
-PIECE_VALUES[constants.PIECE_MAP.k] = 20000;
+PIECE_VALUES[constants.PIECE_P] = 100;
+PIECE_VALUES[constants.PIECE_N] = 320;
+PIECE_VALUES[constants.PIECE_B] = 330;
+PIECE_VALUES[constants.PIECE_R] = 500;
+PIECE_VALUES[constants.PIECE_Q] = 900;
+PIECE_VALUES[constants.PIECE_K] = 20000;
 
+/*
+ * Piece square tables
+ */
 var PIECE_SQUARE_TABLES = [];
 
-PIECE_SQUARE_TABLES[constants.PIECE_MAP.p] = [
+PIECE_SQUARE_TABLES[constants.PIECE_P] = [
      0,  0,  0,  0,  0,  0,  0,  0,
     50, 50, 50, 50, 50, 50, 50, 50,
     10, 10, 20, 30, 30, 20, 10, 10,
@@ -24,7 +30,7 @@ PIECE_SQUARE_TABLES[constants.PIECE_MAP.p] = [
      0,  0,  0,  0,  0,  0,  0,  0
 ];
 
-PIECE_SQUARE_TABLES[constants.PIECE_MAP.n] = [
+PIECE_SQUARE_TABLES[constants.PIECE_N] = [
     -50,-40,-30,-30,-30,-30,-40,-50,
     -40,-20,  0,  0,  0,  0,-20,-40,
     -30,  0, 10, 15, 15, 10,  0,-30,
@@ -35,7 +41,7 @@ PIECE_SQUARE_TABLES[constants.PIECE_MAP.n] = [
     -50,-40,-30,-30,-30,-30,-40,-50
 ];
 
-PIECE_SQUARE_TABLES[constants.PIECE_MAP.b] = [
+PIECE_SQUARE_TABLES[constants.PIECE_B] = [
     -20,-10,-10,-10,-10,-10,-10,-20,
     -10,  0,  0,  0,  0,  0,  0,-10,
     -10,  0,  5, 10, 10,  5,  0,-10,
@@ -46,7 +52,7 @@ PIECE_SQUARE_TABLES[constants.PIECE_MAP.b] = [
     -20,-10,-10,-10,-10,-10,-10,-20
 ];
 
-PIECE_SQUARE_TABLES[constants.PIECE_MAP.r] = [
+PIECE_SQUARE_TABLES[constants.PIECE_R] = [
       0,  0,  0,  0,  0,  0,  0,  0,
       5, 10, 10, 10, 10, 10, 10,  5,
      -5,  0,  0,  0,  0,  0,  0, -5,
@@ -57,7 +63,7 @@ PIECE_SQUARE_TABLES[constants.PIECE_MAP.r] = [
       0,  0,  0,  5,  5,  0,  0,  0
 ];
 
-PIECE_SQUARE_TABLES[constants.PIECE_MAP.q] = [
+PIECE_SQUARE_TABLES[constants.PIECE_Q] = [
     -20,-10,-10, -5, -5,-10,-10,-20,
     -10,  0,  0,  0,  0,  0,  0,-10,
     -10,  0,  5,  5,  5,  5,  0,-10,
@@ -68,7 +74,7 @@ PIECE_SQUARE_TABLES[constants.PIECE_MAP.q] = [
     -20,-10,-10, -5, -5,-10,-10,-20
 ];
 
-PIECE_SQUARE_TABLES[constants.PIECE_MAP.k] = [
+PIECE_SQUARE_TABLES[constants.PIECE_K] = [
     -30,-40,-40,-50,-50,-40,-40,-30,
     -30,-40,-40,-50,-50,-40,-40,-30,
     -30,-40,-40,-50,-50,-40,-40,-30,
@@ -79,7 +85,22 @@ PIECE_SQUARE_TABLES[constants.PIECE_MAP.k] = [
      20, 30, 10,  0,  0, 10, 30, 20
 ];
 
-var padIndices = pieceSquareTable => {
+// Map 64 arrays to 180 arrays
+var PADDED_PIECE_SQUARE_TABLES = [];
+Object.keys(PIECE_SQUARE_TABLES).forEach(piece => {
+    piece = parseInt(piece, 10);
+    PADDED_PIECE_SQUARE_TABLES[piece] = padIndices(PIECE_SQUARE_TABLES[piece]);
+});
+
+/*
+ * Penalties and rewards
+ */
+
+
+// Internal eval count
+var evalCount = 0;
+
+function padIndices(pieceSquareTable) {
     var paddedPieceSquareTable = [],
         paddedInvertedPieceSquareTable = [];
 
@@ -94,20 +115,12 @@ var padIndices = pieceSquareTable => {
     }
 
     return [paddedPieceSquareTable, paddedInvertedPieceSquareTable];
-};
-
-var PADDED_PIECE_SQUARE_TABLES = [];
-Object.keys(PIECE_SQUARE_TABLES).forEach(piece => {
-    piece = parseInt(piece, 10);
-    PADDED_PIECE_SQUARE_TABLES[piece] = padIndices(PIECE_SQUARE_TABLES[piece]);
-});
-
-var evalCount = 0;
+}
 
 function evaluate(board) {
     evalCount++;
     var i, index, pieces, piece, turn, turnCoefficient;
-    var material = 0, pieceMaps = 0;
+    var material = 0, pst = 0;
 
     for (turn = 0; turn < 2; turn++) {
         turnCoefficient = turn ? -1 : 1;
@@ -116,11 +129,13 @@ function evaluate(board) {
             index = pieces.indices[i];
             piece = board.board[index] & constants.JUST_PIECE;
             material += turnCoefficient * PIECE_VALUES[piece];
-            pieceMaps += turnCoefficient * PADDED_PIECE_SQUARE_TABLES[piece][turn][index];
+            pst += turnCoefficient * PADDED_PIECE_SQUARE_TABLES[piece][turn][index];
+
+
         }
     }
 
-    return (board.turn ? -1 : 1) * (material + pieceMaps);
+    return (board.turn ? -1 : 1) * (material + pst);
 }
 
 function resetEvalCount() {
