@@ -430,15 +430,13 @@ module.exports = class Board {
 
     addMoveString(moveString) {
         this.addHistory();
-
         var move = this.moveStringToMove(moveString);
-        var legalMove = this.addMove(move) && move;
 
-        if (!legalMove) {
+        if (move) {
+            return this.addMove(move) && move;
+        } else {
             this.subtractHistory();
         }
-
-        return legalMove;
     }
 
     movesToShortString(moves) {
