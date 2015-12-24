@@ -4,6 +4,7 @@ const constants = require('./constants');
 const utils = require('./utils');
 const zobrist = require('./zobrist');
 const PieceList = require('./piece_list');
+const see = require('./see');
 
 module.exports = class Board {
     constructor() {
@@ -380,26 +381,28 @@ module.exports = class Board {
 
             switch (piece) {
                 case constants.PIECE_P:
-                    this.pawnCaptures(index);
+                    this.pawnCaptures(moves, index);
                     break;
                 case constants.PIECE_N:
-                    this.deltaCaptures(constants.DELTA_KNIGHT, index);
+                    this.deltaCaptures(moves, constants.DELTA_KNIGHT, index);
                     break;
                 case constants.PIECE_B:
-                    this.slidingCaptures(constants.DELTA_BISHOP, index);
+                    this.slidingCaptures(moves, constants.DELTA_BISHOP, index);
                     break;
                 case constants.PIECE_R:
-                    this.slidingCaptures(constants.DELTA_ROOK, index);
+                    this.slidingCaptures(moves, constants.DELTA_ROOK, index);
                     break;
                 case constants.PIECE_Q:
-                    this.slidingCaptures(constants.DELTA_BISHOP, index);
-                    this.slidingCaptures(constants.DELTA_ROOK, index);
+                    this.slidingCaptures(moves, constants.DELTA_BISHOP, index);
+                    this.slidingCaptures(moves, constants.DELTA_ROOK, index);
                     break;
                 case constants.PIECE_K:
-                    this.deltaCaptures(constants.DELTA_KING, index);
+                    this.deltaCaptures(moves, constants.DELTA_KING, index);
                     break;
             }
         }
+
+        moves = moves.map(move => [see(this, move), move]).sort((moveArrA, moveArrB) => moveArrB[0] - moveArrA[0]).map(moveArr => moveArr[1]);
 
         return moves;
     }
