@@ -52,11 +52,19 @@ function moveToString(move) {
 }
 
 function createMove(from, to, bits, captured, promotion) {
-    return (from - 33) +
-           ((to - 33) << 7) +
-           (constants.PIECE_TO_LOG[promotion] << 14) +
-           (constants.PIECE_TO_LOG[(captured & constants.JUST_PIECE) || constants.PIECE_EMPTY] << 17) +
-           (bits >> 1 << 1);
+    var move =  (from - 33) +
+                ((to - 33) << 7) +
+                (bits >> 1 << 1);
+
+    if (promotion) {
+        move += constants.PIECE_TO_LOG[promotion] << 14;
+    }
+
+    if (captured) {
+        move += constants.PIECE_TO_LOG[(captured & constants.JUST_PIECE) || constants.PIECE_EMPTY] << 17;
+    }
+
+    return move;
 }
 
 function moveFrom(move) {
