@@ -119,7 +119,7 @@ function staticExchangeEvaluation(board, move) {
             hiddenDelta *= to < attackerPieceIndex ? 1 : -1;
             newMove = attackerPieceIndex + hiddenDelta;
 
-            // Add sliding (hdden) pieces
+            // Add sliding (hidden) pieces
             while (board.board[newMove] && board.board[newMove] === constants.PIECE_EMPTY) {
                 newMove += hiddenDelta;
             }

@@ -54,29 +54,35 @@ function moveToString(move) {
 function createMove(from, to, bits, captured, promotion) {
     return (from - 33) +
            ((to - 33) << 7) +
-           (promotion >> 1 << 14) +
-           ((captured % 128) >> 1 << 20) +
+           (constants.PIECE_TO_LOG[promotion] << 14) +
+           (constants.PIECE_TO_LOG[(captured & constants.JUST_PIECE) || constants.PIECE_EMPTY] << 17) +
            (bits >> 1 << 1);
 }
 
 function moveFrom(move) {
-    return  (move & 0b00000000000000000000000001111111) + 33;
+    return       (move & 0b00000000000000000000000001111111) + 33;
 }
 
 function moveTo(move) {
-    return ((move & 0b00000000000000000011111110000000) >> 7) + 33;
+    return      ((move & 0b00000000000000000011111110000000) >> 7) + 33;
 }
 
 function movePromotion(move) {
-    return ((move & 0b00000000000011111100000000000000) >> 13);
+    var power = ((move & 0b00000000000000011100000000000000) >> 14);
+    return power && (1 << power);
 }
 
 function moveCaptured(move) {
-    return ((move & 0b00000011111100000000000000000000) >> 19) || constants.PIECE_EMPTY;
+    var power = ((move & 0b00000000000011100000000000000000) >> 17);
+    return power ? (1 << power) : constants.PIECE_EMPTY;
 }
 
 function moveBits(move) {
-    return   move & 0b11111100000000000000000000000000;
+    return        move & 0b00000011111100000000000000000000;
+}
+
+function moveOrder(move) {
+    return        move & 0b11111100000000000000000000000000;
 }
 
 module.exports = {
