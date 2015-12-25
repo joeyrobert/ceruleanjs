@@ -402,7 +402,11 @@ module.exports = class Board {
             }
         }
 
-        moves = moves.map(move => [see(this, move), move]).sort((moveArrA, moveArrB) => moveArrB[0] - moveArrA[0]).map(moveArr => moveArr[1]);
+        for (var i = 0; i < moves.length; i++) {
+            moves[i] = utils.moveAddOrder(moves[i], see(this, moves[i]));
+        }
+
+        moves.sort().reverse();
 
         return moves;
     }

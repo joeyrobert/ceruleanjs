@@ -7,7 +7,7 @@ PIECE_VALUES[constants.PIECE_N] = 3;
 PIECE_VALUES[constants.PIECE_B] = 3;
 PIECE_VALUES[constants.PIECE_R] = 5;
 PIECE_VALUES[constants.PIECE_Q] = 9;
-PIECE_VALUES[constants.PIECE_K] = 100;
+PIECE_VALUES[constants.PIECE_K] = 50;
 
 var DELTA_BY_DIFFERENCE = [];
 
@@ -159,7 +159,7 @@ function staticExchangeEvaluation(board, move) {
         turnDifferential *= -1;
     }
 
-    return score;
+    return Math.max(score, 0);
 }
 
 module.exports = staticExchangeEvaluation;

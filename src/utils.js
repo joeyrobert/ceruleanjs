@@ -51,10 +51,10 @@ function moveToString(move) {
         (movePromotion(move) ? constants.INVERSE_PIECE_MAP[movePromotion(move)] : '');
 }
 
-function createMove(from, to, bits, captured, promotion) {
-    var move =  (from - 33) +
-                ((to - 33) << 7) +
-                (bits >> 1 << 1);
+function createMove(from, to, bits, captured, promotion, order) {
+    var move = (from - 33) +
+               ((to - 33) << 7) +
+               (bits >> 1 << 1);
 
     if (promotion) {
         move += constants.PIECE_TO_LOG[promotion] << 14;
@@ -62,6 +62,10 @@ function createMove(from, to, bits, captured, promotion) {
 
     if (captured) {
         move += constants.PIECE_TO_LOG[(captured & constants.JUST_PIECE) || constants.PIECE_EMPTY] << 17;
+    }
+
+    if (order) {
+        move += order << 26;
     }
 
     return move;
@@ -90,7 +94,11 @@ function moveBits(move) {
 }
 
 function moveOrder(move) {
-    return        move & 0b11111100000000000000000000000000;
+    return       (move & 0b11111100000000000000000000000000) >> 26;
+}
+
+function moveAddOrder(move, order) {
+    return move + (order << 26);
 }
 
 module.exports = {
@@ -109,5 +117,6 @@ module.exports = {
     moveTo,
     movePromotion,
     moveCaptured,
-    moveBits
+    moveBits,
+    moveAddOrder
 };

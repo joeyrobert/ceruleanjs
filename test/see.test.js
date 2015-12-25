@@ -33,7 +33,7 @@ describe('see', () => {
         board.fen = '1b5B/8/8/4p3/8/8/8/8 w - - 0 1';
         var move = board.moveStringToMove('h8e5');
         var score = see(board, move);
-        expect(score).to.equal(-2);
+        expect(score).to.equal(0);
     });
 
     it('should bishop exchange (1 difference)', () => {
@@ -47,7 +47,7 @@ describe('see', () => {
         board.fen = '4r3/8/8/r3b2R/8/8/8/4R3 w - - 0 1';
         var move = board.moveStringToMove('e1e5');
         var score = see(board, move);
-        expect(score).to.equal(-2);
+        expect(score).to.equal(0);
     });
 
     it('should rook exchange (3 difference)', () => {
@@ -68,7 +68,7 @@ describe('see', () => {
         board.fen = '8/3n4/8/4P3/8/5N2/8/8 b - - 0 1';
         var move = board.moveStringToMove('d7e5');
         var score = see(board, move);
-        expect(score).to.equal(-2);
+        expect(score).to.equal(0);
     });
 
     it('should pinned exchange (3 pawn difference)', () => {
