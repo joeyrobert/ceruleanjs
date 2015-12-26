@@ -5,7 +5,7 @@ const constants = require('./constants');
 
 var rankFileToIndex = (rankIndex, fileIndex) => rankIndex * 15 + fileIndex + 17;
 
-var generateZobristKeys = () => {
+function generateZobristKeys() {
     var mt = new MersenneTwister(3141592654);
     var randomZobrist = () => mt.int();
     var SQUARES = [];
@@ -45,6 +45,6 @@ var generateZobristKeys = () => {
         CASTLING,
         TURN
     };
-};
+}
 
 module.exports = generateZobristKeys();

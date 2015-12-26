@@ -14,13 +14,24 @@ module.exports = class Opening {
 
         var book;
 
-        try {
-            book = fs.readFileSync('./book.bok', 'utf-8');
-        } catch (err) {
-            try {
-                book = fs.readFileSync('./suites/bok/small.bok', 'utf-8');
-            } catch (err2) {
+        if (process.browser) {
+            // Synchronous HTTP request for book
+            var request = new XMLHttpRequest();
+            request.open('GET', 'book.bok', false);
+            request.send(null);
 
+            if (request.status === 200) {
+                book = request.responseText;
+            }
+        } else {
+            try {
+                book = fs.readFileSync('./book.bok', 'utf-8');
+            } catch (err) {
+                try {
+                    book = fs.readFileSync('./suites/bok/small.bok', 'utf-8');
+                } catch (err2) {
+
+                }
             }
         }
 

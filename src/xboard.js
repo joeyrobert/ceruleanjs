@@ -1,7 +1,7 @@
 'use strict';
 
-const stdio = require('stdio');
 const colors = require('colors');
+const stdio = require('stdio');
 const constants = require('./constants');
 const Board = require('./board');
 const evaluate = require('./evaluate');
@@ -21,7 +21,6 @@ class Xboard {
         this.opponentTime = 60*100;
         this.xboardSet = false;
         this.moves = [];
-
         this.features = {
             myname: `"CeruleanJS ${packageInfo.version} by ${packageInfo.author}"`,
             setboard: 1,
@@ -30,18 +29,29 @@ class Xboard {
             usermove: 1
         };
 
-        stdio.readByLines(line => {
-            var parts = line.split(' ');
-            var action = parts[0];
+        if (process.browser) {
+            onmessage = evt => this.sendLine(evt.data);
 
-            if (constants.MOVE_REGEX.test(action)) {
-                this.usermove(action);
-            } else if (this[action]) {
-                this[action].call(this, parts.slice(1).join(' '));
-            } else {
-                console.log('Error (invalid command):', line);
-            }
-        });
+            console.log = function () {
+                var args = Array.prototype.slice.call(arguments);
+                postMessage(args.join(' '));
+            };
+        } else {
+            stdio.readByLines(line => this.sendLine(line));
+        }
+    }
+
+    sendLine(line) {
+        var parts = line.split(' ');
+        var action = parts[0];
+
+        if (constants.MOVE_REGEX.test(action)) {
+            this.usermove(action);
+        } else if (this[action]) {
+            this[action].call(this, parts.slice(1).join(' '));
+        } else {
+            console.log('Error (invalid command):', line);
+        }
     }
 
     result(hideDisplay) {
@@ -64,6 +74,10 @@ class Xboard {
     }
 
     display() {
+        // Enable colors
+        colors.enabled = true;
+
+        // Build string buffer
         var display = '\n';
 
         for (var rankIndex = 8; rankIndex >= 1; rankIndex--) {
@@ -90,8 +104,6 @@ class Xboard {
         display += '\n';
         display += `\nFEN:  ${this.board.fen}`;
         display += `\nHash: ${this.board.loHash.toString(16)} ${this.board.hiHash.toString(16)}`;
-        // display += '\nPiece List: ' + JSON.stringify(this.board.pieces[0].indices);
-        // display += '\nPiece List: ' + JSON.stringify(this.board.pieces[1].indices);
 
         console.log(display);
     }
