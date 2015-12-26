@@ -446,23 +446,6 @@ module.exports = class Board {
         }
     }
 
-    movesToShortString(moves) {
-        // Needs to have unique IDENTIFIER + TO
-        // If not unique, add FILE
-        // If still not unique, remove FILE add RANK
-        var longMoves = moves.map(move => {
-            var from = utils.moveFrom(move);
-            var to = utils.moveTo(move);
-            var bits = utils.moveBits(move);
-            var capture = this.board[to] === constants.PIECE_EMPTY ? '' : 'x';
-            var piece = (this.board[from] & constants.JUST_PIECE);
-            var identifier = piece === constants.PIECE_P ? '' : constants.INVERSE_PIECE_MAP[piece].toUpperCase();
-            return identifier + utils.indexToAlgebraic(from) + capture + utils.indexToAlgebraic(to);
-        });
-
-        return longMoves;
-    }
-
     pawnMoves(moves, index) {
         var lastRank = constants.PAWN_LAST_RANK[this.turn];
         var firstRank = constants.PAWN_FIRST_RANK[this.turn]

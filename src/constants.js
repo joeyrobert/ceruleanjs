@@ -1,10 +1,5 @@
 'use strict';
 
-const os = require('os');
-
-/*
- * Constants
- */
 const WHITE                         = 0;
 const BLACK                         = 1;
 const WIDTH                         = 15;
@@ -49,7 +44,7 @@ const INVERSE_PIECE_MAP = {
     [PIECE_K]: 'k'
 };
 
-const PIECE_DISPLAY_MAP = os.platform() !== 'win32' ? {
+const PIECE_DISPLAY_MAP = process.platform !== 'win32' ? {
     [PIECE_P]:      '♟',
     [PIECE_N]:      '♞',
     [PIECE_B]:      '♝',

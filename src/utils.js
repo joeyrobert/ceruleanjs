@@ -51,6 +51,19 @@ function moveToString(move) {
         (movePromotion(move) ? constants.INVERSE_PIECE_MAP[movePromotion(move)] : '');
 }
 
+function moveToShortString(board, move) {
+    // Needs to have unique IDENTIFIER + TO
+    // If not unique, add FILE
+    // If still not unique, remove FILE add RANK
+    var from = moveFrom(move);
+    var to = moveTo(move);
+    var bits = moveBits(move);
+    var captured = moveCaptured(move) !== constants.PIECE_EMPTY ? 'x' : '';
+    var piece = (board.board[from] & constants.JUST_PIECE);
+    var identifier = piece === constants.PIECE_P ? '' : constants.INVERSE_PIECE_MAP[piece].toUpperCase();
+    return identifier + indexToAlgebraic(from) + captured + indexToAlgebraic(to);
+}
+
 function createMove(from, to, bits, captured, promotion, order) {
     var move = (from - 33) +
                ((to - 33) << 7) +
@@ -135,6 +148,7 @@ module.exports = {
     index64ToRank,
     index64ToFile,
     moveToString,
+    moveToShortString,
     createMove,
     moveFrom,
     moveTo,
