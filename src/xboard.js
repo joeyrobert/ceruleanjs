@@ -7,7 +7,7 @@ const Board = require('./board');
 const evaluate = require('./evaluate');
 const Opening = require('./opening');
 const Perft = require('./perft');
-const search = require('./search');
+const Search = require('./search');
 const utils = require('./utils');
 const packageInfo = require('../package.json');
 
@@ -16,6 +16,7 @@ class Xboard {
         this.board = new Board();
         this.opening = new Opening();
         this.perft = new Perft();
+        this.search = new Search();
         this.engineTime = 60*100;
         this.opponentTime = 60*100;
         this.xboardSet = false;
@@ -171,7 +172,7 @@ class Xboard {
         if (moveString) {
             move = this.board.addMoveString(moveString);
         } else {
-            move = search.iterativeDeepening(this.board, this.engineTime);
+            move = this.search.iterativeDeepening(this.board, this.engineTime);
             this.board.addMove(move);
             moveString = utils.moveToString(move);
         }

@@ -51,33 +51,78 @@ function moveToString(move) {
         (movePromotion(move) ? constants.INVERSE_PIECE_MAP[movePromotion(move)] : '');
 }
 
-function createMove(from, to, bits, captured, promotion) {
-    return (from - 33) +
-           ((to - 33) << 7) +
-           (promotion >> 1 << 14) +
-           ((captured % 128) >> 1 << 20) +
-           (bits >> 1 << 1);
+function createMove(from, to, bits, captured, promotion, order) {
+    var move = (from - 33) +
+               ((to - 33) << 7) +
+               (bits >> 1 << 1);
+
+    if (promotion) {
+        move += constants.PIECE_TO_LOG[promotion] << 14;
+    }
+
+    if (captured) {
+        move += constants.PIECE_TO_LOG[captured & constants.JUST_PIECE] << 17;
+    }
+
+    if (order) {
+        move += order << 26;
+    }
+
+    return move;
 }
 
 function moveFrom(move) {
-    return  (move & 0b00000000000000000000000001111111) + 33;
+    return       (move & 0b00000000000000000000000001111111) + 33;
 }
 
 function moveTo(move) {
-    return ((move & 0b00000000000000000011111110000000) >> 7) + 33;
+    return      ((move & 0b00000000000000000011111110000000) >> 7) + 33;
 }
 
 function movePromotion(move) {
-    return ((move & 0b00000000000011111100000000000000) >> 13);
+    var power = ((move & 0b00000000000000011100000000000000) >> 14);
+    return power && (1 << power);
 }
 
 function moveCaptured(move) {
-    return ((move & 0b00000011111100000000000000000000) >> 19) || constants.PIECE_EMPTY;
+    var power = ((move & 0b00000000000011100000000000000000) >> 17);
+    return power ? (1 << power) : constants.PIECE_EMPTY;
 }
 
 function moveBits(move) {
-    return   move & 0b11111100000000000000000000000000;
+    return        move & 0b00000011111100000000000000000000;
 }
+
+function moveOrder(move) {
+    return       (move & 0b11111100000000000000000000000000) >> 26;
+}
+
+function moveAddOrder(move, order) {
+    return move + (order << 26);
+}
+
+// Recursive quicksort, apparently faster than Array.prototype.sort()
+// See https://jsperf.com/javascript-sort/103
+function quickSort(arr) {
+    if (arr.length <= 1) {
+        return arr;
+    }
+
+    var pivot = arr.splice(Math.floor(arr.length / 2), 1)[0];
+    var left = [];
+    var right = [];
+
+    for (var i = 0; i < arr.length; i++) {
+        if (arr[i] > pivot) {
+            left.push(arr[i]);
+        } else {
+            right.push(arr[i]);
+        }
+    }
+
+    return quickSort(left).concat([pivot], quickSort(right));
+}
+
 
 module.exports = {
     isNumeric,
@@ -95,5 +140,7 @@ module.exports = {
     moveTo,
     movePromotion,
     moveCaptured,
-    moveBits
+    moveBits,
+    moveAddOrder,
+    quickSort
 };

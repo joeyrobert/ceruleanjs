@@ -4,6 +4,7 @@ const constants = require('./constants');
 const utils = require('./utils');
 const zobrist = require('./zobrist');
 const PieceList = require('./piece_list');
+const see = require('./see');
 
 module.exports = class Board {
     constructor() {
@@ -380,26 +381,32 @@ module.exports = class Board {
 
             switch (piece) {
                 case constants.PIECE_P:
-                    this.pawnCaptures(index);
+                    this.pawnCaptures(moves, index);
                     break;
                 case constants.PIECE_N:
-                    this.deltaCaptures(constants.DELTA_KNIGHT, index);
+                    this.deltaCaptures(moves, constants.DELTA_KNIGHT, index);
                     break;
                 case constants.PIECE_B:
-                    this.slidingCaptures(constants.DELTA_BISHOP, index);
+                    this.slidingCaptures(moves, constants.DELTA_BISHOP, index);
                     break;
                 case constants.PIECE_R:
-                    this.slidingCaptures(constants.DELTA_ROOK, index);
+                    this.slidingCaptures(moves, constants.DELTA_ROOK, index);
                     break;
                 case constants.PIECE_Q:
-                    this.slidingCaptures(constants.DELTA_BISHOP, index);
-                    this.slidingCaptures(constants.DELTA_ROOK, index);
+                    this.slidingCaptures(moves, constants.DELTA_BISHOP, index);
+                    this.slidingCaptures(moves, constants.DELTA_ROOK, index);
                     break;
                 case constants.PIECE_K:
-                    this.deltaCaptures(constants.DELTA_KING, index);
+                    this.deltaCaptures(moves, constants.DELTA_KING, index);
                     break;
             }
         }
+
+        for (var i = 0; i < moves.length; i++) {
+            moves[i] = utils.moveAddOrder(moves[i], see(this, moves[i]));
+        }
+
+        moves = utils.quickSort(moves);
 
         return moves;
     }
@@ -430,15 +437,13 @@ module.exports = class Board {
 
     addMoveString(moveString) {
         this.addHistory();
-
         var move = this.moveStringToMove(moveString);
-        var legalMove = this.addMove(move) && move;
 
-        if (!legalMove) {
+        if (move) {
+            return this.addMove(move) && move;
+        } else {
             this.subtractHistory();
         }
-
-        return legalMove;
     }
 
     movesToShortString(moves) {

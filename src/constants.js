@@ -10,12 +10,12 @@ const BLACK                         = 1;
 const WIDTH                         = 15;
 const HEIGHT                        = 12;
 const MOVE_BITS_EMPTY               = 0;
-const MOVE_BITS_CAPTURE             = 1 << 26;
-const MOVE_BITS_CASTLING            = 1 << 27;
-const MOVE_BITS_EN_PASSANT          = 1 << 28;
-const MOVE_BITS_PAWN                = 1 << 29;
-const MOVE_BITS_DOUBLE_PAWN         = 1 << 30;
-const MOVE_BITS_PROMOTION           = 1 << 31;
+const MOVE_BITS_CAPTURE             = 1 << 20;
+const MOVE_BITS_CASTLING            = 1 << 21;
+const MOVE_BITS_EN_PASSANT          = 1 << 22;
+const MOVE_BITS_PAWN                = 1 << 23;
+const MOVE_BITS_DOUBLE_PAWN         = 1 << 24;
+const MOVE_BITS_PROMOTION           = 1 << 25;
 const MOVE_BITS_PROMOTION_CAPTURE   = MOVE_BITS_PROMOTION | MOVE_BITS_CAPTURE;
 const JUST_PIECE                    = 0b1111110;
 const PIECE_P                       = 0b00000010;
@@ -66,6 +66,15 @@ const PIECE_DISPLAY_MAP = os.platform() !== 'win32' ? {
     [PIECE_K]:      'k',
     [PIECE_EMPTY]:  ' '
 };
+
+var PIECE_TO_LOG = [];
+PIECE_TO_LOG[PIECE_P]       = 1;
+PIECE_TO_LOG[PIECE_N]       = 2;
+PIECE_TO_LOG[PIECE_B]       = 3;
+PIECE_TO_LOG[PIECE_R]       = 4;
+PIECE_TO_LOG[PIECE_Q]       = 5;
+PIECE_TO_LOG[PIECE_K]       = 6;
+PIECE_TO_LOG[PIECE_EMPTY]   = 7;
 
 const DELTA_KNIGHT = [
     -31,
@@ -146,6 +155,8 @@ const PAWN_LAST_RANK = [
     [33, 40]
 ];
 
+const SEARCH_LIMIT_CHECK = 20000;
+
 const FEN_BOARD_REGEX = /^\s*([rnbqkpRNBQKP1-8]+\/){7}([rnbqkpRNBQKP1-8]+)\s[bw]\s(-|K?Q?k?q?)\s(-|[a-h‌​][36])/;
 const MOVE_REGEX = /^[a-h][1-8][a-h][1-8][bnrq]?$/;
 
@@ -177,6 +188,7 @@ module.exports = {
     PIECE_MAP,
     INVERSE_PIECE_MAP,
     PIECE_DISPLAY_MAP,
+    PIECE_TO_LOG,
     DELTA_KNIGHT,
     DELTA_KING,
     DELTA_BISHOP,
@@ -188,6 +200,7 @@ module.exports = {
     CASTLING_ROOK_MOVES,
     PAWN_FIRST_RANK,
     PAWN_LAST_RANK,
+    SEARCH_LIMIT_CHECK,
     FEN_BOARD_REGEX,
     MOVE_REGEX
 };

@@ -5,7 +5,7 @@ const fs = require('fs');
 const Board = require('../src/board');
 const utils = require('../src/utils');
 
-describe('utils', () => {
+describe('move', () => {
     let board;
     let epd = fs.readFileSync('suites/epd/perftsuite.epd', 'utf8');
     let fens = epd.split('\n').map(line => line.split(';')[0].trim());
@@ -26,7 +26,7 @@ describe('utils', () => {
                 let captured = utils.moveCaptured(move);
                 let promotion = utils.movePromotion(move);
                 let newMove = utils.createMove(from, to, bits, captured, promotion);
-                expect(move).to.equal(newMove);
+                expect(newMove.toString(2)).to.equal(move.toString(2));
             });
         });
     });
