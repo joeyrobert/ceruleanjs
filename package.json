@@ -8,7 +8,6 @@
   "dependencies": {
     "colors": "^1.1.2",
     "mersennetwister": "^0.2.2",
-    "nexe": "^0.4.2",
     "stdio": "^0.2.7"
   },
   "engines": {
@@ -16,7 +15,8 @@
   },
   "devDependencies": {
     "chai": "^3.4.1",
-    "mocha": "^2.3.4"
+    "mocha": "^2.3.4",
+    "nexe": "^0.4.2"
   },
   "repository": {
     "type": "git",
@@ -26,8 +26,8 @@
     "ceruleanjs": "./src/xboard.js"
   },
   "scripts": {
-    "build": "nexe -i src/xboard.js -o ./dist/ceruleanjs -r 4.2.3",
+    "build": "copy /Y suites\\bok\\small.bok dist && nexe -i ./src/xboard.js -o ./dist/ceruleanjs.exe -r 4.2.4",
     "test": "mocha --no-timeouts",
-    "start": "node src/xboard.js"
+    "start": "node ./src/xboard.js"
   }
 }
