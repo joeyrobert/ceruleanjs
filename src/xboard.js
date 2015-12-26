@@ -20,7 +20,7 @@ class Xboard {
         this.engineTime = 60*100;
         this.opponentTime = 60*100;
         this.xboardSet = false;
-        this.moves = [];
+        this.moveHistory = [];
         this.features = {
             myname: `"CeruleanJS ${packageInfo.version} by ${packageInfo.author}"`,
             setboard: 1,
@@ -159,7 +159,7 @@ class Xboard {
         var legalMove = this.board.addMoveString(moveString);
 
         if (legalMove) {
-            this.moves.push(legalMove);
+            this.moveHistory.push(legalMove);
             var result = this.result();
 
             if (result) {
@@ -189,14 +189,14 @@ class Xboard {
             moveString = utils.moveToString(move);
         }
 
-        this.moves.push(move);
+        this.moveHistory.push(move);
 
         console.log(`move ${moveString}`);
         this.result();
     }
 
     undo() {
-        var move = this.moves.pop();
+        var move = this.moveHistory.pop();
         if (move) {
             this.board.subtractMove(move);
         }
