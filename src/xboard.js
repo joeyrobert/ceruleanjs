@@ -147,7 +147,7 @@ class Xboard {
     }
 
     moves() {
-        console.log(this.board.movesToShortString(this.board.generateLegalMoves()).join('\n'));
+        console.log(this.board.generateLegalMoves().map(move => utils.moveToString(this.board, move)).join('\n'));
     }
 
     xboard() {
