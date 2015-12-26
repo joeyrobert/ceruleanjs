@@ -18,7 +18,7 @@ module.exports = class Search {
         if (evaluate.getEvalCount() % constants.SEARCH_LIMIT_CHECK === 0) {
             var timeDiff = new Date() - this.startTime;
 
-            if (timeDiff >= this.totalTime) {
+            if (timeDiff >= this.timeThreshold) {
                 return;
             }
         }
@@ -82,7 +82,7 @@ module.exports = class Search {
         if (evaluate.getEvalCount() % constants.SEARCH_LIMIT_CHECK === 0) {
             var timeDiff = new Date() - this.startTime;
 
-            if (timeDiff >= this.totalTime) {
+            if (timeDiff >= this.timeThreshold) {
                 return;
             }
         }
@@ -126,7 +126,7 @@ module.exports = class Search {
     iterativeDeepening(board, total) {
         this.startTime = new Date();
         this.totalTime = total;
-        var timeThreshold = this.totalTime / 4; // time threshold in ms
+        this.timeThreshold = this.totalTime / 4; // time threshold in ms
         var timeDiff, moveStrings, score;
 
         for (var depth = 1; ; depth++) {
@@ -144,7 +144,7 @@ module.exports = class Search {
                 console.log(`${depth} ${score} ${Math.round(timeDiff / 10)} ${evaluate.getEvalCount()} ${moveStrings.join(' ')}`);
             }
 
-            if (timeDiff >= timeThreshold) {
+            if (timeDiff >= this.timeThreshold) {
                 break;
             }
         }
