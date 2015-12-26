@@ -15,7 +15,11 @@ The board representation is visualized below:
 
 ![CeruleanJS Board](board.gif)
 
-An interactive form of this visualization is available in board.ods.
+An interactive form of this visualization is available in board.ods. Every
+legal position on the board is _truthy_ in JavaScript. Positions outside the
+legal board (8x8) are `undefined`. This is the sentinal value that tells us
+when a square is within the bounds of the board, as in the
+[Mailbox](http://chessprogramming.wikispaces.com/Mailbox) board representation.
 
 ### Conversion
 
@@ -26,24 +30,43 @@ following functions:
     rank = floor(index / 15 - 1)
     file - (index - 3) % 15 + 1
 
+## Piece representation
+
+Pieces are represented as follows:
+
+    Pawn   00000010 (2^1)
+    Knight 00000100 (2^2)
+    Bishop 00001000 (2^3)
+    Rook   00010000 (2^4)
+    Queen  00100000 (2^5)
+    King   01000000 (2^6)
+    Empty  10000000 (2^7)
+
+The turn of the piece is represented as the least significant bit, 1 for
+black, 0 for white.
+
 ## Move representation
 
 Moves are represented as a 32-bit integer with the following fields:
 
-    BITS   CAPTUR PROMO  TO      FROM
-    000000 000000 000000 0000000 0000000
+    ORDER  BITS   CAP PRO TO      FROM
+    000000 000000 000 000 0000000 0000000
     ^ MSB                         LSB ^
 
 This breaksdown to the following distribution:
 
 * 7 bits for FROM index
 * 7 bits for TO index
-* 6 bits for promotion piece (Q/R/B/N)
-* 6 bits for captured piece (any or empty)
-* 6 bits for bits!
+* 3 bits for PROmotion piece (Q/R/B/N)
+* 3 bits for CAPtured piece (any or empty)
+* 6 bits for BITS (metadata)
+* 6 bits for ORDERing
 
 This dense move structure requires less data to be saved on the board's
 internal history array.
+
+For captured and promotion pieces, the number represents the base-2 logarithm
+of the piece type.
 
 BITS is metadata set by the move generate about what type of move this is. The
 BITS property is defined as follows (influenced by TSCP):
@@ -92,5 +115,13 @@ Wiki.
 CeruleanJS 0.0.2 uses 2 32-bit integers. The reasons for switching from 1
 64-bit floating point number are:
 
-* Integer operations remain
+* Integer XOR operations prove to be faster than floating point addition/subtraction
 * Improved resilience against collisions (One collision every ~2^32 vs. ~2^24 for float)
+
+## Move ordering
+
+Move ordering is done using Static Exchange Evaluation (SEE), inspired by
+[Mediocre's guide on the subject](http://mediocrechess.sourceforge.net/guides/see.html).
+This is done on the `qsearch()` only to order capture moves. The primary
+alpha-beta search uses iterative-deepening to put the best move from the
+previous iteration first.

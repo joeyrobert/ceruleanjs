@@ -1,7 +1,7 @@
 {
   "name": "ceruleanjs",
   "version": "0.0.1",
-  "description": "",
+  "description": "JavaScript Chess Engine",
   "main": "src/interface.js",
   "author": "joeyrobert <joey@joeyrobert.org>",
   "license": "GPL-3.0",
