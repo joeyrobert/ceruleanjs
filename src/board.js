@@ -406,7 +406,7 @@ module.exports = class Board {
             moves[i] = utils.moveAddOrder(moves[i], see(this, moves[i]));
         }
 
-        moves.sort().reverse();
+        moves = utils.quickSort(moves);
 
         return moves;
     }

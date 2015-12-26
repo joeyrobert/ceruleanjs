@@ -61,7 +61,7 @@ function createMove(from, to, bits, captured, promotion, order) {
     }
 
     if (captured) {
-        move += constants.PIECE_TO_LOG[(captured & constants.JUST_PIECE) || constants.PIECE_EMPTY] << 17;
+        move += constants.PIECE_TO_LOG[captured & constants.JUST_PIECE] << 17;
     }
 
     if (order) {
@@ -101,6 +101,29 @@ function moveAddOrder(move, order) {
     return move + (order << 26);
 }
 
+// Recursive quicksort, apparently faster than Array.prototype.sort()
+// See https://jsperf.com/javascript-sort/103
+function quickSort(arr) {
+    if (arr.length <= 1) {
+        return arr;
+    }
+
+    var pivot = arr.splice(Math.floor(arr.length / 2), 1)[0];
+    var left = [];
+    var right = [];
+
+    for (var i = 0; i < arr.length; i++) {
+        if (arr[i] > pivot) {
+            left.push(arr[i]);
+        } else {
+            right.push(arr[i]);
+        }
+    }
+
+    return quickSort(left).concat([pivot], quickSort(right));
+}
+
+
 module.exports = {
     isNumeric,
     rankFileToIndex,
@@ -118,5 +141,6 @@ module.exports = {
     movePromotion,
     moveCaptured,
     moveBits,
-    moveAddOrder
+    moveAddOrder,
+    quickSort
 };
