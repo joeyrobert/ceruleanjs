@@ -15,10 +15,10 @@ module.exports = class Opening {
         var book;
 
         try {
-            book = fs.readFileSync('./suites/bok/small.bok', 'utf-8');
+            book = fs.readFileSync('./book.bok', 'utf-8');
         } catch (err) {
             try {
-                book = fs.readFileSync('./small.bok', 'utf-8');
+                book = fs.readFileSync('./suites/bok/small.bok', 'utf-8');
             } catch (err2) {
 
             }
