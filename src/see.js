@@ -102,7 +102,7 @@ function staticExchangeEvaluation(board, move) {
     var turnDifferential = -1;
     var attackersCount = [0, 0];
     var lowestValue, lowestValueIndex;
-    var tempSwap;
+    var swap;
     var attackerPieceIndex = from;
     var attackerPiece = board.board[attackerPieceIndex] & constants.JUST_PIECE;
     var attackerPieceValue = PIECE_VALUES[attackerPiece]
@@ -143,9 +143,9 @@ function staticExchangeEvaluation(board, move) {
 
         // Swap
         if (lowestValueIndex !== attackersCount[turnToMove]) {
-            tempSwap = attackers[turnToMove][lowestValueIndex];
+            swap = attackers[turnToMove][lowestValueIndex];
             attackers[turnToMove][lowestValueIndex] = attackers[turnToMove][attackersCount[turnToMove]];
-            attackers[turnToMove][attackersCount[turnToMove]] = tempSwap;
+            attackers[turnToMove][attackersCount[turnToMove]] = swap;
         }
 
         // New attacked value

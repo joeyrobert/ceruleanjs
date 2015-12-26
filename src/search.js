@@ -1,147 +1,154 @@
 'use strict';
 
+const constants = require('./constants');
 const evaluate = require('./evaluate');
+const HashTable = require('./hash_table');
 const utils = require('./utils');
 
-var startTime, totalTime, moveHistory;
+module.exports = class Search {
+    constructor() {
+        this.hashSize = 22; // default size 2^22 ~ 32M entries
+    }
 
-function search(board, alpha, beta, depth) {
-    if (evaluate.getEvalCount() % 10000 === 0) {
-        var timeDiff = new Date() - startTime;
+    set hashSize(exponent) {
+        this.searchTable = exponent ? new HashTable(exponent) : undefined;
+    }
 
-        if (timeDiff >= totalTime) {
-            return;
+    search(board, alpha, beta, depth) {
+        if (evaluate.getEvalCount() % constants.SEARCH_LIMIT_CHECK === 0) {
+            var timeDiff = new Date() - this.startTime;
+
+            if (timeDiff >= this.totalTime) {
+                return;
+            }
         }
-    }
 
-    if (depth === 0) {
-        return qsearch(board, alpha, beta);
-    }
-
-    var score, alphaMove, searchResult;
-    var move, moves = board.generateMoves();
-    board.addHistory();
-
-    // Move ordering
-    if (moveHistory.length) {
-        var movesIndex = moves.indexOf(moveHistory[moveHistory.length - 1]);
-
-        if (movesIndex > 0) {
-            var swap = moves[0]
-            moves[0] = moves[movesIndex];
-            moves[movesIndex] = swap;
+        if (depth === 0) {
+            return this.qsearch(board, alpha, beta);
         }
-    }
 
-    for (var i = 0; i < moves.length; i++) {
-        move = moves[i];
-        if (board.addMove(move)) {
-            if (!alphaMove) {
-                score = -search(board, -beta, -alpha, depth - 1);
-            } else {
-                score = -search(board, -alpha - 1, -alpha, depth - 1);
+        var score, alphaMove, searchResult;
+        var move, moves = board.generateMoves();
+        board.addHistory();
+
+        // Put last best PV move first
+        if (this.moveHistory.length) {
+            var movesIndex = moves.indexOf(this.moveHistory[this.moveHistory.length - 1]);
+
+            if (movesIndex > 0) {
+                var swap = moves[0]
+                moves[0] = moves[movesIndex];
+                moves[movesIndex] = swap;
+            }
+        }
+
+        for (var i = 0; i < moves.length; i++) {
+            move = moves[i];
+            if (board.addMove(move)) {
+                if (!alphaMove) {
+                    score = -this.search(board, -beta, -alpha, depth - 1);
+                } else {
+                    score = -this.search(board, -alpha - 1, -alpha, depth - 1);
+
+                    if (score > alpha) {
+                        score = -this.search(board, -beta, -alpha, depth - 1);
+                    }
+                }
+
+                board.subtractMove(move);
+
+                if (score >= beta) {
+                    board.subtractHistory();
+                    return beta;
+                }
 
                 if (score > alpha) {
-                    score = -search(board, -beta, -alpha, depth - 1);
+                    alpha = score;
+                    alphaMove = move;
                 }
             }
-
-            board.subtractMove(move);
-
-            if (score >= beta) {
-                board.subtractHistory();
-                return beta;
-            }
-
-            if (score > alpha) {
-                alpha = score;
-                alphaMove = move;
-            }
-        }
-    }
-
-    if (alphaMove) {
-        moveHistory[depth] = alphaMove;
-    }
-
-    board.subtractHistory();
-    return alpha;
-}
-
-function qsearch(board, alpha, beta) {
-    if (evaluate.getEvalCount() % 10000 === 0) {
-        var timeDiff = new Date() - startTime;
-
-        if (timeDiff >= totalTime) {
-            return;
-        }
-    }
-
-    var standPat = evaluate.evaluate(board);
-    var score;
-
-    if (standPat >= beta) {
-        return beta;
-    }
-
-    if (alpha < standPat) {
-        alpha = standPat;
-    }
-
-    var move, moves = board.generateCaptures();
-    board.addHistory();
-
-    for (var i = 0; i < moves.length; i++) {
-        move = moves[i];
-
-        if (board.addMove(move)) {
-            score = -qsearch(board, -beta, -alpha);
-            board.subtractMove(move);
-
-            if (score >= beta) {
-                board.subtractHistory();
-                return beta;
-            }
-
-            if (score > alpha) {
-                alpha = score;
-            }
-        }
-    }
-
-    board.subtractHistory();
-    return alpha;
-}
-
-function iterativeDeepening(board, total) {
-    startTime = new Date();
-    totalTime = total;
-    var timeThreshold = totalTime / 4; // time threshold in ms
-    var timeDiff, moveStrings, score;
-
-    for (var depth = 1; ; depth++) {
-        moveHistory = [];
-        evaluate.resetEvalCount();
-        score = search(board, -Infinity, +Infinity, depth);
-        timeDiff = new Date() - startTime;
-
-        if (utils.isNumeric(score)) {
-            moveStrings = [];
-            for (var i = depth; i >= 1; i--) {
-                moveStrings.push(utils.moveToString(moveHistory[i]));
-            }
-
-            console.log(`${depth} ${score} ${Math.round(timeDiff / 10)} ${evaluate.getEvalCount()} ${moveStrings.join(' ')}`);
         }
 
-        if (timeDiff >= timeThreshold) {
-            break;
+        if (alphaMove) {
+            this.moveHistory[depth] = alphaMove;
         }
+
+        board.subtractHistory();
+
+        return alpha;
     }
 
-    return moveHistory[depth];
-}
+    qsearch(board, alpha, beta) {
+        if (evaluate.getEvalCount() % constants.SEARCH_LIMIT_CHECK === 0) {
+            var timeDiff = new Date() - this.startTime;
 
-module.exports = {
-    iterativeDeepening
+            if (timeDiff >= this.totalTime) {
+                return;
+            }
+        }
+
+        var standPat = evaluate.evaluate(board);
+        var score;
+
+        if (standPat >= beta) {
+            return beta;
+        }
+
+        if (alpha < standPat) {
+            alpha = standPat;
+        }
+
+        var move, moves = board.generateCaptures();
+        board.addHistory();
+
+        for (var i = 0; i < moves.length; i++) {
+            move = moves[i];
+
+            if (board.addMove(move)) {
+                score = -this.qsearch(board, -beta, -alpha);
+                board.subtractMove(move);
+
+                if (score >= beta) {
+                    board.subtractHistory();
+                    return beta;
+                }
+
+                if (score > alpha) {
+                    alpha = score;
+                }
+            }
+        }
+
+        board.subtractHistory();
+        return alpha;
+    }
+
+    iterativeDeepening(board, total) {
+        this.startTime = new Date();
+        this.totalTime = total;
+        var timeThreshold = this.totalTime / 4; // time threshold in ms
+        var timeDiff, moveStrings, score;
+
+        for (var depth = 1; ; depth++) {
+            this.moveHistory = [];
+            evaluate.resetEvalCount();
+            score = this.search(board, -Infinity, +Infinity, depth);
+            timeDiff = new Date() - this.startTime;
+
+            if (utils.isNumeric(score)) {
+                moveStrings = [];
+                for (var i = depth; i >= 1; i--) {
+                    moveStrings.push(utils.moveToString(this.moveHistory[i]));
+                }
+
+                console.log(`${depth} ${score} ${Math.round(timeDiff / 10)} ${evaluate.getEvalCount()} ${moveStrings.join(' ')}`);
+            }
+
+            if (timeDiff >= timeThreshold) {
+                break;
+            }
+        }
+
+        return this.moveHistory[depth];
+    }
 };
