@@ -121,7 +121,19 @@ CeruleanJS 0.0.2 uses 2 32-bit integers. The reasons for switching from 1
 ## Move ordering
 
 Move ordering is done using Static Exchange Evaluation (SEE), inspired by
-[Mediocre's guide on the subject](http://mediocrechess.sourceforge.net/guides/see.html).
-This is done on the `qsearch()` only to order capture moves. The primary
-alpha-beta search uses iterative-deepening to put the best move from the
-previous iteration first.
+[Mediocre's guide](http://mediocrechess.sourceforge.net/guides/see.html) on
+the subject. This is done on the `qsearch()` only to order capture moves. The
+primary alpha-beta search uses iterative-deepening to put the best move from
+the previous iteration first.
+
+## Opening book
+
+CeruleanJS uses the [Amundsen](http://www.bergbomconsulting.se/chess/) opening
+book format and is distributed with a small opening book. An opening book
+transposition table is used to select moves. Moves are chosen randomly if
+there are multiple moves for a certain board position. This allows
+CeruleanJS's gameplay to be non-deterministic.
+
+CeruleanJS looks in `./book.bok` and `./suites/bok/small.bok` (in that order)
+for the opening book. Reading a large opening book may be prohibitively slow
+at startup.

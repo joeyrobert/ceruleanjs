@@ -10,9 +10,23 @@ module.exports = class Opening {
     constructor() {
         this.board = new Board();
         this.openingTable = new HashTable(14);
-        // this.addPgn(fs.readFileSync('./suites/pgn/adams.pgn', 'utf-8'));
-        this.addBok(fs.readFileSync('./suites/bok/small.bok', 'utf-8'));
         this.mt = new MersenneTwister();
+
+        var book;
+
+        try {
+            book = fs.readFileSync('./book.bok', 'utf-8');
+        } catch (err) {
+            try {
+                book = fs.readFileSync('./suites/bok/small.bok', 'utf-8');
+            } catch (err2) {
+
+            }
+        }
+
+        if (book) {
+            this.addBok(book);
+        }
     }
 
     addPgn(pgnText) {
