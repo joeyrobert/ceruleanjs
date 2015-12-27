@@ -65,53 +65,53 @@ function moveToShortString(board, move) {
 }
 
 function createMove(from, to, bits, captured, promotion, order) {
-    var move = (from - 33) +
-               ((to - 33) << 7) +
+    var move = (from - constants.MOVE_INDEX_OFFSET) +
+               ((to - constants.MOVE_INDEX_OFFSET) << constants.MOVE_TO_SHIFT) +
                (bits >> 1 << 1);
 
     if (promotion) {
-        move += constants.PIECE_TO_LOG[promotion] << 14;
+        move += constants.PIECE_TO_LOG[promotion] << constants.MOVE_PROMOTION_SHIFT;
     }
 
     if (captured) {
-        move += constants.PIECE_TO_LOG[captured & constants.JUST_PIECE] << 17;
+        move += constants.PIECE_TO_LOG[captured & constants.JUST_PIECE] << constants.MOVE_CAPTURED_SHIFT;
     }
 
     if (order) {
-        move += order << 26;
+        move += order << constants.MOVE_ORDER_SHIFT;
     }
 
     return move;
 }
 
 function moveFrom(move) {
-    return       (move & 0b00000000000000000000000001111111) + 33;
+    return (move & constants.MOVE_FROM_MASK) + constants.MOVE_INDEX_OFFSET;
 }
 
 function moveTo(move) {
-    return      ((move & 0b00000000000000000011111110000000) >> 7) + 33;
+    return ((move & constants.MOVE_TO_MASK) >> constants.MOVE_TO_SHIFT) + constants.MOVE_INDEX_OFFSET;
 }
 
 function movePromotion(move) {
-    var power = ((move & 0b00000000000000011100000000000000) >> 14);
+    var power = ((move & constants.MOVE_PROMOTION_MASK) >> constants.MOVE_PROMOTION_SHIFT);
     return power && (1 << power);
 }
 
 function moveCaptured(move) {
-    var power = ((move & 0b00000000000011100000000000000000) >> 17);
+    var power = ((move & constants.MOVE_CAPTURED_MASK) >> constants.MOVE_CAPTURED_SHIFT);
     return power ? (1 << power) : constants.PIECE_EMPTY;
 }
 
 function moveBits(move) {
-    return        move & 0b00000011111100000000000000000000;
+    return move & constants.MOVE_BITS_MASK;
 }
 
 function moveOrder(move) {
-    return       (move & 0b11111100000000000000000000000000) >> 26;
+    return (move & constants.MOVE_ORDER_MASK) >> constants.MOVE_ORDER_SHIFT;
 }
 
 function moveAddOrder(move, order) {
-    return move + (order << 26);
+    return move + (order << constants.MOVE_ORDER_SHIFT);
 }
 
 // Recursive quicksort, apparently faster than Array.prototype.sort()
