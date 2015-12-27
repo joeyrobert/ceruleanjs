@@ -54,11 +54,19 @@ To run mocha tests:
 
     npm test
 
-To generate a binary executable for your current platform (using nexe), run:
+To generate a Windows binary executable using nexe, run:
 
-    npm run build
+    npm run build-windows
 
-This will generate a binary executable `ceruleanjs` in `dist`.
+This requires Microsoft Visual Studio 2015 to be installed. It will generate
+`ceruleanjs.exe` and `book.bok` in `dist`.
+
+To generate a web build, run:
+
+    npm run build-web
+
+This will generate a babelify'd ES5 version of CeruleanJS that is compatible with most
+modern day web browsers that support [Web Workers](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers). This build is used in the [CeruleanJS Player](https://bitbucket.org/joeyrobert/ceruleanjs-player).
 
 ## Interface
 
@@ -67,7 +75,7 @@ interfaces or other chess engines. It's also usable directly through
 STDIN/OUT. Here's the list of commands:
 
     Commands
-    --------
+
     display         Draws the board
     perft [INT]     Perfts the current board to specified depth
     divide [INT]    Divides the current board to specified depth
