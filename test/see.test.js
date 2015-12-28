@@ -84,4 +84,11 @@ describe('see', () => {
         var score = see(board, move);
         expect(score).to.equal(9);
     });
+
+    it('should reward queen promotion (9 pawn difference)', () => {
+        board.fen = '7k/4P3/8/8/8/8/8/7K w - - 0 1';
+        var move = board.moveStringToMove('e7e8q');
+        var score = see(board, move);
+        expect(score).to.equal(9);
+    });
 });

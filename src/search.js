@@ -14,26 +14,52 @@ module.exports = class Search {
         this.searchTable = exponent ? new HashTable(exponent) : undefined;
     }
 
-    search(board, alpha, beta, depth) {
-        if (evaluate.getEvalCount() % constants.SEARCH_LIMIT_CHECK === 0) {
-            var timeDiff = new Date() - this.startTime;
+    minimax(board, depth) {
+        if (depth === 0) {
+            return evaluate.evaluate(board);
+        }
 
-            if (timeDiff >= this.timeThreshold) {
-                return;
+        var max = -Infinity, score, bestMove;
+        var move, moves = board.generateMoves();
+        board.addHistory();
+
+        for (var i = 0; i < moves.length; i++) {
+            move = moves[i];
+
+            if (board.addMove(move)) {
+                score = -this.minimax(board, depth - 1);
+
+                if (score > max) {
+                    max = score;
+                    this.pv[this.ply][depth] = move;
+                }
+
+                board.subtractMove(move);
             }
+        }
+
+        board.subtractHistory();
+
+        return max;
+    }
+
+    search(board, alpha, beta, depth) {
+        if (evaluate.getEvalCount() % constants.SEARCH_LIMIT_CHECK === 0 && this.isTimeUp()) {
+            this.endedEarly = true;
+            return;
         }
 
         if (depth === 0) {
             return this.qsearch(board, alpha, beta);
         }
 
-        var score, alphaMove, searchResult;
+        var score;
         var move, moves = board.generateMoves();
         board.addHistory();
 
         // Put last best PV move first
-        if (this.moveHistory.length) {
-            var movesIndex = moves.indexOf(this.moveHistory[this.moveHistory.length - 1]);
+        if (this.pv[this.ply].length) {
+            var movesIndex = moves.indexOf(this.pv[this.ply - 1][this.ply - 1]);
 
             if (movesIndex > 0) {
                 var swap = moves[0]
@@ -42,8 +68,12 @@ module.exports = class Search {
             }
         }
 
+        // PVS search
+        var alphaMove;
+
         for (var i = 0; i < moves.length; i++) {
             move = moves[i];
+
             if (board.addMove(move)) {
                 if (!alphaMove) {
                     score = -this.search(board, -beta, -alpha, depth - 1);
@@ -55,6 +85,7 @@ module.exports = class Search {
                     }
                 }
 
+
                 board.subtractMove(move);
 
                 if (score >= beta) {
@@ -64,13 +95,14 @@ module.exports = class Search {
 
                 if (score > alpha) {
                     alpha = score;
+                    this.pv[this.ply][depth] = move;
                     alphaMove = move;
                 }
             }
         }
 
         if (alphaMove) {
-            this.moveHistory[depth] = alphaMove;
+            this.pv[this.ply][depth] = alphaMove;
         }
 
         board.subtractHistory();
@@ -79,16 +111,12 @@ module.exports = class Search {
     }
 
     qsearch(board, alpha, beta) {
-        if (evaluate.getEvalCount() % constants.SEARCH_LIMIT_CHECK === 0) {
-            var timeDiff = new Date() - this.startTime;
-
-            if (timeDiff >= this.timeThreshold) {
-                return;
-            }
+        if (evaluate.getEvalCount() % constants.SEARCH_LIMIT_CHECK === 0 && this.isTimeUp()) {
+            this.endedEarly = true;
+            return;
         }
 
         var standPat = evaluate.evaluate(board);
-        var score;
 
         if (standPat >= beta) {
             return beta;
@@ -98,7 +126,9 @@ module.exports = class Search {
             alpha = standPat;
         }
 
-        var move, moves = board.generateCaptures();
+        var score;
+        var move, moves = board.generateCapturesAndPromotions();
+        moves = utils.quickSort(moves);
         board.addHistory();
 
         for (var i = 0; i < moves.length; i++) {
@@ -126,29 +156,45 @@ module.exports = class Search {
     iterativeDeepening(board, total) {
         this.startTime = new Date();
         this.totalTime = total;
-        this.timeThreshold = this.totalTime / 4; // time threshold in ms
-        var timeDiff, moveStrings, score;
+        this.timeThreshold = (this.totalTime * 10) / 60; // 40 moves in time
+        this.ply = 1;
+        this.endedEarly = false;
+        this.pv = [];
+        var moveStrings, score;
 
         for (var depth = 1; ; depth++) {
-            this.moveHistory = [];
+            this.ply = depth;
+            this.pv[this.ply] = [];
             evaluate.resetEvalCount();
             score = this.search(board, -Infinity, +Infinity, depth);
-            timeDiff = new Date() - this.startTime;
+            //score = this.minimax(board, depth);
 
             if (utils.isNumeric(score)) {
                 moveStrings = [];
-                for (var i = depth; i >= 1; i--) {
-                    moveStrings.push(utils.moveToString(this.moveHistory[i]));
+                for (var i = depth; i > 0; i--) {
+                    moveStrings.push(utils.moveToString(this.pv[this.ply][i]));
                 }
 
-                console.log(`${depth} ${score} ${Math.round(timeDiff / 10)} ${evaluate.getEvalCount()} ${moveStrings.join(' ')}`);
+                console.log(`${depth} ${score} ${Math.round(this.timeDiff() / 10)} ${evaluate.getEvalCount()} ${moveStrings.join(' ')}`);
             }
 
-            if (timeDiff >= this.timeThreshold) {
+            if (this.isTimeUp()) {
                 break;
             }
         }
 
-        return this.moveHistory[depth];
+        if (this.endedEarly) {
+            this.ply--;
+        }
+
+        return this.pv[this.ply][this.ply];
+    }
+
+    isTimeUp() {
+        return this.timeDiff() >= this.timeThreshold;
+    }
+
+    timeDiff() {
+        return new Date() - this.startTime;
     }
 };

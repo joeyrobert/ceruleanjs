@@ -45,16 +45,21 @@ module.exports = class Perft {
         return total;
     }
 
-    divide(board, depth) {
+    divide(board, depth, display) {
         var move, moves = board.generateMoves();
-        var movePerfts = [];
+        var movePerft, movePerfts = [];
 
         board.addHistory();
+
 
         for (var i = 0; i < moves.length; i++) {
             move = moves[i];
             if (board.addMove(move)) {
-                movePerfts.push([utils.moveToString(move), this.perft(board, depth - 1)]);
+                movePerft = [utils.moveToString(move), this.perft(board, depth - 1)]
+                if (display) {
+                    console.log(movePerft.join(' '));
+                }
+                movePerfts.push(movePerft);
                 board.subtractMove(move);
             }
         }

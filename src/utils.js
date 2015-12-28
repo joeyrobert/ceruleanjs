@@ -7,15 +7,15 @@ function isNumeric(n) {
 }
 
 function rankFileToIndex(rankIndex, fileIndex) {
-    return rankIndex * 15 + fileIndex + 17;
+    return (rankIndex + 1) * 15 + fileIndex + 18;
 }
 
 function indexToRank(index) {
-    return Math.floor(index / 15 - 1);
+    return ((index / 15) >> 0) - 2;
 }
 
 function indexToFile(index) {
-    return (index - 3) % 15 + 1;
+    return (index - 3) % 15;
 }
 
 function algebraicToIndex(algebraic) {
@@ -26,8 +26,8 @@ function algebraicToIndex(algebraic) {
 }
 
 function indexToAlgebraic(index) {
-    var fileIndex = indexToFile(index);
-    var rankIndex = indexToRank(index);
+    var fileIndex = indexToFile(index) + 1;
+    var rankIndex = indexToRank(index) + 1;
     return String.fromCharCode(96 + fileIndex) + rankIndex;
 }
 
@@ -39,11 +39,11 @@ function index64ToIndex180(index64) {
 }
 
 function index64ToRank(index64) {
-    return Math.floor(index64 / 8) + 1;
+    return (index64 / 8) >> 0;
 }
 
 function index64ToFile(index64) {
-    return index64 % 8 + 1;
+    return index64 % 8;
 }
 
 function moveToString(move) {
@@ -121,7 +121,7 @@ function quickSort(arr) {
         return arr;
     }
 
-    var pivot = arr.splice(Math.floor(arr.length / 2), 1)[0];
+    var pivot = arr.splice(((arr.length / 2) >> 0), 1)[0];
     var left = [];
     var right = [];
 
@@ -134,6 +134,28 @@ function quickSort(arr) {
     }
 
     return quickSort(left).concat([pivot], quickSort(right));
+}
+
+function padIndices(pieceSquareTable) {
+    var paddedPieceSquareTables = [
+        new Int32Array(constants.WIDTH * constants.HEIGHT),
+        new Int32Array(constants.WIDTH * constants.HEIGHT)
+    ];
+
+    paddedPieceSquareTables[0].fill(0);
+    paddedPieceSquareTables[1].fill(0);
+
+    for (var index64 = 0; index64 < 64; index64++) {
+        var rank = index64ToRank(index64);
+        var file = index64ToFile(index64);
+        var index180 = rankFileToIndex(rank, file);
+        var invertedIndex180 = rankFileToIndex(7 - rank, file);
+
+        paddedPieceSquareTables[0][index180] = pieceSquareTable[index64];
+        paddedPieceSquareTables[1][invertedIndex180] = pieceSquareTable[index64];
+    }
+
+    return paddedPieceSquareTables;
 }
 
 
@@ -156,5 +178,6 @@ module.exports = {
     moveCaptured,
     moveBits,
     moveAddOrder,
-    quickSort
+    quickSort,
+    padIndices
 };
