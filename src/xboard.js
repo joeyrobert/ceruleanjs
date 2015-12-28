@@ -199,6 +199,7 @@ class Xboard {
         var move = this.moveHistory.pop();
         if (move) {
             this.board.subtractMove(move);
+            this.board.subtractHistory();
         }
     }
 
