@@ -13,15 +13,15 @@ const packageInfo = require('../package.json');
 
 class Xboard {
     constructor() {
-        this.board = new Board();
-        this.opening = new Opening();
-        this.perft = new Perft();
-        this.search = new Search();
-        this.engineTime = 60*100;
-        this.opponentTime = 60*100;
-        this.xboardSet = false;
-        this.moveHistory = [];
-        this.features = {
+        this._board = new Board();
+        this._opening = new Opening();
+        this._perft = new Perft();
+        this._search = new Search();
+        this._engineTime = 60*100;
+        this._opponentTime = 60*100;
+        this._xboardSet = false;
+        this._moveHistory = [];
+        this._features = {
             myname: `"CeruleanJS ${packageInfo.version} by ${packageInfo.author}"`,
             setboard: 1,
             memory: 0,
@@ -30,18 +30,18 @@ class Xboard {
         };
 
         if (process.browser) {
-            onmessage = evt => this.sendLine(evt.data);
+            onmessage = evt => this._sendLine(evt.data);
 
             console.log = function () {
                 var args = Array.prototype.slice.call(arguments);
                 postMessage(args.join(' '));
             };
         } else {
-            stdio.readByLines(line => this.sendLine(line));
+            stdio.readByLines(line => this._sendLine(line));
         }
     }
 
-    sendLine(line) {
+    _sendLine(line) {
         var parts = line.split(' ');
         var action = parts[0];
 
@@ -55,12 +55,12 @@ class Xboard {
     }
 
     result(hideDisplay) {
-        var perftScore = this.perft.perft(this.board, 1);
+        var perftScore = this._perft.perft(this._board, 1);
         var result = false;
 
         if (perftScore === 0) {
-            if (this.board.isInCheck(this.board.turn)) {
-                result = this.board.turn ? '1-0' : '0-1';
+            if (this._board.isInCheck(this._board.turn)) {
+                result = this._board.turn ? '1-0' : '0-1';
             } else {
                 result = '1/2-1/2';
             }
@@ -85,9 +85,9 @@ class Xboard {
 
             for (var fileIndex = 1; fileIndex <= 8; fileIndex++) {
                 var index = utils.rankFileToIndex(rankIndex, fileIndex);
-                var turn = this.board.board[index] % 2;
+                var turn = this._board.board[index] % 2;
                 var square = index % 2 === 0;
-                var value = ` ${constants.PIECE_DISPLAY_MAP[this.board.board[index] - turn]} `;
+                var value = ` ${constants.PIECE_DISPLAY_MAP[this._board.board[index] - turn]} `;
                 value = colors[square ? 'bgGreen' : 'bgYellow'](value);
                 value = colors[turn === constants.WHITE ? 'white' : 'black'](value);
                 display += value;
@@ -102,8 +102,8 @@ class Xboard {
         }
 
         display += '\n';
-        display += `\nFEN:  ${this.board.fen}`;
-        display += `\nHash: ${this.board.loHash.toString(16)} ${this.board.hiHash.toString(16)}`;
+        display += `\nFEN:  ${this._board.fen}`;
+        display += `\nHash: ${this._board.loHash.toString(16)} ${this._board.hiHash.toString(16)}`;
 
         console.log(display);
     }
@@ -115,7 +115,7 @@ class Xboard {
         }
 
         var startTime = new Date();
-        var division = this.perft.divide(this.board, parseInt(depth, 10));
+        var division = this._perft.divide(this._board, parseInt(depth, 10));
         var total = division.reduce((memo, entry) => memo + entry[1], 0);
         var timeDiff = new Date() - startTime;
 
@@ -124,7 +124,7 @@ class Xboard {
     }
 
     evaluate() {
-        console.log(evaluate.evaluate(this.board));
+        console.log(evaluate.evaluate(this._board));
     }
 
     perft(depth) {
@@ -134,7 +134,7 @@ class Xboard {
         }
 
         var startTime = new Date();
-        var total = this.perft.perft(this.board, parseInt(depth, 10));
+        var total = this._perft.perft(this._board, parseInt(depth, 10));
         var timeDiff = new Date() - startTime;
 
         console.log(`${total}\ntime ${timeDiff} ms\nfreq ${Math.floor(total / timeDiff * 1000)} Hz`);
@@ -142,24 +142,24 @@ class Xboard {
 
     perfthash(exponent) {
         exponent = parseInt(exponent, 10) || 0;
-        this.perft.hashSize = exponent;
+        this._perft.hashSize = exponent;
         console.log(exponent ? `Perft hash size set to 2^${exponent} = ${(1 << exponent)}` : 'Perft hash table removed');
     }
 
     moves() {
-        console.log(this.board.generateLegalMoves().map(move => utils.moveToString(this.board, move)).join('\n'));
+        console.log(this._board.generateLegalMoves().map(move => utils.moveToString(this._board, move)).join('\n'));
     }
 
     xboard() {
         console.log('');
-        this.xboardSet = true;
+        this._xboardSet = true;
     }
 
     usermove(moveString) {
-        var legalMove = this.board.addMoveString(moveString);
+        var legalMove = this._board.addMoveString(moveString);
 
         if (legalMove) {
-            this.moveHistory.push(legalMove);
+            this._moveHistory.push(legalMove);
             var result = this.result();
 
             if (result) {
@@ -178,28 +178,28 @@ class Xboard {
 
     go() {
         this.forceSet = false;
-        var moveString = this.opening.lookupRandom(this.board.loHash, this.board.hiHash);
+        var moveString = this._opening.lookupRandom(this._board.loHash, this._board.hiHash);
         var move;
 
         if (moveString) {
-            move = this.board.addMoveString(moveString);
+            move = this._board.addMoveString(moveString);
         } else {
-            move = this.search.iterativeDeepening(this.board, this.engineTime);
-            this.board.addMove(move);
+            move = this._search.iterativeDeepening(this._board, this._engineTime);
+            this._board.addMove(move);
             moveString = utils.moveToString(move);
         }
 
-        this.moveHistory.push(move);
+        this._moveHistory.push(move);
 
         console.log(`move ${moveString}`);
         this.result();
     }
 
     undo() {
-        var move = this.moveHistory.pop();
+        var move = this._moveHistory.pop();
         if (move) {
-            this.board.subtractMove(move);
-            this.board.subtractHistory();
+            this._board.subtractMove(move);
+            this._board.subtractHistory();
         }
     }
 
@@ -210,27 +210,27 @@ class Xboard {
 
     new() {
         this.forceSet = false;
-        this.board = new Board();
+        this._board = new Board();
     }
 
     setboard(fen) {
-        this.board.fen = fen;
+        this._board.fen = fen;
     }
 
     white() {
-        this.board.turn = constants.WHITE;
+        this._board.turn = constants.WHITE;
     }
 
     black() {
-        this.board.turn = constants.BLACK;
+        this._board.turn = constants.BLACK;
     }
 
     time(time) {
-        this.engineTime = time;
+        this._engineTime = time;
     }
 
     otim(otim) {
-        this.opponentTime = otim;
+        this._opponentTime = otim;
     }
 
     level(mps, base, inc) {
@@ -266,8 +266,8 @@ class Xboard {
     }
 
     protover(number) {
-        console.log(Object.keys(this.features).map(name => {
-            return `feature ${name}=${this.features[name]}`;
+        console.log(Object.keys(this._features).map(name => {
+            return `feature ${name}=${this._features[name]}`;
         }).join('\n'));
     }
 

@@ -3,7 +3,7 @@
 const constants = require('./constants');
 const utils = require('./utils');
 const zobrist = require('./zobrist');
-const PieceList = require('./piece_list');
+const BoardPieceList = require('./piece_list').BoardPieceList;
 const see = require('./see');
 
 module.exports = class Board {
@@ -14,8 +14,8 @@ module.exports = class Board {
 
     emptyBoard() {
         this.resetHistory();
-        this.pieces = [new PieceList(), new PieceList()];
         this.board = new Array(constants.WIDTH * constants.HEIGHT);
+        this.pieces = [new BoardPieceList(this), new BoardPieceList(this)];
         this.castling = 0;
         this.enPassant = null;
         this.turn = constants.WHITE;
@@ -143,8 +143,8 @@ module.exports = class Board {
     addPiece(rankIndex, fileIndex, piece, turn) {
         var index = utils.rankFileToIndex(rankIndex, fileIndex);
         var pieceValue = constants.PIECE_MAP[piece.toLowerCase()];
-        this.pieces[turn].push(index);
         this.board[index] = pieceValue | turn;
+        this.pieces[turn].push(index);
         if (pieceValue === constants.PIECE_K) {
             this.kings[turn] = index;
         }
@@ -281,15 +281,18 @@ module.exports = class Board {
             case constants.MOVE_BITS_EN_PASSANT:
                 var pawnIncrement = this.turn ? -15 : 15;
                 var destroyedPawn = to + -1 * pawnIncrement;
-                this.pieces[opponentTurn].push(destroyedPawn);
                 this.board[destroyedPawn] = constants.PIECE_P | opponentTurn;
+                this.pieces[opponentTurn].push(destroyedPawn);
                 break;
             case constants.MOVE_BITS_PROMOTION:
                 this.board[from] = constants.PIECE_P | this.turn;
+                // Recategorize in piece list
+                this.pieces[this.turn].remove(from);
+                this.pieces[this.turn].push(from);
                 break;
             case constants.MOVE_BITS_PROMOTION_CAPTURE:
-                this.pieces[opponentTurn].push(to);
                 this.board[from] = constants.PIECE_P | this.turn;
+                this.pieces[opponentTurn].push(to);
                 break;
         }
 
@@ -315,19 +318,19 @@ module.exports = class Board {
     movePiece(from, to) {
         this.loHash ^= zobrist.SQUARES[from][this.board[from]][0];
         this.loHash ^= zobrist.SQUARES[from][this.board[from]][1];
-        this.pieces[this.turn].remove(from);
-        this.pieces[this.turn].push(to);
         this.board[to] = this.board[from];
         this.board[from] = constants.PIECE_EMPTY;
+        this.pieces[this.turn].remove(from);
+        this.pieces[this.turn].push(to);
         this.loHash ^= zobrist.SQUARES[to][this.board[to]][0];
         this.hiHash ^= zobrist.SQUARES[to][this.board[to]][1];
     }
 
     movePieceNoHash(from, to) {
-        this.pieces[this.turn].remove(from);
-        this.pieces[this.turn].push(to);
         this.board[to] = this.board[from];
         this.board[from] = constants.PIECE_EMPTY;
+        this.pieces[this.turn].remove(from);
+        this.pieces[this.turn].push(to);
     }
 
     generateMoves() {

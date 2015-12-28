@@ -135,7 +135,36 @@ function evaluate(board) {
         }
     }
 
-    return (board.turn ? -1 : 1) * (material + pst);
+    return (board.turn ? -1 : 1) * (material);
+}
+
+// Produce gameStage coefficient
+function gameStage(board) {
+    // 0.0 for opening
+    // 1.0 for end
+}
+
+function castling(board) {
+
+}
+
+function kingSafety(board) {
+    // Pawn shield
+
+    // King tropism
+}
+
+function pawnStructure(board) {
+    // Doubled pawn
+
+    // Isolated pawn
+
+    // Backward pawn
+
+    // Passed pawn
+
+    // Edge pawn
+
 }
 
 function resetEvalCount() {
