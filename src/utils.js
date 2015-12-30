@@ -20,8 +20,8 @@ function indexToFile(index) {
 
 function algebraicToIndex(algebraic) {
     var splitted = algebraic.split('');
-    var fileIndex = splitted[0].charCodeAt(0) - 96;
-    var rankIndex = parseInt(splitted[1], 10);
+    var fileIndex = splitted[0].charCodeAt(0) - 97;
+    var rankIndex = parseInt(splitted[1], 10) - 1;
     return rankFileToIndex(rankIndex, fileIndex);
 }
 
