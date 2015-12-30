@@ -17,8 +17,16 @@ class Xboard {
         this._opening = new Opening();
         this._perft = new Perft();
         this._search = new Search();
-        this._engineTime = 60*100;
-        this._opponentTime = 60*100;
+        this._engineTime = 0;
+        this._opponentTime = 0;
+
+        // 40/4
+        this._movesPerTimeControl = 40;
+        this._base = 4 * 60 * 1000; // to ms
+        this._increment = 0;
+        this._updateTimePerMove();
+
+        this._maxDepth = 64;
         this._xboardSet = false;
         this._moveHistory = [];
         this._useBook = true;
@@ -211,7 +219,7 @@ class Xboard {
         if (moveString) {
             move = this._board.addMoveString(moveString);
         } else {
-            move = this._search.iterativeDeepening(this._board, this._engineTime);
+            move = this._search.iterativeDeepening(this._board, this._timePerMove, this._maxDepth);
             this._board.addMove(move);
             moveString = utils.moveToString(move);
         }
@@ -237,6 +245,7 @@ class Xboard {
 
     new() {
         this.forceSet = false;
+        this._maxDepth = 64;
         this._board = new Board();
     }
 
@@ -260,20 +269,36 @@ class Xboard {
         this._opponentTime = otim;
     }
 
-    level(mps, base, inc) {
+    level(line) {
+        if (!constants.LEVEL_REGEX.test(line)) {
+            console.log('Error (Invalid level): level', line);
+            return;
+        }
 
+        var args = line.split(' ');
+        var baseTimes = args[1].split(':');
+
+        this._movesPerTimeControl = parseInt(args[0]) || 60; // Assume 60 moves
+        this._base = (parseInt(baseTimes[0], 10) * 60 + (parseInt(baseTimes[1], 10) || 0)) * 1000; // to ms
+        this._increment = (parseInt(args[2], 10) || 0) * 1000;
+        this._updateTimePerMove();
+    }
+
+    _updateTimePerMove() {
+        var totalTime = this._base + this._movesPerTimeControl * this._increment;
+        this._timePerMove =  totalTime / this._movesPerTimeControl;
     }
 
     nps(nodeRate) {
 
     }
 
-    st(time) {
-        this.time = time;
+    st(timePerMove) {
+        this._timePerMove = timePerMove;
     }
 
     sd(depth) {
-
+        this._maxDepth = depth;
     }
 
     random() {
@@ -315,28 +340,29 @@ class Xboard {
         var helpMenu = `
 Commands
 
-display         Draws the board
-perft [INT]     Perfts the current board to specified depth
-perfthash [INT] Sets perft hashtable exponent (size 2^exponent)
-divide [INT]    Divides the current board to specified depth
-moves           Lists valid moves for this position
-e2e4            Moves from the current position and thinks
-go              Forces the engine to think
-undo            Subtracts the previous move
-new             Sets up the default board position
-setboard [FEN]  Sets the board using Forsyth-Edwards Notation
-evaluate        Performs a static evaluation of the board
-result          Displays game result (checkmate or stalemate)
-book [on|off]   Toggles whether engine uses opening book
-white           Sets the active colour to WHITE
-black           Sets the active colour to BLACK
-time [INT]      Sets engine's time (in centiseconds)
-otim [INT]      Sets opponent's time (in centiseconds)
-sd [INT]        Sets maximum depth
-st [INT]        Sets maximum time
-exit            Exits the menu
-quit            See exit
-help            Gets you this magical menu
+display                     Draws the board
+perft [INT]                 Perfts the current board to specified depth
+perfthash [INT]             Sets perft hashtable exponent (size 2^exponent)
+divide [INT]                Divides the current board to specified depth
+moves                       Lists valid moves for this position
+e2e4                        Moves from the current position and thinks
+go                          Forces the engine to think
+undo                        Subtracts the previous move
+new                         Sets up the default board position
+setboard [FEN]              Sets the board using Forsyth-Edwards Notation
+evaluate                    Performs a static evaluation of the board
+result                      Displays game result (checkmate or stalemate)
+book [on|off]               Toggles whether engine uses opening book
+white                       Sets the active colour to WHITE
+black                       Sets the active colour to BLACK
+time [INT]                  Sets engine's time (in centiseconds)
+otim [INT]                  Sets opponent's time (in centiseconds)
+sd [INT]                    Sets maximum depth
+st [INT]                    Sets maximum time
+level [MPT] [BASE] [INC]    Sets Winboard level timing
+exit                        Exits the menu
+quit                        See exit
+help                        Gets you this magical menu
         `;
         console.log(helpMenu);
     }

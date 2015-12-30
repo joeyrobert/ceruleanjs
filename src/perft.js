@@ -37,7 +37,7 @@ module.exports = class Perft {
         board.subtractHistory();
 
         if (this.perftTable) {
-            var value = this.perftTable.get(board.loHash, board.hiHash) || {};
+            var value = this.perftTable.get(board.loHash, board.hiHash) || [];
             value[depth] = total;
             this.perftTable.set(board.loHash, board.hiHash, value);
         }
