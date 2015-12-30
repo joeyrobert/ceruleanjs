@@ -158,6 +158,18 @@ function padIndices(pieceSquareTable) {
     return paddedPieceSquareTables;
 }
 
+function colors(squareEven, turn, text) {
+    var squareColor = squareEven ? 'bgGreen' : 'bgYellow';
+    var turnColor = turn === constants.WHITE ? 'white' : 'black';
+
+    return [
+        constants.ANSI_COLORS[squareColor],
+        constants.ANSI_COLORS[turnColor],
+        text,
+        constants.ANSI_COLORS.reset
+    ].join('');
+}
+
 
 module.exports = {
     isNumeric,
@@ -180,5 +192,6 @@ module.exports = {
     moveOrder,
     moveAddOrder,
     quickSort,
-    padIndices
+    padIndices,
+    colors
 };
