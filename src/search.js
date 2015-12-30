@@ -55,6 +55,13 @@ module.exports = class Search {
 
         var score;
         var move, moves = board.generateMoves();
+
+        // Add MVV/LVA
+        for (var i = 0; i < moves.length; i++) {
+            moves[i] = utils.moveAddOrder(moves[i], board.mvvLva(moves[i]));
+        }
+        moves = utils.quickSort(moves);
+
         board.addHistory();
 
         // Put last best PV move first

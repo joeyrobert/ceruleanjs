@@ -1,14 +1,6 @@
 const constants = require('./constants');
 const utils = require('./utils');
 
-var PIECE_VALUES = [];
-PIECE_VALUES[constants.PIECE_P] = 1;
-PIECE_VALUES[constants.PIECE_N] = 3;
-PIECE_VALUES[constants.PIECE_B] = 3;
-PIECE_VALUES[constants.PIECE_R] = 5;
-PIECE_VALUES[constants.PIECE_Q] = 9;
-PIECE_VALUES[constants.PIECE_K] = 50;
-
 var DELTA_BY_DIFFERENCE = [];
 
 for (var diff = 1; diff <= 112; diff++) {
@@ -40,7 +32,7 @@ function staticExchangeEvaluation(board, move) {
     var promotion = utils.movePromotion(move);
 
     if (promotion && captured === constants.PIECE_EMPTY) {
-        return PIECE_VALUES[promotion];
+        return constants.PIECE_VALUES[promotion];
     }
 
     if (captured === constants.PIECE_EMPTY) {
@@ -103,7 +95,7 @@ function staticExchangeEvaluation(board, move) {
     }
 
     // Add captured square
-    var score = PIECE_VALUES[captured];
+    var score = constants.PIECE_VALUES[captured];
     var turnToMove = board.turn ^ 1;
     var turnDifferential = -1;
     var attackersCount = [0, 0];
@@ -111,7 +103,7 @@ function staticExchangeEvaluation(board, move) {
     var swap;
     var attackerPieceIndex = from;
     var attackerPiece = board.board[attackerPieceIndex] & constants.JUST_PIECE;
-    var attackerPieceValue = PIECE_VALUES[attackerPiece];
+    var attackerPieceValue = constants.PIECE_VALUES[attackerPiece];
 
     while (attackers[turnToMove].length > attackersCount[turnToMove]) {
         score += turnDifferential * attackerPieceValue;
@@ -138,12 +130,12 @@ function staticExchangeEvaluation(board, move) {
         }
 
         // Find new lowest
-        lowestValue = PIECE_VALUES[board.board[attackers[turnToMove][attackersCount[turnToMove]]] & constants.JUST_PIECE];
+        lowestValue = constants.PIECE_VALUES[board.board[attackers[turnToMove][attackersCount[turnToMove]]] & constants.JUST_PIECE];
         lowestValueIndex = attackersCount[turnToMove];
         for (j = attackersCount[turnToMove] + 1; j < attackers[turnToMove].length; j++) {
-            if (PIECE_VALUES[board.board[attackers[turnToMove][j]] + 7] < lowestValue) {
+            if (constants.PIECE_VALUES[board.board[attackers[turnToMove][j]] + 7] < lowestValue) {
                 lowestValueIndex = j;
-                lowestValue = PIECE_VALUES[board.board[attackers[turnToMove][j]] & constants.JUST_PIECE];
+                lowestValue = constants.PIECE_VALUES[board.board[attackers[turnToMove][j]] & constants.JUST_PIECE];
             }
         }
 
@@ -157,7 +149,7 @@ function staticExchangeEvaluation(board, move) {
         // New attacked value
         attackerPieceIndex = attackers[turnToMove][attackersCount[turnToMove]];
         attackerPiece = board.board[attackerPieceIndex] & constants.JUST_PIECE;
-        attackerPieceValue = PIECE_VALUES[attackerPiece];
+        attackerPieceValue = constants.PIECE_VALUES[attackerPiece];
         attackersCount[turnToMove]++;
 
         // Increment turn values

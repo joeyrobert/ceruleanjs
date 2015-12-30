@@ -706,4 +706,19 @@ module.exports = class Board {
             this.hiHash ^= zobrist.TURN[1];
         }
     }
+
+    // Outputs MVV/LVA score for move, scaled from 0-63
+    // Inspired by Laser's implementation
+    mvvLva(move) {
+        var captured = utils.moveCaptured(move);
+
+        if (captured === constants.PIECE_EMPTY) {
+            return 0;
+        }
+
+        var from = utils.moveFrom(move);
+        var attacker = this.board[from] & constants.JUST_PIECE;
+
+        return ((constants.PIECE_VALUES[captured] * 8 + 9 - constants.PIECE_VALUES[attacker]) / 80 * 31) | 0;
+    }
 };
