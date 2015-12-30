@@ -37,8 +37,13 @@ PIECE_BY_DELTA[16] = constants.PIECE_B;
 // Ideas in this file inspired by Mediocre's implementation of SEE
 function staticExchangeEvaluation(board, move) {
     var captured = utils.moveCaptured(move);
+    var promotion = utils.movePromotion(move);
 
-    if (captured === 0) {
+    if (promotion && captured === constants.PIECE_EMPTY) {
+        return PIECE_VALUES[promotion];
+    }
+
+    if (captured === constants.PIECE_EMPTY) {
         return 0;
     }
 
@@ -97,6 +102,7 @@ function staticExchangeEvaluation(board, move) {
         }
     }
 
+    // Add captured square
     var score = PIECE_VALUES[captured];
     var turnToMove = board.turn ^ 1;
     var turnDifferential = -1;
@@ -105,7 +111,7 @@ function staticExchangeEvaluation(board, move) {
     var swap;
     var attackerPieceIndex = from;
     var attackerPiece = board.board[attackerPieceIndex] & constants.JUST_PIECE;
-    var attackerPieceValue = PIECE_VALUES[attackerPiece]
+    var attackerPieceValue = PIECE_VALUES[attackerPiece];
 
     while (attackers[turnToMove].length > attackersCount[turnToMove]) {
         score += turnDifferential * attackerPieceValue;

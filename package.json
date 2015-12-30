@@ -20,6 +20,7 @@
     "chai": "^3.4.1",
     "mocha": "^2.3.4",
     "nexe": "^0.4.2",
+    "node-inspector": "^0.12.5",
     "uglify-js": "^2.6.1"
   },
   "repository": {
@@ -32,6 +33,7 @@
   "scripts": {
     "build-windows": "copy /Y suites\\bok\\small.bok dist\\book.bok && nexe -i ./src/xboard.js -o ./dist/ceruleanjs.exe -r 5.3.0",
     "build-web": "browserify ./src/xboard.js -o ./dist/ceruleanjs.js -t [ babelify --presets [ es2015 ] ] && uglifyjs --compress -o ./dist/ceruleanjs.min.js -- ./dist/ceruleanjs.js",
+    "debug": "node-debug ./src/xboard.js",
     "test": "mocha --no-timeouts",
     "start": "node ./src/xboard.js"
   }

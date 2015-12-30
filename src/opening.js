@@ -11,6 +11,7 @@ module.exports = class Opening {
         this.board = new Board();
         this.openingTable = new HashTable(14);
         this.mt = new MersenneTwister();
+        this.bookLoaded = false;
 
         var book;
 
@@ -37,6 +38,7 @@ module.exports = class Opening {
 
         if (book) {
             this.addBok(book);
+            this.bookLoaded = true;
         }
     }
 

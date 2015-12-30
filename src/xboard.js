@@ -21,6 +21,7 @@ class Xboard {
         this._opponentTime = 60*100;
         this._xboardSet = false;
         this._moveHistory = [];
+        this._useBook = true;
         this._features = {
             myname: `"CeruleanJS ${packageInfo.version} by ${packageInfo.author}"`,
             setboard: 1,
@@ -73,6 +74,30 @@ class Xboard {
         return result;
     }
 
+    book(status) {
+        var cleanedUpStatus = status.trim().toLowerCase();
+
+        if (!this._opening.bookLoaded) {
+            console.log('Book not loaded, remains off');
+            this._useBook = false;
+            return false;
+        }
+        console.log(cleanedUpStatus)
+
+        if (cleanedUpStatus === 'on') {
+            console.log('Book set to on');
+            this._useBook = true;
+        } else if (cleanedUpStatus === 'off') {
+            console.log('Book set to off');
+            this._useBook = false;
+        } else {
+            console.log('Book command not understood, remains', this._useBook ? 'on' : 'off');
+            console.log('Usage: book [on|off] Toggles whether engine uses opening book');
+        }
+
+        return this._useBook;
+    }
+
     display() {
         // Enable colors
         colors.enabled = true;
@@ -80,10 +105,10 @@ class Xboard {
         // Build string buffer
         var display = '\n';
 
-        for (var rankIndex = 8; rankIndex >= 1; rankIndex--) {
-            display += ` ${colors.bold(rankIndex)} `;
+        for (var rankIndex = 7; rankIndex >= 0; rankIndex--) {
+            display += ` ${colors.bold(rankIndex + 1)} `;
 
-            for (var fileIndex = 1; fileIndex <= 8; fileIndex++) {
+            for (var fileIndex = 0; fileIndex <= 7; fileIndex++) {
                 var index = utils.rankFileToIndex(rankIndex, fileIndex);
                 var turn = this._board.board[index] % 2;
                 var square = index % 2 === 0;
@@ -97,8 +122,8 @@ class Xboard {
 
         display += '   ';
 
-        for (var fileIndex = 1; fileIndex <= 8; fileIndex++) {
-            display += ` ${colors.bold(String.fromCharCode(96 + fileIndex))} `;
+        for (var fileIndex = 0; fileIndex <= 7; fileIndex++) {
+            display += ` ${colors.bold(String.fromCharCode(96 + fileIndex + 1))} `;
         }
 
         display += '\n';
@@ -115,16 +140,15 @@ class Xboard {
         }
 
         var startTime = new Date();
-        var division = this._perft.divide(this._board, parseInt(depth, 10));
+        var division = this._perft.divide(this._board, parseInt(depth, 10), true);
         var total = division.reduce((memo, entry) => memo + entry[1], 0);
         var timeDiff = new Date() - startTime;
 
-        console.log(division.map(entry => `${entry[0]} ${entry[1]}`).join('\n'));
         console.log(`\ntotal ${total}\ntime ${timeDiff} ms\nfreq ${Math.floor(total / timeDiff * 1000)} Hz`);
     }
 
     evaluate() {
-        console.log(evaluate.evaluate(this._board));
+        evaluate.evaluate(this._board, true);
     }
 
     perft(depth) {
@@ -147,7 +171,7 @@ class Xboard {
     }
 
     moves() {
-        console.log(this._board.generateLegalMoves().map(move => utils.moveToString(this._board, move)).join('\n'));
+        console.log(this._board.generateLegalMoves().map(move => utils.moveToString(move)).join('\n'));
     }
 
     xboard() {
@@ -178,8 +202,11 @@ class Xboard {
 
     go() {
         this.forceSet = false;
-        var moveString = this._opening.lookupRandom(this._board.loHash, this._board.hiHash);
-        var move;
+        var moveString, move;
+
+        if (this._useBook) {
+            moveString = this._opening.lookupRandom(this._board.loHash, this._board.hiHash);
+        }
 
         if (moveString) {
             move = this._board.addMoveString(moveString);
@@ -299,6 +326,8 @@ undo            Subtracts the previous move
 new             Sets up the default board position
 setboard [FEN]  Sets the board using Forsyth-Edwards Notation
 evaluate        Performs a static evaluation of the board
+result          Displays game result (checkmate or stalemate)
+book [on|off]   Toggles whether engine uses opening book
 white           Sets the active colour to WHITE
 black           Sets the active colour to BLACK
 time [INT]      Sets engine's time (in centiseconds)

@@ -14,8 +14,8 @@ function generateZobristKeys() {
     var pieceKeys = ['p', 'n', 'b', 'r', 'q', 'k'];
     var rankIndex, fileIndex, index, turn, pieceIndex, pieceValue, castling;
 
-    for (rankIndex = 1; rankIndex <= 8; rankIndex++) {
-        for (fileIndex = 1; fileIndex <= 8; fileIndex++) {
+    for (rankIndex = 0; rankIndex <= 7; rankIndex++) {
+        for (fileIndex = 0; fileIndex <= 7; fileIndex++) {
             index = utils.rankFileToIndex(fileIndex, rankIndex);
 
             for (turn = 0; turn < 2; turn++) {

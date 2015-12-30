@@ -14,7 +14,7 @@ module.exports = class Board {
 
     emptyBoard() {
         this.resetHistory();
-        this.board = new Array(constants.WIDTH * constants.HEIGHT);
+        this.board = new Uint32Array(constants.WIDTH * constants.HEIGHT);
         this.pieces = [new BoardPieceList(this), new BoardPieceList(this)];
         this.castling = 0;
         this.enPassant = null;
@@ -28,8 +28,8 @@ module.exports = class Board {
         // Set legal board empty
         var rankIndex, fileIndex, index;
 
-        for (rankIndex = 1; rankIndex <= 8; rankIndex++) {
-            for (fileIndex = 1; fileIndex <= 8; fileIndex++) {
+        for (rankIndex = 0; rankIndex <= 7; rankIndex++) {
+            for (fileIndex = 0; fileIndex <= 7; fileIndex++) {
                 index = utils.rankFileToIndex(rankIndex, fileIndex);
                 this.board[index] = constants.PIECE_EMPTY;
             }
@@ -40,11 +40,11 @@ module.exports = class Board {
         var board = [];
         var rankIndex, fileOffset, rankBoard, fileIndex, piece, index;
 
-        for (rankIndex = 8; rankIndex >= 1; rankIndex--) {
+        for (rankIndex = 7; rankIndex >= 0; rankIndex--) {
             fileOffset = 0;
             rankBoard = '';
 
-            for (fileIndex = 1; fileIndex <= 8; fileIndex++) {
+            for (fileIndex = 0; fileIndex <= 7; fileIndex++) {
                 index = utils.rankFileToIndex(rankIndex, fileIndex);
 
                 if (this.board[index] !== constants.PIECE_EMPTY) {
@@ -108,8 +108,8 @@ module.exports = class Board {
         var ranks = parts[0].split('/');
 
         ranks.forEach((rank, invertedRankIndex) => {
-            var fileIndex = 1;
-            var rankIndex = 8 - invertedRankIndex;
+            var fileIndex = 0;
+            var rankIndex = 7 - invertedRankIndex;
             var pieces = rank.split('');
 
             pieces.forEach(piece => {
@@ -227,6 +227,9 @@ module.exports = class Board {
                 this.movePiece(from, to);
                 var promotion = utils.movePromotion(move);
                 this.board[to] = promotion | this.turn;
+                // Recategorize in piece list
+                this.pieces[this.turn].remove(to);
+                this.pieces[this.turn].push(to);
                 break;
             case constants.MOVE_BITS_PROMOTION_CAPTURE:
                 this.loHash ^= zobrist.SQUARES[to][this.board[to]][0];
@@ -235,6 +238,9 @@ module.exports = class Board {
                 this.movePiece(from, to);
                 var promotion = utils.movePromotion(move);
                 this.board[to] = promotion | this.turn;
+                // Recategorize in piece list
+                this.pieces[this.turn].remove(to);
+                this.pieces[this.turn].push(to);
                 this.updateCastlingAndKings(from, to);
                 break;
         }
@@ -293,6 +299,9 @@ module.exports = class Board {
             case constants.MOVE_BITS_PROMOTION_CAPTURE:
                 this.board[from] = constants.PIECE_P | this.turn;
                 this.pieces[opponentTurn].push(to);
+                // Recategorize in piece list
+                this.pieces[this.turn].remove(from);
+                this.pieces[this.turn].push(from);
                 break;
         }
 
@@ -372,7 +381,7 @@ module.exports = class Board {
         return moves;
     }
 
-    generateCaptures() {
+    generateCapturesAndPromotions() {
         var pieces = this.pieces[this.turn];
         var moves = [];
         var i, index, piece;
@@ -385,6 +394,7 @@ module.exports = class Board {
             switch (piece) {
                 case constants.PIECE_P:
                     this.pawnCaptures(moves, index);
+                    this.pawnPromotions(moves, index);
                     break;
                 case constants.PIECE_N:
                     this.deltaCaptures(moves, constants.DELTA_KNIGHT, index);
@@ -408,8 +418,6 @@ module.exports = class Board {
         for (var i = 0; i < moves.length; i++) {
             moves[i] = utils.moveAddOrder(moves[i], see(this, moves[i]));
         }
-
-        moves = utils.quickSort(moves);
 
         return moves;
     }
@@ -476,6 +484,23 @@ module.exports = class Board {
         }
 
         this.pawnCaptures(moves, index);
+    }
+
+    pawnPromotions(moves, index) {
+        var lastRank = constants.PAWN_LAST_RANK[this.turn];
+        var firstRank = constants.PAWN_FIRST_RANK[this.turn]
+        var j;
+
+        // Regular push promotions
+        // Capture promotions are handled by pawnCaptures
+        var newMove = index + 15 - 30 * this.turn;
+        if (this.board[newMove] === constants.PIECE_EMPTY && newMove >= lastRank[0] && newMove <= lastRank[1]) {
+            moves.push(utils.createMove(index, newMove, constants.MOVE_BITS_PROMOTION, 0, constants.PIECE_Q));
+            moves.push(utils.createMove(index, newMove, constants.MOVE_BITS_PROMOTION, 0, constants.PIECE_R));
+            moves.push(utils.createMove(index, newMove, constants.MOVE_BITS_PROMOTION, 0, constants.PIECE_B));
+            moves.push(utils.createMove(index, newMove, constants.MOVE_BITS_PROMOTION, 0, constants.PIECE_N));
+        }
+
     }
 
     pawnCaptures(moves, index) {
@@ -652,8 +677,8 @@ module.exports = class Board {
         this.hiHash = 0;
         var rankIndex, fileIndex, index;
 
-        for (rankIndex = 1; rankIndex <= 8; rankIndex++) {
-            for (fileIndex = 1; fileIndex <= 8; fileIndex++) {
+        for (rankIndex = 0; rankIndex <= 7; rankIndex++) {
+            for (fileIndex = 0; fileIndex <= 7; fileIndex++) {
                 index = utils.rankFileToIndex(rankIndex, fileIndex);
                 if (this.board[index] !== constants.PIECE_EMPTY) {
                     this.loHash ^= zobrist.SQUARES[index][this.board[index]][0];
