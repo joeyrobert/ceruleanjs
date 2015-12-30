@@ -1,6 +1,7 @@
 'use strict';
 
 const constants = require('./constants');
+const HashTable = require('./hash_table');
 const utils = require('./utils');
 
 /*
@@ -30,6 +31,11 @@ PIECE_VALUES[constants.PIECE_B] = 310;
 PIECE_VALUES[constants.PIECE_R] = 500;
 PIECE_VALUES[constants.PIECE_Q] = 975;
 PIECE_VALUES[constants.PIECE_K] = 20000;
+
+/*
+ * Eval hash
+ */
+var evalTable = new HashTable(22);
 
 /*
  * Piece square tables
@@ -132,6 +138,12 @@ var evalCount = 0;
 
 function evaluate(board, display) {
     evalCount++;
+
+    var savedEval = evalTable.get(board.loHash, board.hiHash);
+
+    if (savedEval) {
+        return savedEval;
+    }
 
     // "Losing the game penalty"
     // var legalMoves = board.generateLegalMoves();
@@ -263,6 +275,9 @@ function evaluate(board, display) {
         console.log('Piece Bonuses: ', PIECE_BONUSES_COEFF, '* (' + pieceBonuses[0]  + ' - ' + pieceBonuses[1]   + ') =', PIECE_BONUSES_COEFF * (pieceBonuses[0] - pieceBonuses[0]));
         console.log('Total:         ', total);
     }
+
+    // Set in hash table
+    evalTable.set(board.loHash, board.hiHash, total);
 
     return total;
 }
