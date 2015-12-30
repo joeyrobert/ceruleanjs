@@ -111,7 +111,7 @@ function moveOrder(move) {
 }
 
 function moveAddOrder(move, order) {
-    return move + (order << constants.MOVE_ORDER_SHIFT);
+    return (move & (~constants.MOVE_ORDER_MASK)) + (order << constants.MOVE_ORDER_SHIFT);
 }
 
 // Recursive quicksort, apparently faster than Array.prototype.sort()
@@ -177,6 +177,7 @@ module.exports = {
     movePromotion,
     moveCaptured,
     moveBits,
+    moveOrder,
     moveAddOrder,
     quickSort,
     padIndices

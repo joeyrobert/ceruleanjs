@@ -82,6 +82,15 @@ PIECE_TO_LOG[PIECE_Q]       = 5;
 PIECE_TO_LOG[PIECE_K]       = 6;
 PIECE_TO_LOG[PIECE_EMPTY]   = 7;
 
+var PIECE_VALUES = [];
+PIECE_VALUES[PIECE_P]       = 1;
+PIECE_VALUES[PIECE_N]       = 3;
+PIECE_VALUES[PIECE_B]       = 3;
+PIECE_VALUES[PIECE_R]       = 5;
+PIECE_VALUES[PIECE_Q]       = 9;
+PIECE_VALUES[PIECE_K]       = 50;
+PIECE_VALUES[PIECE_EMPTY]   = 0;
+
 const DELTA_KNIGHT = [
     -31,
     -29,
@@ -161,10 +170,11 @@ const PAWN_LAST_RANK = [
     [33, 40]
 ];
 
-const SEARCH_LIMIT_CHECK = 20000;
+const SEARCH_LIMIT_CHECK = 10000;
 
 const FEN_BOARD_REGEX = /^\s*([rnbqkpRNBQKP1-8]+\/){7}([rnbqkpRNBQKP1-8]+)\s[bw]\s(-|K?Q?k?q?)\s(-|[a-h‌​][36])/;
 const MOVE_REGEX = /^[a-h][1-8][a-h][1-8][bnrq]?$/;
+const LEVEL_REGEX = /^\d+ \d+(:\d{2})? \d+$/;
 
 module.exports = {
     WHITE,
@@ -206,6 +216,7 @@ module.exports = {
     INVERSE_PIECE_MAP,
     PIECE_DISPLAY_MAP,
     PIECE_TO_LOG,
+    PIECE_VALUES,
     DELTA_KNIGHT,
     DELTA_KING,
     DELTA_BISHOP,
@@ -219,5 +230,6 @@ module.exports = {
     PAWN_LAST_RANK,
     SEARCH_LIMIT_CHECK,
     FEN_BOARD_REGEX,
-    MOVE_REGEX
+    MOVE_REGEX,
+    LEVEL_REGEX
 };

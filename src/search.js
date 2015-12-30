@@ -7,7 +7,7 @@ const utils = require('./utils');
 
 module.exports = class Search {
     constructor() {
-        this.hashSize = 22; // default size 2^22 ~ 32M entries
+        this.hashSize = 20; // default size 2^22 ~ 32M entries
     }
 
     set hashSize(exponent) {
@@ -44,7 +44,7 @@ module.exports = class Search {
     }
 
     search(board, alpha, beta, depth) {
-        if (evaluate.getEvalCount() % constants.SEARCH_LIMIT_CHECK === 0 && this.isTimeUp()) {
+        if (evaluate.getEvalCount() % constants.SEARCH_LIMIT_CHECK === 0 && this.timeDiff() >= this.timePerMove) {
             this.endedEarly = true;
             return;
         }
@@ -55,6 +55,13 @@ module.exports = class Search {
 
         var score;
         var move, moves = board.generateMoves();
+
+        // Add MVV/LVA
+        for (var i = 0; i < moves.length; i++) {
+            moves[i] = utils.moveAddOrder(moves[i], board.mvvLva(moves[i]));
+        }
+        moves = utils.quickSort(moves);
+
         board.addHistory();
 
         // Put last best PV move first
@@ -111,7 +118,7 @@ module.exports = class Search {
     }
 
     qsearch(board, alpha, beta) {
-        if (evaluate.getEvalCount() % constants.SEARCH_LIMIT_CHECK === 0 && this.isTimeUp()) {
+        if (evaluate.getEvalCount() % constants.SEARCH_LIMIT_CHECK === 0 && this.timeDiff() >= this.timePerMove) {
             this.endedEarly = true;
             return;
         }
@@ -153,16 +160,15 @@ module.exports = class Search {
         return alpha;
     }
 
-    iterativeDeepening(board, total) {
+    iterativeDeepening(board, timePerMove, maxDepth) {
         this.startTime = new Date();
-        this.totalTime = total;
-        this.timeThreshold = (this.totalTime * 10) / 60; // 40 moves in time
+        this.timePerMove = timePerMove;
         this.ply = 1;
         this.endedEarly = false;
         this.pv = [];
         var moveStrings, score;
 
-        for (var depth = 1; ; depth++) {
+        for (var depth = 1; depth <= maxDepth; depth++) {
             this.ply = depth;
             this.pv[this.ply] = [];
             evaluate.resetEvalCount();
@@ -178,7 +184,7 @@ module.exports = class Search {
                 console.log(`${depth} ${score} ${Math.round(this.timeDiff() / 10)} ${evaluate.getEvalCount()} ${moveStrings.join(' ')}`);
             }
 
-            if (this.isTimeUp()) {
+            if (this.timeDiff() >= this.timePerMove) {
                 break;
             }
         }
@@ -188,10 +194,6 @@ module.exports = class Search {
         }
 
         return this.pv[this.ply][this.ply];
-    }
-
-    isTimeUp() {
-        return this.timeDiff() >= this.timeThreshold;
     }
 
     timeDiff() {
