@@ -176,6 +176,16 @@ const FEN_BOARD_REGEX = /^\s*([rnbqkpRNBQKP1-8]+\/){7}([rnbqkpRNBQKP1-8]+)\s[bw]
 const MOVE_REGEX = /^[a-h][1-8][a-h][1-8][bnrq]?$/;
 const LEVEL_REGEX = /^\d+ \d+(:\d{2})? \d+$/;
 
+const ANSI_COLORS = {
+    white:      '\u001b[39m',
+    black:      '\u001b[30m',
+    bgWhite:    '\u001b[47m',
+    bgBlack:    '\u001b[40m',
+    bgGreen:    '\u001b[42m',
+    bgYellow:   '\u001b[43m',
+    reset:      '\u001b[0m'
+};
+
 module.exports = {
     WHITE,
     BLACK,
@@ -231,5 +241,6 @@ module.exports = {
     SEARCH_LIMIT_CHECK,
     FEN_BOARD_REGEX,
     MOVE_REGEX,
-    LEVEL_REGEX
+    LEVEL_REGEX,
+    ANSI_COLORS
 };

@@ -1,7 +1,6 @@
 'use strict';
 
-const colors = require('colors');
-const stdio = require('stdio');
+const readline = require('readline');
 const constants = require('./constants');
 const Board = require('./board');
 const evaluate = require('./evaluate');
@@ -9,7 +8,6 @@ const Opening = require('./opening');
 const Perft = require('./perft');
 const Search = require('./search');
 const utils = require('./utils');
-const packageInfo = require('../package.json');
 
 class Xboard {
     constructor() {
@@ -31,7 +29,7 @@ class Xboard {
         this._moveHistory = [];
         this._useBook = true;
         this._features = {
-            myname: `"CeruleanJS ${packageInfo.version} by ${packageInfo.author}"`,
+            myname: `"CeruleanJS 0.0.1 by Joey Robert"`,
             setboard: 1,
             memory: 0,
             time: 1,
@@ -46,7 +44,11 @@ class Xboard {
                 postMessage(args.join(' '));
             };
         } else {
-            stdio.readByLines(line => this._sendLine(line));
+            var rl = readline.createInterface({
+                input: process.stdin
+            });
+
+            rl.on('line', line => this._sendLine(line));
         }
     }
 
@@ -107,22 +109,18 @@ class Xboard {
     }
 
     display() {
-        // Enable colors
-        colors.enabled = true;
-
         // Build string buffer
         var display = '\n';
 
         for (var rankIndex = 7; rankIndex >= 0; rankIndex--) {
-            display += ` ${colors.bold(rankIndex + 1)} `;
+            display += ` ${rankIndex + 1} `;
 
             for (var fileIndex = 0; fileIndex <= 7; fileIndex++) {
                 var index = utils.rankFileToIndex(rankIndex, fileIndex);
                 var turn = this._board.board[index] % 2;
                 var square = index % 2 === 0;
                 var value = ` ${constants.PIECE_DISPLAY_MAP[this._board.board[index] - turn]} `;
-                value = colors[square ? 'bgGreen' : 'bgYellow'](value);
-                value = colors[turn === constants.WHITE ? 'white' : 'black'](value);
+                value = utils.colors(square, turn, value);
                 display += value;
             }
             display += '\n';
@@ -131,7 +129,7 @@ class Xboard {
         display += '   ';
 
         for (var fileIndex = 0; fileIndex <= 7; fileIndex++) {
-            display += ` ${colors.bold(String.fromCharCode(96 + fileIndex + 1))} `;
+            display += ` ${String.fromCharCode(96 + fileIndex + 1)} `;
         }
 
         display += '\n';
