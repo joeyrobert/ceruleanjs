@@ -292,7 +292,7 @@ class Xboard {
     }
 
     st(timePerMove) {
-        this._timePerMove = timePerMove;
+        this._timePerMove = timePerMove * 1000; // ms
     }
 
     sd(depth) {
