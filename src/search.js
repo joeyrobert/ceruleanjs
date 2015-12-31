@@ -181,7 +181,9 @@ module.exports = class Search {
                     moveStrings.push(utils.moveToString(this.pv[this.ply][i]));
                 }
 
-                console.log(`${depth} ${score} ${Math.round(this.timeDiff() / 10)} ${evaluate.getEvalCount()} ${moveStrings.join(' ')}`);
+                if (!this.endedEarly) {
+                    console.log(`${depth} ${score} ${Math.round(this.timeDiff() / 10)} ${evaluate.getEvalCount()} ${moveStrings.join(' ')}`);
+                }
             }
 
             if (this.timeDiff() >= this.timePerMove) {

@@ -55,7 +55,7 @@ const INVERSE_PIECE_MAP = {
     [PIECE_K]: 'k'
 };
 
-const PIECE_DISPLAY_MAP = ['win32', 'browser'].indexOf(process.platform) >= 0 ? {
+const PIECE_DISPLAY_MAP = ['win32', 'browser'].indexOf(process.platform) === -1 ? {
     [PIECE_P]:      '♟',
     [PIECE_N]:      '♞',
     [PIECE_B]:      '♝',
