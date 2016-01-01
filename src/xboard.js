@@ -70,7 +70,7 @@ class Xboard {
         var result = false;
 
         if (perftScore === 0) {
-            if (this._board.isInCheck(this._board.turn)) {
+            if (this._board.isInCheck()) {
                 result = this._board.turn ? '1-0' : '0-1';
             } else {
                 result = '1/2-1/2';

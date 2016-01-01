@@ -22,17 +22,6 @@ const TOTAL_COEFFICIENT =
     KING_SAFETY_COEFF;
 
 /*
- * Piece values
- */
-var PIECE_VALUES = [];
-PIECE_VALUES[constants.PIECE_P] = 100;
-PIECE_VALUES[constants.PIECE_N] = 300;
-PIECE_VALUES[constants.PIECE_B] = 310;
-PIECE_VALUES[constants.PIECE_R] = 500;
-PIECE_VALUES[constants.PIECE_Q] = 975;
-PIECE_VALUES[constants.PIECE_K] = 20000;
-
-/*
  * Eval hash
  */
 var evalTable = new HashTable(22);
@@ -147,10 +136,10 @@ function evaluate(board, display) {
 
     // "Losing the game penalty"
     // var legalMoves = board.generateLegalMoves();
-    // var isInCheck = board.isInCheck(board.turn);
+    // var isInCheck = board.isInCheck();
 
     // if (legalMoves.length === 0 && isInCheck) {
-    //     return -1 * PIECE_VALUES[constants.PIECE_K];
+    //     return -1 * constants.PIECE_VALUES[constants.PIECE_K];
     // }
 
     // Summed values
@@ -223,7 +212,7 @@ function evaluate(board, display) {
         for (i = 0; i < pieces.length; i++) {
             index = pieces.indices[i];
             piece = board.board[index] & constants.JUST_PIECE;
-            material[turn] += PIECE_VALUES[piece];
+            material[turn] += constants.PIECE_VALUES[piece];
 
             switch (piece) {
                 case constants.PIECE_P:

@@ -415,10 +415,6 @@ module.exports = class Board {
             }
         }
 
-        for (var i = 0; i < moves.length; i++) {
-            moves[i] = utils.moveAddOrder(moves[i], see(this, moves[i]));
-        }
-
         return moves;
     }
 
@@ -668,8 +664,8 @@ module.exports = class Board {
         return false;
     }
 
-    isInCheck(turn) {
-        return this.isAttacked(this.kings[turn], turn ^ 1);
+    isInCheck() {
+        return this.isAttacked(this.kings[this.turn], (this.turn) ^ 1);
     }
 
     initialHash() {
@@ -719,6 +715,6 @@ module.exports = class Board {
         var from = utils.moveFrom(move);
         var attacker = this.board[from] & constants.JUST_PIECE;
 
-        return ((constants.PIECE_VALUES[captured] * 8 + 9 - constants.PIECE_VALUES[attacker]) / 80 * 31) | 0;
+        return (constants.MVV_LVA_PIECE_VALUES[captured] * 5 + 5 - constants.MVV_LVA_PIECE_VALUES[attacker]) | 0;
     }
 };
