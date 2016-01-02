@@ -23,7 +23,7 @@ class Xboard {
         this._base = 4 * 60 * 1000; // to ms
         this._increment = 0;
         this._updateTimePerMove();
-
+        this._gameOver = false;
         this._maxDepth = 64;
         this._xboardSet = false;
         this._moveHistory = [];
@@ -78,7 +78,8 @@ class Xboard {
         }
 
         if (result && !hideDisplay) {
-            console.log(`result ${result}`);
+            this._gameOver = true;
+            console.log(result);
         }
 
         return result;
@@ -186,6 +187,10 @@ class Xboard {
     }
 
     usermove(moveString) {
+        if (this._gameOver) {
+            return;
+        }
+
         var legalMove = this._board.addMoveString(moveString);
 
         if (legalMove) {
@@ -194,7 +199,7 @@ class Xboard {
 
             if (result) {
                 console.log(result);
-            } else if (!this.forceSet) {
+            } else if (!this._forceSet) {
                 this.go();
             }
         } else {
@@ -203,11 +208,15 @@ class Xboard {
     }
 
     force() {
-        this.forceSet = true;
+        this._forceSet = true;
     }
 
     go() {
-        this.forceSet = false;
+        if (this._gameOver) {
+            return;
+        }
+
+        this._forceSet = false;
         var moveString, move;
 
         if (this._useBook) {
@@ -229,6 +238,8 @@ class Xboard {
     }
 
     undo() {
+        this._gameOver = false;
+
         var move = this._moveHistory.pop();
         if (move) {
             this._board.subtractMove(move);
@@ -242,8 +253,9 @@ class Xboard {
     }
 
     new() {
-        this.forceSet = false;
+        this._forceSet = false;
         this._maxDepth = 64;
+        this._gameOver = false;
         this._board = new Board();
     }
 

@@ -116,7 +116,7 @@ module.exports = class Search {
 
         if (searchedMoves === 0) {
             if (board.isInCheck()) {
-                return constants.PIECE_VALUES.PIECE_K + depth;
+                return -1 * (constants.MATE_VALUE + depth);
             } else {
                 // DRAW
                 return 0;

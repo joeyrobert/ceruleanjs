@@ -1,7 +1,6 @@
 'use strict';
 
 const expect = require('chai').expect;
-const fs = require('fs');
 const Board = require('../src/board');
 const see = require('../src/see');
 const utils = require('../src/utils');
