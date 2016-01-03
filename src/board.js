@@ -151,7 +151,7 @@ module.exports = class Board {
     }
 
     addHistory() {
-        this.currentHistory = [this.enPassant, this.castling, this.loHash, this.hiHash];
+        this.currentHistory = [this.enPassant, this.castling, this.loHash, this.hiHash, this.halfMoveClock];
         this.history.push(this.currentHistory);
     }
 
@@ -182,6 +182,7 @@ module.exports = class Board {
             case constants.MOVE_BITS_EMPTY:
                 this.movePiece(from, to);
                 this.updateCastlingAndKings(from, to);
+                this.halfMoveClock++;
                 break;
             case constants.MOVE_BITS_CAPTURE:
                 this.loHash ^= zobrist.SQUARES[to][this.board[to]][0];
@@ -189,6 +190,7 @@ module.exports = class Board {
                 this.pieces[opponentTurn].remove(to);
                 this.movePiece(from, to);
                 this.updateCastlingAndKings(from, to);
+                this.halfMoveClock = 0;
                 break;
             case constants.MOVE_BITS_CASTLING:
                 this.movePiece(from, to);
@@ -196,6 +198,7 @@ module.exports = class Board {
                 var direction = to > from ? 1 : -1;
                 this.movePiece(utils.moveFrom(rookMove), utils.moveTo(rookMove));
                 this.updateCastlingAndKings(from, to);
+                this.halfMoveClock++;
 
                 for (var kingIndex = from; kingIndex !== to; kingIndex += direction) {
                     if (this.isAttacked(kingIndex, opponentTurn)) {
@@ -212,9 +215,11 @@ module.exports = class Board {
                 this.loHash ^= zobrist.SQUARES[destroyedPawn][this.board[destroyedPawn]][0];
                 this.hiHash ^= zobrist.SQUARES[destroyedPawn][this.board[destroyedPawn]][1];
                 this.board[destroyedPawn] = constants.PIECE_EMPTY;
+                this.halfMoveClock = 0;
                 break;
             case constants.MOVE_BITS_PAWN:
                 this.movePiece(from, to);
+                this.halfMoveClock = 0;
                 break;
             case constants.MOVE_BITS_DOUBLE_PAWN:
                 this.movePiece(from, to);
@@ -222,6 +227,7 @@ module.exports = class Board {
                 this.enPassant = from + pawnIncrement;
                 this.loHash ^= zobrist.EN_PASSANT[this.enPassant][0];
                 this.hiHash ^= zobrist.EN_PASSANT[this.enPassant][1];
+                this.halfMoveClock = 0;
                 break;
             case constants.MOVE_BITS_PROMOTION:
                 this.movePiece(from, to);
@@ -230,6 +236,7 @@ module.exports = class Board {
                 // Recategorize in piece list
                 this.pieces[this.turn].remove(to);
                 this.pieces[this.turn].push(to);
+                this.halfMoveClock = 0;
                 break;
             case constants.MOVE_BITS_PROMOTION_CAPTURE:
                 this.loHash ^= zobrist.SQUARES[to][this.board[to]][0];
@@ -242,7 +249,13 @@ module.exports = class Board {
                 this.pieces[this.turn].remove(to);
                 this.pieces[this.turn].push(to);
                 this.updateCastlingAndKings(from, to);
+                this.halfMoveClock = 0;
                 break;
+        }
+
+        // Increment full move number after black's turn
+        if (this.turn === constants.BLACK) {
+            this.fullMoveNumber++;
         }
 
         // Update turn
@@ -271,6 +284,7 @@ module.exports = class Board {
         this.board[to] = captured === constants.PIECE_EMPTY ? captured : (captured | opponentTurn);
         this.enPassant = this.currentHistory[0];
         this.castling = this.currentHistory[1];
+        this.halfMoveClock = this.currentHistory[4];
 
         if ((this.board[from] & constants.JUST_PIECE) === constants.PIECE_K) {
             this.kings[this.turn] = from;
@@ -303,6 +317,11 @@ module.exports = class Board {
                 this.pieces[this.turn].remove(from);
                 this.pieces[this.turn].push(from);
                 break;
+        }
+
+        // Decrement full move number after black's turn
+        if (this.turn === constants.BLACK) {
+            this.fullMoveNumber--;
         }
 
         this.loHash = this.currentHistory[2];
