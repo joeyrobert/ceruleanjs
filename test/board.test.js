@@ -37,4 +37,21 @@ describe('board', () => {
         expect(utils.moveToString(moves[2])).to.equal('e4g6');
         expect(utils.moveToString(moves[3])).to.equal('e4d5');
     });
+
+    it('should count max repetitions correctly', () => {
+        var cycleOfMoves = [
+            'g1f3',
+            'g8f6',
+            'f3g1',
+            'f6g8'
+        ];
+
+        for (var i = 0; i < 5; i++) {
+            cycleOfMoves.forEach(moveString => {
+                board.addMoveString(moveString);
+            });
+
+            expect(board.maxRepetitions()).to.equal(i + 1);
+        }
+    });
 });
