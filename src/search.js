@@ -54,6 +54,7 @@ module.exports = class Search {
         }
 
         var score;
+        var searchedMoves = 0;
         var move, moves = board.generateMoves();
 
         // Add MVV/LVA
@@ -82,6 +83,8 @@ module.exports = class Search {
             move = moves[i];
 
             if (board.addMove(move)) {
+                searchedMoves++;
+
                 if (!alphaMove) {
                     score = -this.search(board, -beta, -alpha, depth - 1);
                 } else {
@@ -91,7 +94,6 @@ module.exports = class Search {
                         score = -this.search(board, -beta, -alpha, depth - 1);
                     }
                 }
-
 
                 board.subtractMove(move);
 
@@ -110,6 +112,15 @@ module.exports = class Search {
 
         if (alphaMove) {
             this.pv[this.ply][depth] = alphaMove;
+        }
+
+        if (searchedMoves === 0) {
+            if (board.isInCheck()) {
+                return -1 * (constants.MATE_VALUE + depth);
+            } else {
+                // DRAW
+                return 0;
+            }
         }
 
         board.subtractHistory();
@@ -135,7 +146,13 @@ module.exports = class Search {
 
         var score;
         var move, moves = board.generateCapturesAndPromotions();
+
+        // Add MVV/LVA
+        for (var i = 0; i < moves.length; i++) {
+            moves[i] = utils.moveAddOrder(moves[i], board.mvvLva(moves[i]));
+        }
         moves = utils.quickSort(moves);
+
         board.addHistory();
 
         for (var i = 0; i < moves.length; i++) {
