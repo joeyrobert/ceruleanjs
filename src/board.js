@@ -345,7 +345,7 @@ module.exports = class Board {
 
     movePiece(from, to) {
         this.loHash ^= zobrist.SQUARES[from][this.board[from]][0];
-        this.loHash ^= zobrist.SQUARES[from][this.board[from]][1];
+        this.hiHash ^= zobrist.SQUARES[from][this.board[from]][1];
         this.board[to] = this.board[from];
         this.board[from] = constants.PIECE_EMPTY;
         this.pieces[this.turn].remove(from);
@@ -735,5 +735,27 @@ module.exports = class Board {
         var attacker = this.board[from] & constants.JUST_PIECE;
 
         return (constants.MVV_LVA_PIECE_VALUES[captured] * 5 + 5 - constants.MVV_LVA_PIECE_VALUES[attacker]) | 0;
+    }
+
+    maxRepetitions() {
+        var repetitionsByKey = {};
+        var key;
+        var maxRep = 0;
+
+        for (var i = 0; i < this.history.length; i++) {
+            key = this.history[i][3].toString(16) + this.history[i][2].toString(16);
+
+            if (!repetitionsByKey[key]) {
+                repetitionsByKey[key] = 0;
+            }
+
+            repetitionsByKey[key]++;
+
+            if (repetitionsByKey[key] > maxRep) {
+                maxRep = repetitionsByKey[key];
+            }
+        }
+
+        return maxRep;
     }
 };

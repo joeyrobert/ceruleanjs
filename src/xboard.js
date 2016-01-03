@@ -68,18 +68,33 @@ class Xboard {
     result(hideDisplay) {
         var perftScore = this._perft.perft(this._board, 1);
         var result = false;
+        var comment = '';
 
         if (perftScore === 0) {
             if (this._board.isInCheck()) {
-                result = this._board.turn ? '1-0' : '0-1';
+                if (this._board.turn === constants.WHITE) {
+                    result = '0-1';
+                    comment = 'Black mates';
+                } else {
+                    result = '1-0';
+                    comment = 'White mates';
+                }
+
             } else {
                 result = '1/2-1/2';
+                comment = 'Stalemate';
             }
+        } else if (this._board.halfMoveClock >= 100) {
+            result = '1/2-1/2';
+            comment = 'Draw by 50 move rule';
+        } else if (this._board.maxRepetitions() >= 3) {
+            result = '1/2-1/2';
+            comment = 'Draw by repetition';
         }
 
         if (result && !hideDisplay) {
             this._gameOver = true;
-            console.log(result);
+            console.log(`${result} {${comment}}`);
         }
 
         return result;
