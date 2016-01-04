@@ -193,7 +193,7 @@ class Xboard {
     }
 
     moves() {
-        console.log(this._board.generateLegalMoves().map(move => utils.moveToString(move)).join('\n'));
+        console.log(this._board.generateLegalMoves().map(move => utils.moveToShortString(this._board, move)).join('\n'));
     }
 
     xboard() {

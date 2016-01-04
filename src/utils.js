@@ -51,6 +51,7 @@ function moveToString(move) {
         (movePromotion(move) ? constants.INVERSE_PIECE_MAP[movePromotion(move)] : '');
 }
 
+// Inspired by chess.js implementation
 function moveToShortString(board, move) {
     // Needs to have unique IDENTIFIER + TO
     // If not unique, add FILE
@@ -58,10 +59,74 @@ function moveToShortString(board, move) {
     var from = moveFrom(move);
     var to = moveTo(move);
     var bits = moveBits(move);
-    var captured = moveCaptured(move) !== constants.PIECE_EMPTY ? 'x' : '';
-    var piece = (board.board[from] & constants.JUST_PIECE);
-    var identifier = piece === constants.PIECE_P ? '' : constants.INVERSE_PIECE_MAP[piece].toUpperCase();
-    return identifier + indexToAlgebraic(from) + captured + indexToAlgebraic(to);
+    var captured = moveCaptured(move);
+    var capturedString = captured !== constants.PIECE_EMPTY ? 'x' : '';
+    var piece = board.board[from] & constants.JUST_PIECE;
+    var pieceString = piece === constants.PIECE_P ? '' : constants.INVERSE_PIECE_MAP[piece].toUpperCase();
+    var fromString = '';
+    var checkString = '';
+    var promotion = movePromotion(move);
+    var promotionString = promotion ? '=' + constants.INVERSE_PIECE_MAP[promotion].toUpperCase() : '';
+    var moves = board.generateLegalMoves();
+    var toAlgebraic = indexToAlgebraic(to);
+    var fromAlgebraic = indexToAlgebraic(from);
+    var rank = indexToRank(from);
+    var file = indexToFile(from);
+    var possibleMove, possibleFrom, possibleTo, possiblePiece, possibleRank, possibleFile;
+    var ambiguous = false;
+    // Rank is always ambiguous on pawn captures
+    var ambiguousRank = captured !== constants.PIECE_EMPTY && piece === constants.PIECE_P;
+    var ambiguousFile = false;
+
+    // Test ambiguity against all possible moves
+    for (var i = 0; i < moves.length; i++) {
+        possibleMove = moves[i];
+        possibleFrom = moveFrom(possibleMove);
+        possibleTo = moveTo(possibleMove);
+        possiblePiece = board.board[possibleFrom] & constants.JUST_PIECE;
+        possibleRank = indexToRank(possibleFrom);
+        possibleFile = indexToFile(possibleFrom);
+
+        // Remove exact from<->to match
+        if (possiblePiece === piece && possibleFrom !== from && possibleTo === to) {
+            if (possibleRank === rank) {
+                ambiguousRank = true;
+            }
+
+            if (possibleFile === file) {
+                ambiguousFile = true;
+            }
+        }
+    }
+
+    if (ambiguousRank && ambiguousFile) {
+        // Both ambiguous, add full from
+        fromString = fromAlgebraic;
+    } else if (ambiguousFile) {
+        // File ambiguous, add unique rank
+        fromString = fromAlgebraic[1];
+    } else if (ambiguousRank) {
+        // Rank ambiguous, add unique file
+        fromString = fromAlgebraic[0];
+    }
+
+    // Determine check status
+    board.addHistory();
+    board.addMove(move);
+
+    if (board.isInCheck()) {
+        // Checkmate
+        if (board.generateLegalMoves().length === 0) {
+            checkString = '#';
+        } else {
+            checkString = '+';
+        }
+    }
+
+    board.subtractMove(move);
+    board.subtractHistory();
+
+    return pieceString + fromString + capturedString + toAlgebraic + promotionString + checkString;
 }
 
 function createMove(from, to, bits, captured, promotion, order) {
