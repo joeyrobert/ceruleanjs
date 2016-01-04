@@ -177,7 +177,7 @@ module.exports = class Search {
         return alpha;
     }
 
-    iterativeDeepening(board, timePerMove, maxDepth) {
+    iterativeDeepening(board, timePerMove, maxDepth, hideDisplay) {
         this.startTime = new Date();
         this.timePerMove = timePerMove;
         this.ply = 1;
@@ -198,7 +198,7 @@ module.exports = class Search {
                     moveStrings.push(utils.moveToString(this.pv[this.ply][i]));
                 }
 
-                if (!this.endedEarly) {
+                if (!this.endedEarly && !hideDisplay) {
                     console.log(`${depth} ${score} ${Math.round(this.timeDiff() / 10)} ${evaluate.getEvalCount()} ${moveStrings.join(' ')}`);
                 }
             }

@@ -7,6 +7,7 @@ const evaluate = require('./evaluate');
 const Opening = require('./opening');
 const Perft = require('./perft');
 const Search = require('./search');
+const sts = require('./sts');
 const utils = require('./utils');
 
 class Xboard {
@@ -92,8 +93,11 @@ class Xboard {
             comment = 'Draw by repetition';
         }
 
-        if (result && !hideDisplay) {
+        if (result) {
             this._gameOver = true;
+        }
+
+        if (result && !hideDisplay) {
             console.log(`${result} {${comment}}`);
         }
 
@@ -352,6 +356,10 @@ class Xboard {
 
     }
 
+    sts() {
+        sts();
+    }
+
     quit() {
         this.exit();
     }
@@ -385,6 +393,7 @@ otim [INT]                  Sets opponent's time (in centiseconds)
 sd [INT]                    Sets maximum depth
 st [INT]                    Sets maximum time
 level [MPT] [BASE] [INC]    Sets Winboard level timing
+sts                         Run Strategic Test Suite (1s per move)
 exit                        Exits the menu
 quit                        See exit
 help                        Gets you this magical menu
