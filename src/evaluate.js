@@ -134,14 +134,6 @@ function evaluate(board, display) {
         return savedEval;
     }
 
-    // "Losing the game penalty"
-    // var legalMoves = board.generateLegalMoves();
-    // var isInCheck = board.isInCheck();
-
-    // if (legalMoves.length === 0 && isInCheck) {
-    //     return -1 * constants.PIECE_VALUES[constants.PIECE_K];
-    // }
-
     // Summed values
     var material        = [0, 0];
     var pst             = [0, 0];
