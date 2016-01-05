@@ -76,25 +76,30 @@ STDIN/OUT. Here's the list of commands:
 
     Commands
 
-    display         Draws the board
-    perft [INT]     Perfts the current board to specified depth
-    divide [INT]    Divides the current board to specified depth
-    moves           Lists valid moves for this position
-    e2e4            Moves from the current position and thinks
-    go              Forces the engine to think
-    undo            Subtracts the previous move
-    new             Sets up the default board position
-    setboard [FEN]  Sets the board using Forsyth-Edwards Notation
-    evaluate        Performs a static evaluation of the board
-    white           Sets the active colour to WHITE
-    black           Sets the active colour to BLACK
-    time [INT]      Sets engine's time (in centiseconds)
-    otim [INT]      Sets opponent's time (in centiseconds)
-    sd [INT]        Sets maximum depth
-    st [INT]        Sets maximum time
-    exit            Exits the menu
-    quit            See exit
-    help            Gets you this magical menu
+    display                     Draws the board
+    perft [INT]                 Perfts the current board to specified depth
+    perfthash [INT]             Sets perft hashtable exponent (size 2^exponent)
+    divide [INT]                Divides the current board to specified depth
+    moves                       Lists valid moves for this position
+    e2e4                        Moves from the current position and thinks
+    go                          Forces the engine to think
+    undo                        Subtracts the previous move
+    new                         Sets up the default board position
+    setboard [FEN]              Sets the board using Forsyth-Edwards Notation
+    evaluate                    Performs a static evaluation of the board
+    result                      Displays game result (checkmate or stalemate)
+    book [on|off]               Toggles whether engine uses opening book
+    white                       Sets the active colour to WHITE
+    black                       Sets the active colour to BLACK
+    time [INT]                  Sets engine's time (in centiseconds)
+    otim [INT]                  Sets opponent's time (in centiseconds)
+    sd [INT]                    Sets maximum depth
+    st [INT]                    Sets maximum time
+    level [MPT] [BASE] [INC]    Sets Winboard level timing
+    sts                         Run Strategic Test Suite (1s per move)
+    exit                        Exits the menu
+    quit                        See exit
+    help                        Gets you this magical menu
 
 ## Interface GIF
 
