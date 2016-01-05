@@ -1,42 +1,49 @@
 'use strict';
 
-const fs = require('fs');
 const MersenneTwister = require('mersennetwister');
-const HashTable = require('./hash_table');
 const PGN = require('./pgn');
 const Board = require('./board');
+const utils = require('./utils');
 
 module.exports = class Opening {
     constructor() {
         this.board = new Board();
-        this.openingTable = new HashTable(14);
         this.mt = new MersenneTwister();
+        this.openingTable = {};
         this.bookLoaded = false;
+        this.loadBook();
+    }
 
-        var book;
+    loadBook() {
+        var json, book;
 
+        // Try JSON first, then go to BOK
         if (process.browser) {
-            // Synchronous HTTP request for book
-            var request = new XMLHttpRequest();
-            request.open('GET', 'book.bok', false);
-            request.send(null);
+            json = utils.syncGET('book.json');
 
-            if (request.status === 200) {
-                book = request.responseText;
+            if (!json) {
+                book = utils.syncGET('book.bok');
             }
         } else {
-            try {
-                book = fs.readFileSync('./book.bok', 'utf-8');
-            } catch (err) {
-                try {
-                    book = fs.readFileSync('./suites/bok/small.bok', 'utf-8');
-                } catch (err2) {
+            json = utils.readFile('./book.json');
 
+            if (!json) {
+                json = utils.readFile('./suites/json/large.json');
+            }
+
+            if (!json) {
+                book = utils.readFile('./book.bok');
+
+                if (!book) {
+                    book = utils.readFile('./suites/bok/large.bok');
                 }
             }
         }
 
-        if (book) {
+        if (json) {
+            this.addJSON(json);
+            this.bookLoaded = true;
+        } else if (book) {
             this.addBok(book);
             this.bookLoaded = true;
         }
@@ -52,16 +59,18 @@ module.exports = class Opening {
     addBok(bokText) {
         var lines = bokText.split('\n');
         var moveCount = 0;
+        var openingTable = {};
 
         lines.forEach(line => {
             var moveStrings = this.chunkString(line.trim(), 4);
             var moveInts = [];
 
             moveStrings.forEach(moveString => {
-                var moves = this.openingTable.get(this.board.loHash, this.board.hiHash) || [];
+                var boardHashString = this.board.hashString;
+                var moves = openingTable[boardHashString] || [];
                 moves.push(moveString);
                 moves = moves.filter(this.onlyUnique);
-                this.openingTable.set(this.board.loHash, this.board.hiHash, moves);
+                openingTable[boardHashString] = moves;
                 moveInts.push(this.board.addMoveString(moveString));
                 moveCount++;
             });
@@ -71,10 +80,19 @@ module.exports = class Opening {
                 this.board.subtractHistory();
             });
         });
+
+        this.openingTable = openingTable;
+
+        // For regeneration, run:
+        // utils.writeFile('./suites/json/large.json', JSON.stringify(openingTable));
     }
 
-    lookupRandom(loHash, hiHash) {
-        var possibleMoves = this.openingTable.get(loHash, hiHash);
+    addJSON(jsonText) {
+        this.openingTable = JSON.parse(jsonText);
+    }
+
+    lookupRandom(board) {
+        var possibleMoves = this.openingTable[board.hashString];
         return possibleMoves && possibleMoves[this.mt.int31() % possibleMoves.length];
     }
 

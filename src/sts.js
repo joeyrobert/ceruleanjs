@@ -1,6 +1,5 @@
 'use strict';
 
-const fs = require('fs');
 const Board = require('./board');
 const Search = require('./search');
 const utils = require('./utils');
@@ -18,9 +17,11 @@ function sts() {
 
     // Load them ahead of time
     for (var i = 1; i <= limit; i++) {
-        try {
-            epds.push(fs.readFileSync(`suites/epd/STS${i}.epd`, 'utf8'));
-        } catch (err) {
+        var epd = utils.readFile(`suites/epd/STS${i}.epd`);
+
+        if (epd) {
+            epds.push(epd);
+        } else {
             console.log(`STS file not found at ./suites/epd/STS${i}.epd`);
             return;
         }

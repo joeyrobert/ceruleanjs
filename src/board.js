@@ -721,6 +721,10 @@ module.exports = class Board {
         }
     }
 
+    get hashString() {
+        return this.loHash.toString(16) + ' ' + this.hiHash.toString(16);
+    }
+
     // Outputs MVV/LVA score for move, scaled from 0-63
     // Inspired by Laser's implementation
     mvvLva(move) {
