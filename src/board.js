@@ -8,6 +8,7 @@ const see = require('./see');
 
 module.exports = class Board {
     constructor() {
+        this.emptyBoard();
         this.fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
     }
 
@@ -208,8 +209,8 @@ module.exports = class Board {
                 break;
             case constants.MOVE_BITS_EN_PASSANT:
                 this.movePiece(from, to);
-                var pawnIncrement = this.turn ? 15 : -15;
-                var destroyedPawn = to + pawnIncrement;
+                var pawnIncrement = this.turn ? -15 : 15;
+                var destroyedPawn = to + -1 * pawnIncrement;
                 this.pieces[opponentTurn].remove(destroyedPawn);
                 this.loHash ^= zobrist.SQUARES[destroyedPawn][this.board[destroyedPawn]][0];
                 this.hiHash ^= zobrist.SQUARES[destroyedPawn][this.board[destroyedPawn]][1];

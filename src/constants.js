@@ -189,11 +189,8 @@ const PAWN_LAST_RANK = [
     [33, 40]
 ];
 
-// Search
 const SEARCH_LIMIT_CHECK = 10000;
-const ASPIRATION_WINDOW = 25; // quarter pawn
 
-// Regex
 const FEN_BOARD_REGEX = /^\s*([rnbqkpRNBQKP1-8]+\/){7}([rnbqkpRNBQKP1-8]+)\s[bw]\s(-|K?Q?k?q?)\s(-|[a-h‌​][36])/;
 const MOVE_REGEX = /^[a-h][1-8][a-h][1-8][bnrq]?$/;
 const LEVEL_REGEX = /^\d+ \d+(:\d{2})? \d+$/;
@@ -264,7 +261,6 @@ module.exports = {
     PAWN_FIRST_RANK,
     PAWN_LAST_RANK,
     SEARCH_LIMIT_CHECK,
-    ASPIRATION_WINDOW,
     FEN_BOARD_REGEX,
     MOVE_REGEX,
     LEVEL_REGEX,

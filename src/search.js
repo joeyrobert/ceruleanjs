@@ -185,26 +185,12 @@ module.exports = class Search {
         this.pv = [];
         var moveStrings, score;
 
-        var alpha = -Infinity;
-        var beta = Infinity;
-
-        for (var depth = 1; depth <= maxDepth;) {
+        for (var depth = 1; depth <= maxDepth; depth++) {
             this.ply = depth;
             this.pv[this.ply] = [];
             evaluate.resetEvalCount();
-            score = this.search(board, alpha, beta, depth);
-
-            // Aspiration Window
-            alpha = score - constants.ASPIRATION_WINDOW;
-            beta = score + constants.ASPIRATION_WINDOW;
-
-            if (score <= alpha) {
-                alpha -= 3 * constants.ASPIRATION_WINDOW;
-                continue;
-            } else if (score >= beta) {
-                beta += 3 * constants.ASPIRATION_WINDOW;
-                continue;
-            }
+            score = this.search(board, -Infinity, +Infinity, depth);
+            //score = this.minimax(board, depth);
 
             if (utils.isNumeric(score)) {
                 moveStrings = [];
@@ -220,8 +206,6 @@ module.exports = class Search {
             if (this.timeDiff() >= this.timePerMove) {
                 break;
             }
-
-            depth++
         }
 
         if (this.endedEarly) {
