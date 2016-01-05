@@ -1,5 +1,6 @@
 'use strict';
 
+const fs = require('fs');
 const constants = require('./constants');
 
 function isNumeric(n) {
@@ -235,6 +236,31 @@ function colors(squareEven, turn, text) {
     ].join('');
 }
 
+function syncGET(path) {
+    // Synchronous HTTP request
+    var request = new XMLHttpRequest();
+    request.open('GET', path, false);
+    request.send(null);
+
+    if (request.status === 200) {
+        return request.responseText;
+    }
+}
+
+function readFile(path) {
+    try {
+        return fs.readFileSync(path, 'utf8');
+    } catch (err) {
+    }
+}
+
+function writeFile(path, text) {
+    try {
+        fs.writeFileSync(path, text, 'utf8');
+        return true;
+    } catch (err) {
+    }
+}
 
 module.exports = {
     isNumeric,
@@ -258,5 +284,8 @@ module.exports = {
     moveAddOrder,
     quickSort,
     padIndices,
-    colors
+    colors,
+    syncGET,
+    readFile,
+    writeFile
 };

@@ -153,7 +153,7 @@ class Xboard {
 
         display += '\n';
         display += `\nFEN:  ${this._board.fen}`;
-        display += `\nHash: ${this._board.loHash.toString(16)} ${this._board.hiHash.toString(16)}`;
+        display += `\nHash: ${this._board.hashString}`;
 
         console.log(display);
     }
@@ -238,7 +238,7 @@ class Xboard {
         var moveString, move;
 
         if (this._useBook) {
-            moveString = this._opening.lookupRandom(this._board.loHash, this._board.hiHash);
+            moveString = this._opening.lookupRandom(this._board);
         }
 
         if (moveString) {
