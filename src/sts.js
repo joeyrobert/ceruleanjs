@@ -12,18 +12,25 @@ function sts() {
     var timePerMove = 1 * 1000;
     var pointTotal = 0;
     var maxDepth = 64;
-    var limit = 15;
+    var limit = 10;
     var count = 0;
+    var epds = [];
 
-    for (var i = 1; i <= 15; i++) {
+    // Load them ahead of time
+    for (var i = 1; i <= limit; i++) {
         try {
-            var epd = fs.readFileSync(`suites/epd/STS${i}.epd`, 'utf8');
+            epds.push(fs.readFileSync(`suites/epd/STS${i}.epd`, 'utf8'));
         } catch (err) {
             console.log(`STS file not found at ./suites/epd/STS${i}.epd`);
             return;
         }
-        var lines = epd.split('\n');
-        var fens = lines.map(line => line.split(';')[0].trim());
+    }
+
+    // Run em
+    for (var i = 0; i < epds.length; i++) {
+        var lines = epds[i].split('\n');
+        var fens = lines.map(line => line.split('bm')[0].trim() + ' 0 1');
+        var ids = lines.map(line => /id "(.*?)"/.exec(line)[1]);
         var points = lines.map(line => {
             var movesByPoints = /c0 \"(.*?)\"/.exec(line)[1].split(', ');
             var movePoints = {};
@@ -41,10 +48,13 @@ function sts() {
             var point = points[index][moveString] || 0;
             pointTotal += point;
             count++;
+            console.log(ids[index]);
             console.log(`${count}/${limit * 100}: ${fen}`);
-            console.log('move', moveString, 'points added', point, 'total points', pointTotal, points[index], '\n');
+            console.log('Move:', moveString, 'Points Added:', point, 'Total Points:', pointTotal, points[index], '\n');
         });
     }
+
+    console.log(`STS Total Points: ${pointTotal} / ${limit * 100 * 10}`);
 
     return pointTotal;
 }

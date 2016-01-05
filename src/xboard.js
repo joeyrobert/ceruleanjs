@@ -112,7 +112,6 @@ class Xboard {
             this._useBook = false;
             return false;
         }
-        console.log(cleanedUpStatus)
 
         if (cleanedUpStatus === 'on') {
             console.log('Book set to on');
