@@ -4,8 +4,8 @@ const constants = require('./constants');
 
 class PieceList {
     constructor() {
-        this.indices = new Array(16);
-        this.reverse = new Array(constants.WIDTH * constants.HEIGHT);
+        this.indices = new Uint32Array(16);
+        this.reverse = new Uint32Array(constants.WIDTH * constants.HEIGHT);
         this.length = 0;
     }
 
@@ -27,11 +27,11 @@ class PieceList {
 
 class BoardPieceList {
     constructor(board) {
-        this.indices = new Array(16);
-        this.reverse = new Array(constants.WIDTH * constants.HEIGHT);
+        this.indices = new Uint32Array(16);
+        this.reverse = new Uint32Array(constants.WIDTH * constants.HEIGHT);
         this.length = 0;
 
-        this.indexToPiece = new Array(constants.WIDTH * constants.HEIGHT);
+        this.indexToPiece = new Uint32Array(constants.WIDTH * constants.HEIGHT);
         this.board = board;
         this.pieces = [];
         this.pieces[constants.PIECE_P] = new PieceList();
