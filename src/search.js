@@ -190,7 +190,6 @@ module.exports = class Search {
             this.pv[this.ply] = [];
             evaluate.resetEvalCount();
             score = this.search(board, -Infinity, +Infinity, depth);
-            //score = this.minimax(board, depth);
 
             if (utils.isNumeric(score)) {
                 moveStrings = [];
