@@ -21,11 +21,11 @@ for (var diff = 1; diff <= 112; diff++) {
     DELTA_BY_DIFFERENCE[diff] = delta;
 }
 
-var PIECE_BY_DELTA = [];
-PIECE_BY_DELTA[1]  = constants.PIECE_R;
-PIECE_BY_DELTA[14] = constants.PIECE_B;
-PIECE_BY_DELTA[15] = constants.PIECE_R;
-PIECE_BY_DELTA[16] = constants.PIECE_B;
+var BISHOPY_DELTA = [];
+BISHOPY_DELTA[1]  = constants.ROOK;
+BISHOPY_DELTA[14] = constants.BISHOP;
+BISHOPY_DELTA[15] = constants.ROOK;
+BISHOPY_DELTA[16] = constants.BISHOP;
 
 // Static exchange evaluation
 // Ideas in this file inspired by Mediocre's implementation of SEE
@@ -33,11 +33,11 @@ function staticExchangeEvaluation(board, move) {
     var captured = utils.moveCaptured(move);
     var promotion = utils.movePromotion(move);
 
-    if (promotion && captured === constants.PIECE_EMPTY) {
+    if (promotion && captured === constants.EMPTY) {
         return constants.SEE_PIECE_VALUES[promotion];
     }
 
-    if (captured === constants.PIECE_EMPTY) {
+    if (captured === constants.EMPTY) {
         return 0;
     }
 
@@ -49,11 +49,11 @@ function staticExchangeEvaluation(board, move) {
     // Pawns
     for (var turn = 0; turn < 2; turn++) {
         for (j = 0; j < 2; j++) {
-            newMove = to + (14 + 2 * j) * (turn ? 1 : -1);
+            newMove = to + (14 + 2 * j) * (turn === constants.WHITE ? -1 : 1);
             if (board.board[newMove] &&
                 newMove !== from &&
                 board.board[newMove] % 2 === turn &&
-                (board.board[newMove] & constants.JUST_PIECE) === constants.PIECE_P) {
+                (board.board[newMove] & constants.JUST_PIECE) === constants.PAWN) {
                 attackers[turn].push(newMove);
             }
         }
@@ -83,13 +83,13 @@ function staticExchangeEvaluation(board, move) {
         for (j = 0; j < 4; j++) {
             newMove = to + deltas[j];
 
-            while (board.board[newMove] && board.board[newMove] === constants.PIECE_EMPTY) {
+            while (board.board[newMove] && board.board[newMove] === constants.EMPTY) {
                 newMove += deltas[j];
             }
 
             if (newMove !== from &&
                 (board.board[newMove] & constants.JUST_PIECE) === deltaPiece ||
-                (board.board[newMove] & constants.JUST_PIECE) === constants.PIECE_Q) {
+                (board.board[newMove] & constants.JUST_PIECE) === constants.QUEEN) {
                 turn = board.board[newMove] % 2;
                 attackers[turn].push(newMove);
             }
@@ -114,18 +114,18 @@ function staticExchangeEvaluation(board, move) {
         var hiddenDelta = DELTA_BY_DIFFERENCE[Math.abs(to - attackerPieceIndex)];
 
         if (hiddenDelta) {
-            deltaPiece = PIECE_BY_DELTA[hiddenDelta];
+            deltaPiece = BISHOPY_DELTA[hiddenDelta];
             // Moving away from to/attackerPieceIndex
             hiddenDelta *= to < attackerPieceIndex ? 1 : -1;
             newMove = attackerPieceIndex + hiddenDelta;
 
             // Add sliding (hidden) pieces
-            while (board.board[newMove] && board.board[newMove] === constants.PIECE_EMPTY) {
+            while (board.board[newMove] && board.board[newMove] === constants.EMPTY) {
                 newMove += hiddenDelta;
             }
 
             if ((board.board[newMove] & constants.JUST_PIECE) === deltaPiece ||
-                (board.board[newMove] & constants.JUST_PIECE) === constants.PIECE_Q) {
+                (board.board[newMove] & constants.JUST_PIECE) === constants.QUEEN) {
                 turn = board.board[newMove] % 2;
                 attackers[turn].push(newMove);
             }

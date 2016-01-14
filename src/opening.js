@@ -1,6 +1,5 @@
 'use strict';
 
-const MersenneTwister = require('mersennetwister');
 const PGN = require('./pgn');
 const Board = require('./board');
 const utils = require('./utils');
@@ -8,7 +7,6 @@ const utils = require('./utils');
 module.exports = class Opening {
     constructor() {
         this.board = new Board();
-        this.mt = new MersenneTwister();
         this.openingTable = {};
         this.bookLoaded = false;
         this.loadBook();
@@ -93,7 +91,11 @@ module.exports = class Opening {
 
     lookupRandom(board) {
         var possibleMoves = this.openingTable[board.hashString];
-        return possibleMoves && possibleMoves[this.mt.int31() % possibleMoves.length];
+
+        if (possibleMoves) {
+            var randomIndex = Math.floor(Math.random() * (possibleMoves.length - 1));
+            return possibleMoves[randomIndex];
+        }
     }
 
     chunkString(str, len) {

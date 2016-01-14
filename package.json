@@ -6,7 +6,6 @@
   "author": "joeyrobert <joey@joeyrobert.org>",
   "license": "GPL-3.0",
   "dependencies": {
-    "mersennetwister": "^0.2.2"
   },
   "engines": {
     "node": ">=4.0.0"

@@ -16,7 +16,7 @@ function indexToRank(index) {
 }
 
 function indexToFile(index) {
-    return (index - 3) % 15;
+    return index % 15 - 3;
 }
 
 function algebraicToIndex(algebraic) {
@@ -61,9 +61,9 @@ function moveToShortString(board, move) {
     var to = moveTo(move);
     var bits = moveBits(move);
     var captured = moveCaptured(move);
-    var capturedString = captured !== constants.PIECE_EMPTY ? 'x' : '';
+    var capturedString = captured !== constants.EMPTY ? 'x' : '';
     var piece = board.board[from] & constants.JUST_PIECE;
-    var pieceString = piece === constants.PIECE_P ? '' : constants.INVERSE_PIECE_MAP[piece].toUpperCase();
+    var pieceString = piece === constants.PAWN ? '' : constants.INVERSE_PIECE_MAP[piece].toUpperCase();
     var fromString = '';
     var checkString = '';
     var promotion = movePromotion(move);
@@ -76,7 +76,7 @@ function moveToShortString(board, move) {
     var possibleMove, possibleFrom, possibleTo, possiblePiece, possibleRank, possibleFile;
     var ambiguous = false;
     // Rank is always ambiguous on pawn captures
-    var ambiguousRank = captured !== constants.PIECE_EMPTY && piece === constants.PIECE_P;
+    var ambiguousRank = captured !== constants.EMPTY && piece === constants.PAWN;
     var ambiguousFile = false;
 
     // Test ambiguity against all possible moves
@@ -136,12 +136,14 @@ function createMove(from, to, bits, captured, promotion, order) {
                (bits >> 1 << 1);
 
     if (promotion) {
-        move += constants.PIECE_TO_LOG[promotion] << constants.MOVE_PROMOTION_SHIFT;
+        move += (promotion >> 1) << constants.MOVE_PROMOTION_SHIFT;
     }
 
-    if (captured) {
-        move += constants.PIECE_TO_LOG[captured & constants.JUST_PIECE] << constants.MOVE_CAPTURED_SHIFT;
+    if (captured === undefined) {
+        captured = constants.EMPTY;
     }
+
+    move += (captured >> 1) << constants.MOVE_CAPTURED_SHIFT;
 
     if (order) {
         move += order << constants.MOVE_ORDER_SHIFT;
@@ -159,13 +161,11 @@ function moveTo(move) {
 }
 
 function movePromotion(move) {
-    var power = ((move & constants.MOVE_PROMOTION_MASK) >> constants.MOVE_PROMOTION_SHIFT);
-    return power && (1 << power);
+    return ((move & constants.MOVE_PROMOTION_MASK) >> constants.MOVE_PROMOTION_SHIFT) << 1;
 }
 
 function moveCaptured(move) {
-    var power = ((move & constants.MOVE_CAPTURED_MASK) >> constants.MOVE_CAPTURED_SHIFT);
-    return power ? (1 << power) : constants.PIECE_EMPTY;
+    return ((move & constants.MOVE_CAPTURED_MASK) >> constants.MOVE_CAPTURED_SHIFT) << 1;
 }
 
 function moveBits(move) {
@@ -262,6 +262,15 @@ function writeFile(path, text) {
     }
 }
 
+function unsignedHexString(number) {
+    if (number < 0) {
+        number = 0xFFFFFFFF + number + 1;
+    }
+
+    return number.toString(16).toUpperCase();
+}
+
+
 module.exports = {
     isNumeric,
     rankFileToIndex,
@@ -287,5 +296,6 @@ module.exports = {
     colors,
     syncGET,
     readFile,
-    writeFile
+    writeFile,
+    unsignedHexString
 };
