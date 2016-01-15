@@ -178,9 +178,14 @@ module.exports = class Board {
         var zobristIndex;
 
         if (this.enPassant) {
-            zobristIndex = polyglot.EN_PASSANT_OFFSET + utils.indexToFile(this.enPassant);
-            this.loHash ^= polyglot.LO_HASH[zobristIndex];
-            this.hiHash ^= polyglot.HI_HASH[zobristIndex];
+            var direction = this.turn === constants.WHITE ? 1 : -1;
+
+            // opponentTurn === opponentPiece, because pawn offset is 0
+            if (this.board[this.enPassant - 14 * direction] === this.turn || this.board[this.enPassant - 16 * direction] === this.turn) {
+                zobristIndex = polyglot.EN_PASSANT_OFFSET + utils.indexToFile(this.enPassant);
+                this.loHash ^= polyglot.LO_HASH[zobristIndex];
+                this.hiHash ^= polyglot.HI_HASH[zobristIndex];
+            }
         }
 
         this.enPassant = null;
@@ -234,10 +239,15 @@ module.exports = class Board {
             case constants.MOVE_BITS_DOUBLE_PAWN:
                 this.movePiece(from, to);
                 var pawnIncrement = this.turn === constants.WHITE ? 15 : -15;
+                var direction = this.turn === constants.WHITE ? -1 : 1;
                 this.enPassant = from + pawnIncrement;
-                zobristIndex = polyglot.EN_PASSANT_OFFSET + utils.indexToFile(this.enPassant);
-                this.loHash ^= polyglot.LO_HASH[zobristIndex];
-                this.hiHash ^= polyglot.HI_HASH[zobristIndex];
+
+                if (this.board[this.enPassant - 14 * direction] === opponentTurn || this.board[this.enPassant - 16 * direction] === opponentTurn) {
+                    zobristIndex = polyglot.EN_PASSANT_OFFSET + utils.indexToFile(this.enPassant);
+                    this.loHash ^= polyglot.LO_HASH[zobristIndex];
+                    this.hiHash ^= polyglot.HI_HASH[zobristIndex];
+                }
+
                 this.halfMoveClock = 0;
                 break;
             case constants.MOVE_BITS_PROMOTION:
@@ -346,8 +356,8 @@ module.exports = class Board {
             var castlingInfo = constants.CASTLING_INFO[castlingIndex];
             if ((this.castling & castlingInfo[0]) && (from === castlingInfo[1] || to === castlingInfo[3] || from === castlingInfo[3])) {
                 this.castling -= castlingInfo[0];
-                this.loHash ^= polyglot.LO_HASH[polyglot.CASTLING_OFFSET + castlingIndex];
-                this.hiHash ^= polyglot.HI_HASH[polyglot.CASTLING_OFFSET + castlingIndex];
+                this.loHash ^= polyglot.LO_HASH[polyglot.CASTLING_OFFSET + castlingInfo[6]];
+                this.hiHash ^= polyglot.HI_HASH[polyglot.CASTLING_OFFSET + castlingInfo[6]];
             }
         }
 

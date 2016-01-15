@@ -152,11 +152,12 @@ const CASTLING = {
     q: CASTLING_B_Q
 };
 
+// Refactor/remove this, getting unweildy
 const CASTLING_INFO = [
-    [CASTLING_B_K, 142, 144, 145, 143, 'k'],
-    [CASTLING_B_Q, 142, 140, 138, 141, 'q'],
-    [CASTLING_W_K, 37, 39, 40, 38, 'K'],
-    [CASTLING_W_Q, 37, 35, 33, 36, 'Q']
+    [CASTLING_B_K, 142, 144, 145, 143, 'k', 2],
+    [CASTLING_B_Q, 142, 140, 138, 141, 'q', 3],
+    [CASTLING_W_K, 37, 39, 40, 38, 'K', 0],
+    [CASTLING_W_Q, 37, 35, 33, 36, 'Q', 1]
 ];
 
 var CASTLING_MAP    = [];
