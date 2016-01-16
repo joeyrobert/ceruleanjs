@@ -497,6 +497,25 @@ module.exports = class Board {
         }
     }
 
+    polyglotMoveToMoveString(polyglotMove) {
+        var toFile          = (polyglotMove & 0b000000000000111);
+        var toRank          = (polyglotMove & 0b000000000111000) >> 3;
+        var fromFile        = (polyglotMove & 0b000000111000000) >> 6;
+        var fromRank        = (polyglotMove & 0b000111000000000) >> 9;
+        var promotionPiece  = (polyglotMove & 0b111000000000000) >> 12;
+
+        var moveString = String.fromCharCode(96 + fromFile + 1) +
+            (fromRank + 1) +
+            String.fromCharCode(96 + toFile + 1) +
+            (toRank + 1);
+
+        if (promotionPiece) {
+            moveString += constants.POLYGLOT_PROMOTION_STRINGS[promotionPiece];
+        }
+
+        return moveString;
+    }
+
     pawnMoves(moves, index) {
         var lastRank = constants.PAWN_LAST_RANK[this.turn];
         var firstRank = constants.PAWN_FIRST_RANK[this.turn]

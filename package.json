@@ -6,6 +6,7 @@
   "author": "joeyrobert <joey@joeyrobert.org>",
   "license": "GPL-3.0",
   "dependencies": {
+    "ceruleanjs_opening_books": "^1.0.0"
   },
   "engines": {
     "node": ">=4.0.0"

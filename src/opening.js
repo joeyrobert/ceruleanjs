@@ -1,6 +1,5 @@
 'use strict';
 
-const PGN = require('./pgn');
 const Board = require('./board');
 const utils = require('./utils');
 
@@ -13,80 +12,25 @@ module.exports = class Opening {
     }
 
     loadBook() {
-        var json, book;
+        var book;
 
-        // Try JSON first, then go to BOK
         if (process.browser) {
-            json = utils.syncGET('book.json');
+            book = utils.syncGET('book.bin');
 
-            if (!json) {
-                book = utils.syncGET('book.bok');
+            if (book) {
+                this.addBook(book);
             }
         } else {
-            json = utils.readFile('./book.json');
+            book = utils.readFileBuffer('./book.bin');
 
-            if (!json) {
-                json = utils.readFile('./suites/json/large.json');
+            if (!book) {
+                book = utils.readFileBuffer('./node_modules/ceruleanjs_opening_books/gm2001.bin');
             }
 
-            if (!json) {
-                book = utils.readFile('./book.bok');
-
-                if (!book) {
-                    book = utils.readFile('./suites/bok/large.bok');
-                }
+            if (book) {
+                this.addBook(utils.bufferToArrayBuffer(book));
             }
         }
-
-        if (json) {
-            this.addJSON(json);
-            this.bookLoaded = true;
-        } else if (book) {
-            this.addBok(book);
-            this.bookLoaded = true;
-        }
-    }
-
-    addPgn(pgnText) {
-        var pgn = new PGN(pgnText);
-        pgn.games.forEach(game => {
-
-        });
-    }
-
-    addBok(bokText) {
-        var lines = bokText.split('\n');
-        var moveCount = 0;
-        var openingTable = {};
-
-        lines.forEach(line => {
-            var moveStrings = this.chunkString(line.trim(), 4);
-            var moveInts = [];
-
-            moveStrings.forEach(moveString => {
-                var boardHashString = this.board.hashString;
-                var moves = openingTable[boardHashString] || [];
-                moves.push(moveString);
-                moves = moves.filter(this.onlyUnique);
-                openingTable[boardHashString] = moves;
-                moveInts.push(this.board.addMoveString(moveString));
-                moveCount++;
-            });
-
-            moveStrings.forEach(() => {
-                this.board.subtractMove(moveInts.pop());
-                this.board.subtractHistory();
-            });
-        });
-
-        this.openingTable = openingTable;
-
-        // For regeneration, run:
-        // utils.writeFile('./suites/json/large.json', JSON.stringify(openingTable));
-    }
-
-    addJSON(jsonText) {
-        this.openingTable = JSON.parse(jsonText);
     }
 
     lookupRandom(board) {
@@ -98,21 +42,22 @@ module.exports = class Opening {
         }
     }
 
-    chunkString(str, len) {
-        var s = Math.ceil(str.length / len),
-            ret = new Array(s),
-            offset;
+    addBook(book) {
+        var bookDataView = new DataView(book);
 
-        for (var i = 0; i < s; i++) {
-            offset = i * len;
-            ret[i] = str.substring(offset, offset + len);
+        for (var byteOffset = 0; byteOffset < bookDataView.byteLength - 8; byteOffset += 8) {
+            var key = utils.unsignedHexString(bookDataView.getUint32(byteOffset)) + utils.unsignedHexString(bookDataView.getUint32(byteOffset + 4));
+            var move = bookDataView.getUint16(byteOffset + 8);
+            var weight = bookDataView.getUint16(byteOffset + 10);
+            var learn = bookDataView.getUint32(byteOffset + 12);
+
+            if (!this.openingTable[key]) {
+                this.openingTable[key] = [];
+            }
+
+            this.openingTable[key].push(move);
         }
 
-        return ret;
-    }
-
-
-    onlyUnique(value, index, self) {
-        return self.indexOf(value) === index;
+        this.bookLoaded = true;
     }
 };

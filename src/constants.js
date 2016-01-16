@@ -204,6 +204,14 @@ const ANSI_COLORS = {
     reset:      '\u001b[0m'
 };
 
+const POLYGLOT_PROMOTION_STRINGS = [
+    '',
+    'N',
+    'B',
+    'R',
+    'Q'
+];
+
 module.exports = {
     WHITE,
     BLACK,
@@ -264,5 +272,6 @@ module.exports = {
     FEN_BOARD_REGEX,
     MOVE_REGEX,
     LEVEL_REGEX,
-    ANSI_COLORS
+    ANSI_COLORS,
+    POLYGLOT_PROMOTION_STRINGS
 };

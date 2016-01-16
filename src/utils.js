@@ -247,9 +247,28 @@ function syncGET(path) {
     }
 }
 
+function syncGETBuffer(path) {
+    // Synchronous HTTP request
+    var request = new XMLHttpRequest();
+    request.responseType = 'arraybuffer';
+    request.open('GET', path, false);
+    request.send(null);
+
+    if (request.status === 200) {
+        return request.response;
+    }
+}
+
 function readFile(path) {
     try {
         return fs.readFileSync(path, 'utf8');
+    } catch (err) {
+    }
+}
+
+function readFileBuffer(path) {
+    try {
+        return fs.readFileSync(path);
     } catch (err) {
     }
 }
@@ -270,6 +289,9 @@ function unsignedHexString(number) {
     return number.toString(16).toUpperCase();
 }
 
+function bufferToArrayBuffer(buffer) {
+    return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
+}
 
 module.exports = {
     isNumeric,
@@ -295,7 +317,10 @@ module.exports = {
     padIndices,
     colors,
     syncGET,
+    syncGETBuffer,
     readFile,
+    readFileBuffer,
     writeFile,
-    unsignedHexString
+    unsignedHexString,
+    bufferToArrayBuffer
 };

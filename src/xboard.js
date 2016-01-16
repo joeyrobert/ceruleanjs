@@ -235,13 +235,14 @@ class Xboard {
         }
 
         this._forceSet = false;
-        var moveString, move;
+        var moveString, move, polyglotMove;
 
         if (this._useBook) {
-            moveString = this._opening.lookupRandom(this._board);
+            polyglotMove = this._opening.lookupRandom(this._board);
         }
 
-        if (moveString) {
+        if (polyglotMove) {
+            moveString = this._board.polyglotMoveToMoveString(polyglotMove);
             move = this._board.addMoveString(moveString);
         } else {
             move = this._search.iterativeDeepening(this._board, this._timePerMove, this._maxDepth);
