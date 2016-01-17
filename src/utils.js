@@ -208,8 +208,8 @@ function padIndices(pieceSquareTable) {
         new Int32Array(constants.WIDTH * constants.HEIGHT)
     ];
 
-    paddedPieceSquareTables[0].fill(0);
-    paddedPieceSquareTables[1].fill(0);
+    paddedPieceSquareTables[constants.BLACK].fill(0);
+    paddedPieceSquareTables[constants.WHITE].fill(0);
 
     for (var index64 = 0; index64 < 64; index64++) {
         var rank = index64ToRank(index64);
@@ -217,8 +217,8 @@ function padIndices(pieceSquareTable) {
         var index180 = rankFileToIndex(rank, file);
         var invertedIndex180 = rankFileToIndex(7 - rank, file);
 
-        paddedPieceSquareTables[0][index180] = pieceSquareTable[index64];
-        paddedPieceSquareTables[1][invertedIndex180] = pieceSquareTable[index64];
+        paddedPieceSquareTables[constants.BLACK][index180] = pieceSquareTable[index64];
+        paddedPieceSquareTables[constants.WHITE][invertedIndex180] = pieceSquareTable[index64];
     }
 
     return paddedPieceSquareTables;

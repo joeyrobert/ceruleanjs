@@ -30,7 +30,7 @@ class Xboard {
         this._moveHistory = [];
         this._useBook = true;
         this._features = {
-            myname: `"CeruleanJS 0.0.1 by Joey Robert"`,
+            myname: `CeruleanJS 0.0.1 by Joey Robert`,
             setboard: 1,
             memory: 0,
             time: 1,
@@ -85,13 +85,16 @@ class Xboard {
                 result = '1/2-1/2';
                 comment = 'Stalemate';
             }
-        } else if (this._board.halfMoveClock >= 100) {
-            result = '1/2-1/2';
-            comment = 'Draw by 50 move rule';
-        } else if (this._board.maxRepetitions() >= 3) {
-            result = '1/2-1/2';
-            comment = 'Draw by repetition';
         }
+
+        // Disabling draws for now, these should become `offer draw` statements
+        // if (this._board.halfMoveClock >= 100) {
+        //     result = '1/2-1/2';
+        //     comment = 'Draw by 50 move rule';
+        // } else if (this._board.maxRepetitions() >= 3) {
+        //     result = '1/2-1/2';
+        //     comment = 'Draw by repetition';
+        // }
 
         if (result) {
             this._gameOver = true;
@@ -348,7 +351,9 @@ class Xboard {
 
     protover(number) {
         console.log(Object.keys(this._features).map(name => {
-            return `feature ${name}=${this._features[name]}`;
+            return typeof this._features[name] === 'string' ?
+                `feature ${name}="${this._features[name]}"` :
+                `feature ${name}=${this._features[name]}`;
         }).join('\n'));
     }
 
@@ -358,6 +363,10 @@ class Xboard {
 
     sts() {
         sts();
+    }
+
+    version() {
+        console.log(this._features.myname);
     }
 
     quit() {
@@ -394,6 +403,7 @@ sd [INT]                    Sets maximum depth
 st [INT]                    Sets maximum time
 level [MPT] [BASE] [INC]    Sets Winboard level timing
 sts                         Run Strategic Test Suite (1s per move)
+version                     Outputs the version number
 exit                        Exits the menu
 quit                        See exit
 help                        Gets you this magical menu

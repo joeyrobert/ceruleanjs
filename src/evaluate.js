@@ -8,10 +8,10 @@ const utils = require('./utils');
  * Coefficients
  */
 const MATERIAL_COEFF = 100;
-const PST_COEFF = 50;
+const PST_COEFF = 60;
 const MOBILITY_COEFF = 0;
-const PIECE_BONUSES_COEFF = 30;
-const PAWN_STRUCT_COEFF = 30;
+const PIECE_BONUSES_COEFF = 10;
+const PAWN_STRUCT_COEFF = 10;
 const KING_SAFETY_COEFF = 0;
 const TOTAL_COEFFICIENT =
     MATERIAL_COEFF +
@@ -30,6 +30,17 @@ var evalTable = new HashTable(22);
  * Piece square tables
  */
 var PIECE_SQUARE_TABLES = [];
+
+/*
+ * a8 b8 c8 d8 e8 f8 g8 h8
+ * a7 b7 c7 d7 e7 f7 g7 h7
+ * a6 b6 c6 d6 e6 f6 g6 h6
+ * a5 b5 c5 d5 e5 f5 g5 h5
+ * a4 b4 c4 d4 e4 f4 g4 h4
+ * a3 b3 c3 d3 e3 f3 g3 h3
+ * a2 b2 c2 d2 e2 f2 g2 h2
+ * a1 b1 c1 d1 e1 f1 g1 h1
+ */
 
 PIECE_SQUARE_TABLES[constants.PAWN] = [
     0,   0,   0,   0,   0,   0,   0,   0,
@@ -139,7 +150,7 @@ function evaluate(board, display) {
 
     var savedEval = evalTable.get(board.loHash, board.hiHash);
 
-    if (savedEval) {
+    if (savedEval && !display) {
         return savedEval;
     }
 
@@ -215,6 +226,10 @@ function evaluate(board, display) {
             piece = board.board[index] & constants.JUST_PIECE;
             material[turn] += constants.PIECE_VALUES[piece];
 
+            // if (piece !== constants.KING) {
+            //     console.log(constants.INVERSE_PIECE_MAP[piece], turn, index, PADDED_PIECE_SQUARE_TABLES[piece][turn][index]);
+            // }
+
             switch (piece) {
                 case constants.PAWN:
                     pst[turn] += PADDED_PIECE_SQUARE_TABLES[piece][turn][index];
@@ -244,7 +259,7 @@ function evaluate(board, display) {
         }
     }
 
-    var turnCoefficient = board.turn === 0 ? 1 : -1;
+    var turnCoefficient = board.turn === constants.WHITE ? 1 : -1;
 
     var total =
         MATERIAL_COEFF      * (material[0] - material[1]) +
@@ -258,7 +273,7 @@ function evaluate(board, display) {
 
     if (display) {
         console.log('Material:      ', MATERIAL_COEFF,      '* (' + material[0]      + ' - ' + material[1]       + ') =', MATERIAL_COEFF * (material[0] - material[1]));
-        console.log('PST:           ', PST_COEFF,           '* (' + pst[0]           + ' - ' + pst[1]            + ') =', PST_COEFF * (pst[0] - pst[1]));
+        console.log('PST:           ', PST_COEFF,           '* (' + pst[1]           + ' - ' + pst[0]            + ') =', PST_COEFF * (pst[1] - pst[0]));
         console.log('Pawn structure:', PAWN_STRUCT_COEFF,   '* (' + pawnStructure[0] + ' - ' + pawnStructure[1]  + ') =', PAWN_STRUCT_COEFF * (pawnStructure[0] - pawnStructure[1]));
         console.log('Mobility:      ', MOBILITY_COEFF,      '* (' + mobility[0]      + ' - ' + mobility[1]       + ') =', MOBILITY_COEFF * (mobility[0] - mobility[1]));
         console.log('King safety:   ', KING_SAFETY_COEFF,   '* (' + kingSafety[0]    + ' - ' + kingSafety[1]     + ') =', KING_SAFETY_COEFF * (kingSafety[0] - kingSafety[1]));
@@ -280,7 +295,7 @@ const PROTECTED_PAWN_BONUS = 10;
 
 function pawn(board, index, turn, pawnsByFile, pawnRank) {
     var bonus = 0;
-    var behindCoefficient = turn === constants.WHITE ? 1 : -1;
+    var behindCoefficient = turn === constants.WHITE ? -1 : 1;
     var file = utils.indexToFile(index);
     var rank = utils.indexToRank(index);
     var pawnRankOffset = turn === constants.WHITE ? 7 - rank : rank;
