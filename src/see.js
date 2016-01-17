@@ -21,11 +21,11 @@ for (var diff = 1; diff <= 112; diff++) {
     DELTA_BY_DIFFERENCE[diff] = delta;
 }
 
-var BISHOPY_DELTA = [];
-BISHOPY_DELTA[1]  = constants.ROOK;
-BISHOPY_DELTA[14] = constants.BISHOP;
-BISHOPY_DELTA[15] = constants.ROOK;
-BISHOPY_DELTA[16] = constants.BISHOP;
+var PIECE_BY_DELTA = [];
+PIECE_BY_DELTA[1]  = constants.ROOK;
+PIECE_BY_DELTA[14] = constants.BISHOP;
+PIECE_BY_DELTA[15] = constants.ROOK;
+PIECE_BY_DELTA[16] = constants.BISHOP;
 
 // Static exchange evaluation
 // Ideas in this file inspired by Mediocre's implementation of SEE
@@ -114,7 +114,7 @@ function staticExchangeEvaluation(board, move) {
         var hiddenDelta = DELTA_BY_DIFFERENCE[Math.abs(to - attackerPieceIndex)];
 
         if (hiddenDelta) {
-            deltaPiece = BISHOPY_DELTA[hiddenDelta];
+            deltaPiece = PIECE_BY_DELTA[hiddenDelta];
             // Moving away from to/attackerPieceIndex
             hiddenDelta *= to < attackerPieceIndex ? 1 : -1;
             newMove = attackerPieceIndex + hiddenDelta;
