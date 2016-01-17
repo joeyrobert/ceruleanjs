@@ -15,7 +15,7 @@ module.exports = class Opening {
         var book;
 
         if (process.browser) {
-            book = utils.syncGET('book.bin');
+            book = utils.syncGETBuffer('book.bin');
 
             if (book) {
                 this.addBook(book);

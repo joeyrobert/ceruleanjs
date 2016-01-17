@@ -250,8 +250,8 @@ function syncGET(path) {
 function syncGETBuffer(path) {
     // Synchronous HTTP request
     var request = new XMLHttpRequest();
-    request.responseType = 'arraybuffer';
     request.open('GET', path, false);
+    request.responseType = 'arraybuffer';
     request.send(null);
 
     if (request.status === 200) {

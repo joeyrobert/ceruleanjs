@@ -56,7 +56,7 @@ const INVERSE_PIECE_MAP = {
     [KING]:     'k'
 };
 
-const PIECE_DISPLAY_MAP = ['win32', 'browser'].indexOf(process.platform) === -1 ? {
+const PIECE_DISPLAY_MAP = process.platform !== 'win32' && !process.browser ? {
     [PAWN]:     '\u265f',
     [KNIGHT]:   '\u265e',
     [BISHOP]:   '\u265d',
