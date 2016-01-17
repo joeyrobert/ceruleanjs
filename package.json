@@ -6,7 +6,7 @@
   "author": "joeyrobert <joey@joeyrobert.org>",
   "license": "GPL-3.0",
   "dependencies": {
-    "mersennetwister": "^0.2.2"
+    "ceruleanjs_opening_books": "^1.0.0"
   },
   "engines": {
     "node": ">=4.0.0"
@@ -29,7 +29,7 @@
     "ceruleanjs": "./src/xboard.js"
   },
   "scripts": {
-    "build-windows": "copy /Y suites\\json\\large.json dist\\book.json && nexe -i ./src/xboard.js -o ./dist/ceruleanjs.exe -r 5.3.0",
+    "build-windows": "copy /Y node_modules\\ceruleanjs_opening_books\\gm2001.bin dist\\book.bin && nexe -i ./src/xboard.js -o ./dist/ceruleanjs.exe -r 5.3.0",
     "build-web": "browserify ./src/xboard.js -o ./dist/ceruleanjs.js -t [ babelify --presets [ es2015 ] ] && uglifyjs --compress -o ./dist/ceruleanjs.min.js -- ./dist/ceruleanjs.js",
     "debug": "node-debug ./src/xboard.js",
     "test": "mocha --no-timeouts",

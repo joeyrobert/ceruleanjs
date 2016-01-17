@@ -1,116 +1,108 @@
 'use strict';
 
-const WHITE                         = 0;
-const BLACK                         = 1;
+const WHITE                         = 1;
+const BLACK                         = 0;
 const WIDTH                         = 15;
 const HEIGHT                        = 12;
 const MOVE_BITS_EMPTY               = 0;
 const MOVE_BITS_CAPTURE             = 1 << 20;
-const MOVE_BITS_CASTLING            = 1 << 21;
-const MOVE_BITS_EN_PASSANT          = 1 << 22;
-const MOVE_BITS_PAWN                = 1 << 23;
-const MOVE_BITS_DOUBLE_PAWN         = 1 << 24;
-const MOVE_BITS_PROMOTION           = 1 << 25;
-const MOVE_BITS_PROMOTION_CAPTURE   = MOVE_BITS_PROMOTION | MOVE_BITS_CAPTURE;
+const MOVE_BITS_CASTLING            = 2 << 20;
+const MOVE_BITS_EN_PASSANT          = 3 << 20;
+const MOVE_BITS_PAWN                = 4 << 20;
+const MOVE_BITS_DOUBLE_PAWN         = 5 << 20;
+const MOVE_BITS_PROMOTION           = 6 << 20;
+const MOVE_BITS_PROMOTION_CAPTURE   = 7 << 20;
 const MOVE_FROM_MASK                = 0b00000000000000000000000001111111;
 const MOVE_TO_MASK                  = 0b00000000000000000011111110000000;
 const MOVE_PROMOTION_MASK           = 0b00000000000000011100000000000000;
 const MOVE_CAPTURED_MASK            = 0b00000000000011100000000000000000;
-const MOVE_BITS_MASK                = 0b00000011111100000000000000000000;
-const MOVE_ORDER_MASK               = 0b11111100000000000000000000000000;
+const MOVE_BITS_MASK                = 0b00000000011100000000000000000000;
+const MOVE_ORDER_MASK               = 0b11111111100000000000000000000000;
 const MOVE_TO_SHIFT                 = 7;
 const MOVE_PROMOTION_SHIFT          = 14;
 const MOVE_CAPTURED_SHIFT           = 17;
 const MOVE_ORDER_SHIFT              = 26;
 const MOVE_INDEX_OFFSET             = 33;
-const JUST_PIECE                    = 0b1111110;
-const PIECE_P                       = 0b00000010;
-const PIECE_N                       = 0b00000100;
-const PIECE_B                       = 0b00001000;
-const PIECE_R                       = 0b00010000;
-const PIECE_Q                       = 0b00100000;
-const PIECE_K                       = 0b01000000;
-const PIECE_EMPTY                   = 0b10000000;
+const JUST_PIECE                    = 0b1110;
+const PAWN                          = 0;
+const KNIGHT                        = 2;
+const BISHOP                        = 4;
+const ROOK                          = 6;
+const QUEEN                         = 8;
+const KING                          = 10;
+const EMPTY                         = 12;
+const OUT_OF_BOUNDS                 = 16;
 const CASTLING_W_K                  = 0b0001;
 const CASTLING_W_Q                  = 0b0010;
 const CASTLING_B_K                  = 0b0100;
 const CASTLING_B_Q                  = 0b1000;
 
 const PIECE_MAP = {
-    p:      PIECE_P,
-    n:      PIECE_N,
-    b:      PIECE_B,
-    r:      PIECE_R,
-    q:      PIECE_Q,
-    k:      PIECE_K,
-    empty:  PIECE_EMPTY
+    p:      PAWN,
+    n:      KNIGHT,
+    b:      BISHOP,
+    r:      ROOK,
+    q:      QUEEN,
+    k:      KING,
+    empty:  EMPTY
 };
 
 const INVERSE_PIECE_MAP = {
-    [PIECE_P]: 'p',
-    [PIECE_N]: 'n',
-    [PIECE_B]: 'b',
-    [PIECE_R]: 'r',
-    [PIECE_Q]: 'q',
-    [PIECE_K]: 'k'
+    [PAWN]:     'p',
+    [KNIGHT]:   'n',
+    [BISHOP]:   'b',
+    [ROOK]:     'r',
+    [QUEEN]:    'q',
+    [KING]:     'k'
 };
 
-const PIECE_DISPLAY_MAP = ['win32', 'browser'].indexOf(process.platform) === -1 ? {
-    [PIECE_P]:      '♟',
-    [PIECE_N]:      '♞',
-    [PIECE_B]:      '♝',
-    [PIECE_R]:      '♜',
-    [PIECE_Q]:      '♛',
-    [PIECE_K]:      '♚',
-    [PIECE_EMPTY]:  ' '
+const PIECE_DISPLAY_MAP = process.platform !== 'win32' && !process.browser ? {
+    [PAWN]:     '\u265f',
+    [KNIGHT]:   '\u265e',
+    [BISHOP]:   '\u265d',
+    [ROOK]:     '\u265c',
+    [QUEEN]:    '\u265b',
+    [KING]:     '\u265a',
+    [EMPTY]:    ' '
 } : {
-    [PIECE_P]:      'p',
-    [PIECE_N]:      'n',
-    [PIECE_B]:      'b',
-    [PIECE_R]:      'r',
-    [PIECE_Q]:      'q',
-    [PIECE_K]:      'k',
-    [PIECE_EMPTY]:  ' '
+    [PAWN]:     'p',
+    [KNIGHT]:   'n',
+    [BISHOP]:   'b',
+    [ROOK]:     'r',
+    [QUEEN]:    'q',
+    [KING]:     'k',
+    [EMPTY]:    ' '
 };
 
-var PIECE_TO_LOG = [];
-PIECE_TO_LOG[PIECE_P]       = 1;
-PIECE_TO_LOG[PIECE_N]       = 2;
-PIECE_TO_LOG[PIECE_B]       = 3;
-PIECE_TO_LOG[PIECE_R]       = 4;
-PIECE_TO_LOG[PIECE_Q]       = 5;
-PIECE_TO_LOG[PIECE_K]       = 6;
-PIECE_TO_LOG[PIECE_EMPTY]   = 7;
+var PIECE_VALUES        = [];
+PIECE_VALUES[PAWN]      = 100;
+PIECE_VALUES[KNIGHT]    = 300;
+PIECE_VALUES[BISHOP]    = 310;
+PIECE_VALUES[ROOK]      = 500;
+PIECE_VALUES[QUEEN]     = 975;
+PIECE_VALUES[KING]      = 20000;
 
-var PIECE_VALUES = [];
-PIECE_VALUES[PIECE_P] = 100;
-PIECE_VALUES[PIECE_N] = 300;
-PIECE_VALUES[PIECE_B] = 310;
-PIECE_VALUES[PIECE_R] = 500;
-PIECE_VALUES[PIECE_Q] = 975;
-PIECE_VALUES[PIECE_K] = 20000;
+var MVV_LVA_PIECE_VALUES        = [];
+MVV_LVA_PIECE_VALUES[PAWN]      = 1;
+MVV_LVA_PIECE_VALUES[KNIGHT]    = 2;
+MVV_LVA_PIECE_VALUES[BISHOP]    = 2;
+MVV_LVA_PIECE_VALUES[ROOK]      = 3;
+MVV_LVA_PIECE_VALUES[QUEEN]     = 4;
+MVV_LVA_PIECE_VALUES[KING]      = 5;
+MVV_LVA_PIECE_VALUES[EMPTY]     = 0;
 
-var MVV_LVA_PIECE_VALUES = [];
-MVV_LVA_PIECE_VALUES[PIECE_P]       = 1;
-MVV_LVA_PIECE_VALUES[PIECE_N]       = 2;
-MVV_LVA_PIECE_VALUES[PIECE_B]       = 2;
-MVV_LVA_PIECE_VALUES[PIECE_R]       = 3;
-MVV_LVA_PIECE_VALUES[PIECE_Q]       = 4;
-MVV_LVA_PIECE_VALUES[PIECE_K]       = 5;
-MVV_LVA_PIECE_VALUES[PIECE_EMPTY]   = 0;
-
-var SEE_PIECE_VALUES = [];
-SEE_PIECE_VALUES[PIECE_P]       = 1;
-SEE_PIECE_VALUES[PIECE_N]       = 3;
-SEE_PIECE_VALUES[PIECE_B]       = 3;
-SEE_PIECE_VALUES[PIECE_R]       = 5;
-SEE_PIECE_VALUES[PIECE_Q]       = 9;
-SEE_PIECE_VALUES[PIECE_K]       = 31;
-SEE_PIECE_VALUES[PIECE_EMPTY]   = 0;
+var SEE_PIECE_VALUES        = [];
+SEE_PIECE_VALUES[PAWN]      = 1;
+SEE_PIECE_VALUES[KNIGHT]    = 3;
+SEE_PIECE_VALUES[BISHOP]    = 3;
+SEE_PIECE_VALUES[ROOK]      = 5;
+SEE_PIECE_VALUES[QUEEN]     = 9;
+SEE_PIECE_VALUES[KING]      = 31;
+SEE_PIECE_VALUES[EMPTY]     = 0;
 
 const MATE_VALUE = 100000;
 
-const DELTA_KNIGHT = [
+const DELTA_KNIGHT = new Int32Array([
     -31,
     -29,
     -17,
@@ -119,9 +111,9 @@ const DELTA_KNIGHT = [
     17,
     29,
     31
-];
+]);
 
-const DELTA_KING = [
+const DELTA_KING = new Int32Array([
     -16,
     -15,
     -14,
@@ -130,27 +122,27 @@ const DELTA_KING = [
     14,
     15,
     16
-];
+]);
 
-const DELTA_BISHOP = [
+const DELTA_BISHOP = new Int32Array([
     -16,
     -14,
     14,
     16
-];
+]);
 
-const DELTA_ROOK = [
+const DELTA_ROOK = new Int32Array([
     -15,
     -1,
     1,
     15
-];
+]);
 
 const DELTA_MAP = [
-    [DELTA_BISHOP,  PIECE_MAP.b],
-    [DELTA_ROOK,    PIECE_MAP.r],
-    [DELTA_KNIGHT,  PIECE_MAP.n],
-    [DELTA_KING,    PIECE_MAP.k]
+    [DELTA_BISHOP,  BISHOP],
+    [DELTA_ROOK,    ROOK],
+    [DELTA_KNIGHT,  KNIGHT],
+    [DELTA_KING,    KING]
 ];
 
 const CASTLING = {
@@ -160,33 +152,40 @@ const CASTLING = {
     q: CASTLING_B_Q
 };
 
+// Refactor/remove this, getting unweildy
 const CASTLING_INFO = [
-    [CASTLING_W_K, 37, 39, 40, 38, 'K'],
-    [CASTLING_W_Q, 37, 35, 33, 36, 'Q'],
-    [CASTLING_B_K, 142, 144, 145, 143, 'k'],
-    [CASTLING_B_Q, 142, 140, 138, 141, 'q']
+    [CASTLING_B_K, 142, 144, 145, 143, 'k', 2],
+    [CASTLING_B_Q, 142, 140, 138, 141, 'q', 3],
+    [CASTLING_W_K, 37, 39, 40, 38, 'K', 0],
+    [CASTLING_W_Q, 37, 35, 33, 36, 'Q', 1]
 ];
 
 var CASTLING_MAP    = [];
-CASTLING_MAP[39]    = 37;
 CASTLING_MAP[35]    = 37;
-CASTLING_MAP[144]   = 142;
+CASTLING_MAP[39]    = 37;
 CASTLING_MAP[140]   = 142;
+CASTLING_MAP[144]   = 142;
 
-var CASTLING_ROOK_MOVES     = [];
-CASTLING_ROOK_MOVES[35]     = 384; //utils.createMove(33, 36, MOVE_BITS_EMPTY);
-CASTLING_ROOK_MOVES[39]     = 647; //utils.createMove(40, 38, MOVE_BITS_EMPTY);
-CASTLING_ROOK_MOVES[140]    = 13929; //utils.createMove(138, 141, MOVE_BITS_EMPTY);
-CASTLING_ROOK_MOVES[144]    = 14192; //utils.createMove(145, 143, MOVE_BITS_EMPTY);
+var CASTLING_ROOK_FROM  = new Uint32Array(145);
+CASTLING_ROOK_FROM[35]  = 33;
+CASTLING_ROOK_FROM[39]  = 40;
+CASTLING_ROOK_FROM[140] = 138;
+CASTLING_ROOK_FROM[144] = 145;
+
+var CASTLING_ROOK_TO  = new Uint32Array(145);
+CASTLING_ROOK_TO[35]  = 36;
+CASTLING_ROOK_TO[39]  = 38;
+CASTLING_ROOK_TO[140] = 141;
+CASTLING_ROOK_TO[144] = 143;
 
 const PAWN_FIRST_RANK = [
-    [48, 55],
-    [123, 130]
+    [123, 130],
+    [48, 55]
 ];
 
 const PAWN_LAST_RANK = [
-    [138, 145],
-    [33, 40]
+    [33, 40],
+    [138, 145]
 ];
 
 const SEARCH_LIMIT_CHECK = 10000;
@@ -204,6 +203,14 @@ const ANSI_COLORS = {
     bgYellow:   '\u001b[43m',
     reset:      '\u001b[0m'
 };
+
+const POLYGLOT_PROMOTION_STRINGS = [
+    '',
+    'N',
+    'B',
+    'R',
+    'Q'
+];
 
 module.exports = {
     WHITE,
@@ -230,13 +237,14 @@ module.exports = {
     MOVE_ORDER_SHIFT,
     MOVE_INDEX_OFFSET,
     JUST_PIECE,
-    PIECE_P,
-    PIECE_N,
-    PIECE_B,
-    PIECE_R,
-    PIECE_Q,
-    PIECE_K,
-    PIECE_EMPTY,
+    PAWN,
+    KNIGHT,
+    BISHOP,
+    ROOK,
+    QUEEN,
+    KING,
+    EMPTY,
+    OUT_OF_BOUNDS,
     CASTLING_W_K,
     CASTLING_W_Q,
     CASTLING_B_K,
@@ -244,7 +252,6 @@ module.exports = {
     PIECE_MAP,
     INVERSE_PIECE_MAP,
     PIECE_DISPLAY_MAP,
-    PIECE_TO_LOG,
     PIECE_VALUES,
     MVV_LVA_PIECE_VALUES,
     SEE_PIECE_VALUES,
@@ -257,12 +264,14 @@ module.exports = {
     CASTLING,
     CASTLING_INFO,
     CASTLING_MAP,
-    CASTLING_ROOK_MOVES,
+    CASTLING_ROOK_FROM,
+    CASTLING_ROOK_TO,
     PAWN_FIRST_RANK,
     PAWN_LAST_RANK,
     SEARCH_LIMIT_CHECK,
     FEN_BOARD_REGEX,
     MOVE_REGEX,
     LEVEL_REGEX,
-    ANSI_COLORS
+    ANSI_COLORS,
+    POLYGLOT_PROMOTION_STRINGS
 };

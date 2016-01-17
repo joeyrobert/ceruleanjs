@@ -34,12 +34,12 @@ class BoardPieceList {
         this.indexToPiece = new Uint32Array(constants.WIDTH * constants.HEIGHT);
         this.board = board;
         this.pieces = [];
-        this.pieces[constants.PIECE_P] = new PieceList();
-        this.pieces[constants.PIECE_N] = new PieceList();
-        this.pieces[constants.PIECE_B] = new PieceList();
-        this.pieces[constants.PIECE_R] = new PieceList();
-        this.pieces[constants.PIECE_Q] = new PieceList();
-        this.pieces[constants.PIECE_K] = new PieceList();
+        this.pieces[constants.PAWN]     = new PieceList();
+        this.pieces[constants.KNIGHT]   = new PieceList();
+        this.pieces[constants.BISHOP]   = new PieceList();
+        this.pieces[constants.ROOK]     = new PieceList();
+        this.pieces[constants.QUEEN]    = new PieceList();
+        this.pieces[constants.KING]     = new PieceList();
     }
 
     push(index) {
