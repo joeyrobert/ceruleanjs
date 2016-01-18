@@ -749,7 +749,7 @@ module.exports = class Board {
             for (var j = 0; j < 2; j++) {
                 index = this.enPassant + (14 + 2 * j) * (this.turn === constants.WHITE ? 1 : -1);
                 if (this.board[index] !== constants.OUT_OF_BOUNDS &&
-                    this.board[index] % 2 === this.turn ^ 1 &&
+                    this.board[index] % 2 === (this.turn ^ 1) &&
                     (this.board[index] & constants.JUST_PIECE) === constants.PAWN) {
                     enPassantCapture = true;
                     break;
