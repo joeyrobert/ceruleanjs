@@ -114,6 +114,8 @@ module.exports = class Search {
             this.pv[this.ply][depth] = alphaMove;
         }
 
+        board.subtractHistory();
+
         if (searchedMoves === 0) {
             if (board.isInCheck()) {
                 return -1 * (constants.MATE_VALUE + depth);
@@ -122,8 +124,6 @@ module.exports = class Search {
                 return 0;
             }
         }
-
-        board.subtractHistory();
 
         return alpha;
     }
