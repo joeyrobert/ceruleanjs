@@ -262,22 +262,22 @@ function evaluate(board, display) {
     var turnCoefficient = board.turn === constants.WHITE ? 1 : -1;
 
     var total =
-        MATERIAL_COEFF      * (material[0] - material[1]) +
+        MATERIAL_COEFF      * (material[1] - material[0]) +
         PST_COEFF           * (pst[1] - pst[0]) +
-        PAWN_STRUCT_COEFF   * (pawnStructure[0] - pawnStructure[1]) +
-        MOBILITY_COEFF      * (mobility[0] - mobility[1]) +
-        KING_SAFETY_COEFF   * (kingSafety[0] - kingSafety[1]) +
-        PIECE_BONUSES_COEFF * (pieceBonuses[0] - pieceBonuses[1]);
+        PAWN_STRUCT_COEFF   * (pawnStructure[1] - pawnStructure[0]) +
+        MOBILITY_COEFF      * (mobility[1] - mobility[0]) +
+        KING_SAFETY_COEFF   * (kingSafety[1] - kingSafety[0]) +
+        PIECE_BONUSES_COEFF * (pieceBonuses[1] - pieceBonuses[0]);
 
     total = Math.round(turnCoefficient * total / TOTAL_COEFFICIENT);
 
     if (display) {
-        console.log('Material:      ', MATERIAL_COEFF,      '* (' + material[0]      + ' - ' + material[1]       + ') =', MATERIAL_COEFF * (material[0] - material[1]));
+        console.log('Material:      ', MATERIAL_COEFF,      '* (' + material[1]      + ' - ' + material[0]       + ') =', MATERIAL_COEFF * (material[1] - material[0]));
         console.log('PST:           ', PST_COEFF,           '* (' + pst[1]           + ' - ' + pst[0]            + ') =', PST_COEFF * (pst[1] - pst[0]));
-        console.log('Pawn structure:', PAWN_STRUCT_COEFF,   '* (' + pawnStructure[0] + ' - ' + pawnStructure[1]  + ') =', PAWN_STRUCT_COEFF * (pawnStructure[0] - pawnStructure[1]));
-        console.log('Mobility:      ', MOBILITY_COEFF,      '* (' + mobility[0]      + ' - ' + mobility[1]       + ') =', MOBILITY_COEFF * (mobility[0] - mobility[1]));
-        console.log('King safety:   ', KING_SAFETY_COEFF,   '* (' + kingSafety[0]    + ' - ' + kingSafety[1]     + ') =', KING_SAFETY_COEFF * (kingSafety[0] - kingSafety[1]));
-        console.log('Piece Bonuses: ', PIECE_BONUSES_COEFF, '* (' + pieceBonuses[0]  + ' - ' + pieceBonuses[1]   + ') =', PIECE_BONUSES_COEFF * (pieceBonuses[0] - pieceBonuses[0]));
+        console.log('Pawn structure:', PAWN_STRUCT_COEFF,   '* (' + pawnStructure[1] + ' - ' + pawnStructure[0]  + ') =', PAWN_STRUCT_COEFF * (pawnStructure[1] - pawnStructure[0]));
+        console.log('Mobility:      ', MOBILITY_COEFF,      '* (' + mobility[1]      + ' - ' + mobility[0]       + ') =', MOBILITY_COEFF * (mobility[1] - mobility[0]));
+        console.log('King safety:   ', KING_SAFETY_COEFF,   '* (' + kingSafety[1]    + ' - ' + kingSafety[0]     + ') =', KING_SAFETY_COEFF * (kingSafety[1] - kingSafety[0]));
+        console.log('Piece Bonuses: ', PIECE_BONUSES_COEFF, '* (' + pieceBonuses[1]  + ' - ' + pieceBonuses[0]   + ') =', PIECE_BONUSES_COEFF * (pieceBonuses[1] - pieceBonuses[0]));
         console.log('Total:         ', total);
     }
 
