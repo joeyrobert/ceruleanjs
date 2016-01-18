@@ -554,10 +554,10 @@ module.exports = class Board {
         // Capture promotions are handled by pawnCaptures
         var newMove = index - 15 + 30 * this.turn;
         if (this.board[newMove] === constants.EMPTY && newMove >= lastRank[0] && newMove <= lastRank[1]) {
-            moves.push(utils.createMove(index, newMove, constants.MOVE_BITS_PROMOTION, 0, constants.QUEEN));
-            moves.push(utils.createMove(index, newMove, constants.MOVE_BITS_PROMOTION, 0, constants.ROOK));
-            moves.push(utils.createMove(index, newMove, constants.MOVE_BITS_PROMOTION, 0, constants.BISHOP));
-            moves.push(utils.createMove(index, newMove, constants.MOVE_BITS_PROMOTION, 0, constants.KNIGHT));
+            moves.push(utils.createMove(index, newMove, constants.MOVE_BITS_PROMOTION, constants.EMPTY, constants.QUEEN));
+            moves.push(utils.createMove(index, newMove, constants.MOVE_BITS_PROMOTION, constants.EMPTY, constants.ROOK));
+            moves.push(utils.createMove(index, newMove, constants.MOVE_BITS_PROMOTION, constants.EMPTY, constants.BISHOP));
+            moves.push(utils.createMove(index, newMove, constants.MOVE_BITS_PROMOTION, constants.EMPTY, constants.KNIGHT));
         }
 
     }
