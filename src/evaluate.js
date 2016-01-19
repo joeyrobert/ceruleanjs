@@ -226,10 +226,6 @@ function evaluate(board, display) {
             piece = board.board[index] & constants.JUST_PIECE;
             material[turn] += constants.PIECE_VALUES[piece];
 
-            // if (piece !== constants.KING) {
-            //     console.log(constants.INVERSE_PIECE_MAP[piece], turn, index, PADDED_PIECE_SQUARE_TABLES[piece][turn][index]);
-            // }
-
             switch (piece) {
                 case constants.PAWN:
                     pst[turn] += PADDED_PIECE_SQUARE_TABLES[piece][turn][index];
