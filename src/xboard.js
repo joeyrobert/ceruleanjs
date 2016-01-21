@@ -30,7 +30,7 @@ class Xboard {
         this._moveHistory = [];
         this._useBook = true;
         this._features = {
-            myname: `CeruleanJS 0.1.0 by Joey Robert`,
+            myname: `CeruleanJS 0.1.1 by Joey Robert`,
             setboard: 1,
             memory: 0,
             time: 1,
