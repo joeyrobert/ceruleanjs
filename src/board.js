@@ -513,6 +513,27 @@ module.exports = class Board {
             moveString += constants.POLYGLOT_PROMOTION_STRINGS[promotionPiece];
         }
 
+        // Special case fix for castling
+        if (moveString === 'e1h1')
+            if (this.kings[constants.WHITE] === 37)
+                moveString = 'e1g1';
+
+
+        if (moveString === 'e1a1')
+            if (this.kings[constants.WHITE] === 37)
+                moveString = 'e1c1';
+
+
+        if (moveString === 'e8h8')
+            if (this.kings[constants.BLACK] === 142)
+                moveString = 'e8g8';
+
+
+        if (moveString === 'e8a8')
+            if (this.kings[constants.BLACK] === 142)
+                moveString = 'e8c8';
+
+
         return moveString;
     }
 

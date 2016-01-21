@@ -1,6 +1,6 @@
 {
   "name": "ceruleanjs",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "JavaScript Chess Engine",
   "main": "src/xboard.js",
   "author": "joeyrobert <joey@joeyrobert.org>",

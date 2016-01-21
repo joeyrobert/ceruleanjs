@@ -116,6 +116,8 @@ docs/TECHNICAL.md](docs/TECHNICAL.md)
 CeruleanJS is licensed under the [GNU GPL v3](LICENSE).
 
 ## Changelog
+* v0.1.1 *(Blizzard)* - 2016-01-20
+    * Fixed Polyglot castling bug
 
 * v0.1.0 *(Blizzard)* - 2016-01-20
     * Vastly improved move generation performance (10x)
