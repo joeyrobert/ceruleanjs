@@ -97,6 +97,7 @@ STDIN/OUT. Here's the list of commands:
     st [INT]                    Sets maximum time
     level [MPT] [BASE] [INC]    Sets Winboard level timing
     sts                         Run Strategic Test Suite (1s per move)
+    version                     Outputs the version number
     exit                        Exits the menu
     quit                        See exit
     help                        Gets you this magical menu
@@ -116,7 +117,28 @@ CeruleanJS is licensed under the [GNU GPL v3](LICENSE).
 
 ## Changelog
 
-* v0.0.1 (Azure) - 2015-12-13
+* v0.1.0 *(Blizzard)* - 2016-01-20
+    * Vastly improved move generation performance (10x)
+    * Polyglot opening book (removes Mersenne Twister dependency)
+        * Changed piece representation to Polyglot format
+        * Implemented Polyglot Zobrist key support
+        * Changed turn value (`BLACK = 0, WHITE = 1`)
+    * Improved time management (supporting winboard level)
+    * Implemented Strategic Test Suite (STS)
+    * Support for Standard Algebraic Notation through `moves` command
+    * Implemented Static Exchange Evaluation (SEE) -- not used at the moment
+    * Implemented MVV/LVA move ordering
+    * Improved evaluation function
+    * Denser move structure
+    * Added ANSI colors function (removes `colors` dependency)
+    * Switched to Node's readline (removes `stdio` dependency)
+    * Web support through [CeruleanJS Player](https://bitbucket.org/joeyrobert/ceruleanjs-player)
+    * Fixed Windows EXE generation bug
+    * Improved unit test coverage
+    * Changed LICENSE from GPLv2 to GPLv3
+    * Rating roughly ~1300 ELO
+
+* v0.0.1 *(Azure)* - 2015-12-13
     * 15x12 board representation
     * Black and White piece lists
     * Move generation passing 100% perft test suite

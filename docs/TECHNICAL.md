@@ -16,10 +16,11 @@ The board representation is visualized below:
 ![CeruleanJS Board](board.gif)
 
 An interactive form of this visualization is available in board.ods. Every
-legal position on the board is _truthy_ in JavaScript. Positions outside the
-legal board (8x8) are `undefined`. This is the sentinal value that tells us
-when a square is within the bounds of the board, as in the
-[Mailbox](http://chessprogramming.wikispaces.com/Mailbox) board representation.
+legal position on the board is a piece value or EMPTY in JavaScript. Positions
+outside the legal board (8x8) are defined as OUT_OF_BOUNDS. This is the
+sentinal value that tells us when a square is within the bounds of the board,
+as in the [Mailbox](http://chessprogramming.wikispaces.com/Mailbox) board
+representation.
 
 ### Conversion
 
@@ -34,24 +35,24 @@ following functions:
 
 Pieces are represented as follows:
 
-    Pawn   00000010 (2^1)
-    Knight 00000100 (2^2)
-    Bishop 00001000 (2^3)
-    Rook   00010000 (2^4)
-    Queen  00100000 (2^5)
-    King   01000000 (2^6)
-    Empty  10000000 (2^7)
+    Pawn   0
+    Knight 2
+    Bishop 4
+    Rook   6
+    Queen  8
+    King   10
+    Empty  12
 
 The turn of the piece is represented as the least significant bit, 1 for
-black, 0 for white.
+white, 0 for black.
 
 ## Move representation
 
 Moves are represented as a 32-bit integer with the following fields:
 
-    ORDER  BITS   CAP PRO TO      FROM
-    000000 000000 000 000 0000000 0000000
-    ^ MSB                         LSB ^
+    ORDER     BIT CAP PRO TO      FROM
+    000000000 000 000 000 0000000 0000000
+    ^ MSB                           LSB ^
 
 This breaksdown to the following distribution:
 
@@ -59,7 +60,7 @@ This breaksdown to the following distribution:
 * 7 bits for TO index
 * 3 bits for PROmotion piece (Q/R/B/N)
 * 3 bits for CAPtured piece (any or empty)
-* 6 bits for BITS (metadata)
+* 3 bits for BITs (metadata)
 * 6 bits for ORDERing
 
 This dense move structure requires less data to be saved on the board's
@@ -69,14 +70,15 @@ For captured and promotion pieces, the number represents the base-2 logarithm
 of the piece type.
 
 BITS is metadata set by the move generate about what type of move this is. The
-BITS property is defined as follows (influenced by TSCP):
+BITS property is defined as follows:
 
-    1  capture            (000001)
-    2  castling           (000010)
-    4  en passant         (000100)
-    8  pawn move          (001000)
-    16 double pawn move   (010000)
-    32 promote            (100000)
+    1  capture             (001)
+    2  castling            (010)
+    3  en passant          (011)
+    4  pawn move           (100)
+    5  double pawn move    (101)
+    6  promote             (110)
+    7  promote and capture (111)
 
 ## Zobrist hashing
 
@@ -105,28 +107,34 @@ seed, the max zobrist sum possible in this scheme is 7,827,150,971,215,194
 does not account for maximum *legal* position, only a sum of the 38 largest
 integers generated.
 
-This architecture was inspired by [this
-paragraph](https://chessprogramming.wikispaces.com/Zobrist+Hashing#Collisions-
-When you lack a true integer type) on zobrist keys in the Chess Programming
-Wiki.
+This architecture was inspired by
+[this paragraph](https://chessprogramming.wikispaces.com/Zobrist+Hashing#Collisions-When%20you%20lack%20a%20true%20integer%20type)
+on zobrist keys in the Chess Programming Wiki.
 
-### Version 0.0.2 (Blizzard)
+### Version 0.1.0 (Blizzard)
 
-CeruleanJS 0.0.2 uses 2 32-bit integers. The reasons for switching from 1
-64-bit floating point number are:
+CeruleanJS uses 2 32-bit integers (`hiHash` and `loHash`). The reasons for
+switching from 1 64-bit floating point number are:
 
 * Integer XOR operations prove to be faster than floating point addition/subtraction
 * Improved resilience against collisions (One collision every ~2^32 vs. ~2^24 for float)
 
+In addition, CeruleanJS uses the
+[Polyglot opening book format](http://hardy.uhasselt.be/Toga/book_format.html),
+which standardizes the Zobrist keys and how they're generated.
+
 ## Move ordering
 
-Move ordering is done using Static Exchange Evaluation (SEE), inspired by
+Move ordering is done using ~~Static Exchange Evaluation (SEE), inspired by
 [Mediocre's guide](http://mediocrechess.sourceforge.net/guides/see.html) on
-the subject. This is done on the `qsearch()` only to order capture moves. The
+the subject~~ [MVV/LVA](https://chessprogramming.wikispaces.com/MVV-LVA). The
 primary alpha-beta search uses iterative-deepening to put the best move from
 the previous iteration first.
 
 ## Opening book
+
+
+### Version 0.0.1 (Azure)
 
 CeruleanJS uses the [Amundsen](http://www.bergbomconsulting.se/chess/) opening
 book format and is distributed with a small opening book. An opening book
@@ -137,3 +145,12 @@ CeruleanJS's gameplay to be non-deterministic.
 CeruleanJS looks in `./book.bok` and `./suites/bok/small.bok` (in that order)
 for the opening book. Reading a large opening book may be prohibitively slow
 at startup.
+
+### Version 0.1.0 (Blizzard)
+
+CeruleanJS can use any standard Polyglot opening book. It's only dependency is
+the npm package [ceruleanjs_opening_books](https://bitbucket.org/joeyrobert/ceruleanjs_opening_books).
+It currently doesn't support the `weight` parameter in Polyglot opening books
+and simply selects equivalent moves at a transposition manually.
+
+It looks for books in `./book.bin` and `./node_modules/ceruleanjs_opening_books/gm2001.bin`.
