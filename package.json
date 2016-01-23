@@ -2,7 +2,7 @@
   "name": "ceruleanjs",
   "version": "0.1.1",
   "description": "JavaScript Chess Engine",
-  "main": "src/xboard.js",
+  "main": "index.js",
   "author": "joeyrobert <joey@joeyrobert.org>",
   "license": "GPL-3.0",
   "dependencies": {
@@ -26,13 +26,13 @@
     "url": "https://joeyrobert@bitbucket.org/joeyrobert/ceruleanjs.git"
   },
   "bin": {
-    "ceruleanjs": "./src/xboard.js"
+    "ceruleanjs": "./index.js"
   },
   "scripts": {
-    "build-windows": "copy /Y node_modules\\ceruleanjs_opening_books\\gm2001.bin dist\\book.bin && nexe -i ./src/xboard.js -o ./dist/ceruleanjs.exe -r 5.3.0",
-    "build-web": "browserify ./src/xboard.js -o ./dist/ceruleanjs.js -t [ babelify --presets [ es2015 ] ] && uglifyjs --compress -o ./dist/ceruleanjs.min.js -- ./dist/ceruleanjs.js",
-    "debug": "node-debug ./src/xboard.js",
+    "build-windows": "copy /Y node_modules\\ceruleanjs_opening_books\\gm2001.bin dist\\book.bin && nexe -i ./index.js -o ./dist/ceruleanjs.exe -r 5.3.0",
+    "build-web": "browserify ./index.js -o ./dist/ceruleanjs.js -t [ babelify --presets [ es2015 ] ] && uglifyjs --compress -o ./dist/ceruleanjs.min.js -- ./dist/ceruleanjs.js",
+    "debug": "node-debug ./index.js",
     "test": "mocha --no-timeouts",
-    "start": "node ./src/xboard.js"
+    "start": "node ./index.js"
   }
 }
