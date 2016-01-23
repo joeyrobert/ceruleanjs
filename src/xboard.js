@@ -10,7 +10,7 @@ const Search = require('./search');
 const sts = require('./sts');
 const utils = require('./utils');
 
-class Xboard {
+module.exports = class Xboard {
     constructor() {
         this._board = new Board();
         this._opening = new Opening();
@@ -410,6 +410,4 @@ help                        Gets you this magical menu
         `;
         console.log(helpMenu);
     }
-}
-
-module.exports = new Xboard();
+};
