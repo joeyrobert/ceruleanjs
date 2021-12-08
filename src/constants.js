@@ -138,6 +138,14 @@ const DELTA_ROOK = new Int32Array([
     15
 ]);
 
+// Pawns have a directional component, this doesn't consider that
+const DELTA_PAWN = new Int32Array([
+    -16,
+    -14,
+    14,
+    16
+]);
+
 const DELTA_MAP = [
     [DELTA_BISHOP,  BISHOP],
     [DELTA_ROOK,    ROOK],
@@ -212,6 +220,23 @@ const POLYGLOT_PROMOTION_STRINGS = [
     'Q'
 ];
 
+// Attack lookup table entries
+const ATTACK_NONE        = 0b000000; // 0
+const ATTACK_DIAGONAL    = 0b000001; // 1
+const ATTACK_HORIZONTAL  = 0b000010; // 2
+const ATTACK_VERTICAL    = 0b000100; // 4
+const ATTACK_KNIGHT      = 0b001000; // 8
+const ATTACK_KING        = 0b010000; // 16
+const ATTACK_PAWN        = 0b100000; // 32
+const ATTACK_PIECE_ORDER = new Uint32Array([
+    PAWN,
+    KNIGHT,
+    KING,
+    BISHOP,
+    ROOK,
+    QUEEN,
+]);
+
 module.exports = {
     WHITE,
     BLACK,
@@ -260,6 +285,7 @@ module.exports = {
     DELTA_KING,
     DELTA_BISHOP,
     DELTA_ROOK,
+    DELTA_PAWN,
     DELTA_MAP,
     CASTLING,
     CASTLING_INFO,
@@ -273,5 +299,13 @@ module.exports = {
     MOVE_REGEX,
     LEVEL_REGEX,
     ANSI_COLORS,
-    POLYGLOT_PROMOTION_STRINGS
+    POLYGLOT_PROMOTION_STRINGS,
+    ATTACK_NONE,
+    ATTACK_DIAGONAL,
+    ATTACK_HORIZONTAL,
+    ATTACK_VERTICAL,
+    ATTACK_KNIGHT,
+    ATTACK_KING,
+    ATTACK_PAWN,
+    ATTACK_PIECE_ORDER,
 };
