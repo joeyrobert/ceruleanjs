@@ -3,16 +3,20 @@
 const expect = require('chai').expect;
 const Board = require('../src/board');
 const Search = require('../src/search');
+const Evaluate = require('../src/evaluate');
 
 describe('search', () => {
     var board;
     var search;
+    var evaluate;
     var timePerMove; // ms
     var maxDepth = 64;
 
     beforeEach(() => {
         board = new Board();
         search = new Search();
+        evaluate = new Evaluate();
+        search.evaluate = evaluate;
     });
 
     describe('tactics', () => {

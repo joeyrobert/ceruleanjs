@@ -1,6 +1,6 @@
 'use strict';
 
-const HashTable = require('./hash_table');
+const { HashTable } = require('./hash_table');
 const utils = require('./utils');
 
 module.exports = class Perft {

@@ -3,7 +3,7 @@
 const readline = require('readline');
 const constants = require('./constants');
 const Board = require('./board');
-const evaluate = require('./evaluate');
+const Evaluate = require('./evaluate');
 const Opening = require('./opening');
 const Perft = require('./perft');
 const Search = require('./search');
@@ -16,6 +16,8 @@ module.exports = class Xboard {
         this._opening = new Opening();
         this._perft = new Perft();
         this._search = new Search();
+        this._evaluate = new Evaluate();
+        this._search.evaluate = this._evaluate;
         this._engineTime = 0;
         this._opponentTime = 0;
 
@@ -30,9 +32,9 @@ module.exports = class Xboard {
         this._moveHistory = [];
         this._useBook = true;
         this._features = {
-            myname: `CeruleanJS 0.1.1 by Joey Robert`,
+            myname: `CeruleanJS 0.1.2 by Joey Robert`,
             setboard: 1,
-            memory: 0,
+            memory: 1,
             time: 1,
             usermove: 1
         };
@@ -176,7 +178,7 @@ module.exports = class Xboard {
     }
 
     evaluate() {
-        evaluate.evaluate(this._board, true);
+        this._evaluate.evaluate(this._board, true);
     }
 
     perft(depth) {
@@ -190,12 +192,6 @@ module.exports = class Xboard {
         var timeDiff = new Date() - startTime;
 
         console.log(`${total}\ntime ${timeDiff} ms\nfreq ${Math.floor(total / timeDiff * 1000)} Hz`);
-    }
-
-    perfthash(exponent) {
-        exponent = parseInt(exponent, 10) || 0;
-        this._perft.hashSize = exponent;
-        console.log(exponent ? `Perft hash size set to 2^${exponent} = ${(1 << exponent)}` : 'Perft hash table removed');
     }
 
     moves() {
@@ -378,13 +374,17 @@ module.exports = class Xboard {
         process.exit(0);
     }
 
+    memory(mb) {
+        mb = parseInt(mb, 10) || 0;
+    }
+
     help() {
         var helpMenu = `
 Commands
 
 display                     Draws the board
 perft [INT]                 Perfts the current board to specified depth
-perfthash [INT]             Sets perft hashtable exponent (size 2^exponent)
+memory [INT]                Sets the memory used by the engine in megabytes
 divide [INT]                Divides the current board to specified depth
 moves                       Lists valid moves for this position
 e2e4                        Moves from the current position and thinks

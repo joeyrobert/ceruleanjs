@@ -2,21 +2,21 @@
 
 const constants = require('./constants');
 const evaluate = require('./evaluate');
-const HashTable = require('./hash_table');
+const { HashTable } = require('./hash_table');
 const utils = require('./utils');
 
 module.exports = class Search {
-    constructor() {
-        this.hashSize = 20; // default size 2^22 ~ 32M entries
-    }
-
     set hashSize(exponent) {
         this.searchTable = exponent ? new HashTable(exponent) : undefined;
     }
 
+    set evaluate(evaluate) {
+        this._evaluate = evaluate;
+    }
+
     minimax(board, depth) {
         if (depth === 0) {
-            return evaluate.evaluate(board);
+            return this._evaluate.evaluate(board);
         }
 
         var max = -Infinity, score, bestMove;
@@ -44,7 +44,7 @@ module.exports = class Search {
     }
 
     search(board, alpha, beta, depth) {
-        if (evaluate.getEvalCount() % constants.SEARCH_LIMIT_CHECK === 0 && this.timeDiff() >= this.timePerMove) {
+        if (this._evaluate.evalCount % constants.SEARCH_LIMIT_CHECK === 0 && this.timeDiff() >= this.timePerMove) {
             this.endedEarly = true;
             return;
         }
@@ -129,12 +129,12 @@ module.exports = class Search {
     }
 
     qsearch(board, alpha, beta) {
-        if (evaluate.getEvalCount() % constants.SEARCH_LIMIT_CHECK === 0 && this.timeDiff() >= this.timePerMove) {
+        if (this._evaluate.evalCount % constants.SEARCH_LIMIT_CHECK === 0 && this.timeDiff() >= this.timePerMove) {
             this.endedEarly = true;
             return;
         }
 
-        var standPat = evaluate.evaluate(board);
+        var standPat = this._evaluate.evaluate(board);
 
         if (standPat >= beta) {
             return beta;
@@ -188,7 +188,7 @@ module.exports = class Search {
         for (var depth = 1; depth <= maxDepth; depth++) {
             this.ply = depth;
             this.pv[this.ply] = [];
-            evaluate.resetEvalCount();
+            this._evaluate.resetEvalCount();
             score = this.search(board, -Infinity, +Infinity, depth);
 
             if (utils.isNumeric(score)) {
@@ -198,7 +198,7 @@ module.exports = class Search {
                 }
 
                 if (!this.endedEarly && !hideDisplay) {
-                    console.log(`${depth} ${score} ${Math.round(this.timeDiff() / 10)} ${evaluate.getEvalCount()} ${moveStrings.join(' ')}`);
+                    console.log(`${depth} ${score} ${Math.round(this.timeDiff() / 10)} ${this._evaluate.evalCount} ${moveStrings.join(' ')}`);
                 }
             }
 

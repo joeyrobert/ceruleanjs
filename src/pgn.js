@@ -19,7 +19,7 @@ module.exports = class PGN {
                 // PGN comment
                 return;
             } else if (line[0] === '[') {
-                var matches = /\[(.*?) \"(.*?)\"\]/.exec(line);
+                var matches = /\[(.*?) "(.*?)"\]/.exec(line);
                 game[matches[1].toLowerCase()] = matches[2];
             } else if (/\d+./.test(line)) {
                 moveMode = true;

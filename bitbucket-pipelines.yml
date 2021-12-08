@@ -1,0 +1,11 @@
+image: node:16.13.1
+
+pipelines:
+  default:
+    - step:
+        caches:
+          - node
+        script:
+          - npm install
+          - npm run lint
+          - npm test

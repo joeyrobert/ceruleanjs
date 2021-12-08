@@ -33,7 +33,7 @@ function sts() {
         var fens = lines.map(line => line.split('bm')[0].trim() + ' 0 1');
         var ids = lines.map(line => /id "(.*?)"/.exec(line)[1]);
         var points = lines.map(line => {
-            var movesByPoints = /c0 \"(.*?)\"/.exec(line)[1].split(', ');
+            var movesByPoints = /c0 "(.*?)"/.exec(line)[1].split(', ');
             var movePoints = {};
             movesByPoints.forEach(movesAndPoints => {
                 var moves = movesAndPoints.split('=');
