@@ -44,7 +44,12 @@ module.exports = class Search {
     }
 
     search(board, alpha, beta, depth) {
-        if (this._evaluate.evalCount % constants.SEARCH_LIMIT_CHECK === 0 && this.timeDiff() >= this.timePerMove) {
+        if (this.endedEarly) {
+            return;
+        }
+
+        if (this.timeDiff() >= this.timePerMove) {
+            console.log('ENDING EARLY', this.timeDiff(), this.timePerMove)
             this.endedEarly = true;
             return;
         }
@@ -129,8 +134,13 @@ module.exports = class Search {
     }
 
     qsearch(board, alpha, beta) {
-        if (this._evaluate.evalCount % constants.SEARCH_LIMIT_CHECK === 0 && this.timeDiff() >= this.timePerMove) {
+        if (this.endedEarly) {
+            return;
+        }
+
+        if (this.timeDiff() >= this.timePerMove) {
             this.endedEarly = true;
+            console.log('ENDING EARLY QSEARCH')
             return;
         }
 
@@ -178,7 +188,7 @@ module.exports = class Search {
     }
 
     iterativeDeepening(board, timePerMove, maxDepth, hideDisplay) {
-        this.startTime = new Date();
+        this.startTime = performance.now();
         this.timePerMove = timePerMove;
         this.ply = 1;
         this.endedEarly = false;
@@ -215,6 +225,6 @@ module.exports = class Search {
     }
 
     timeDiff() {
-        return new Date() - this.startTime;
+        return performance.now() - this.startTime;
     }
 };
