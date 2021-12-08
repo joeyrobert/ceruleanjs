@@ -37,20 +37,20 @@ describe('hash_table', () => {
     describe('NativeHashTable', () => {
         it('stores one value', () => {
             const table = new NativeHashTable(HASH_TABLE_SIZE);
-            table.set(0, 1, 314159);
+            table.set(0, 1, [314159]);
             expect(table.get(0, 1)).to.equal(314159);
         });
 
         it('stores two values', () => {
             const table = new NativeHashTable(HASH_TABLE_SIZE, 2);
-            table.set(0, 1, 314159, 265359);
+            table.set(0, 1, [314159, 265359]);
             expect(table.get(0, 1)[0]).to.equal(314159);
             expect(table.get(0, 1)[1]).to.equal(265359);
         });
 
         it('stores three values', () => {
             const table = new NativeHashTable(HASH_TABLE_SIZE, 3);
-            table.set(0, 1, 314159, 265358, 979324);
+            table.set(0, 1, [314159, 265358, 979324]);
             expect(table.get(0, 1)[0]).to.equal(314159);
             expect(table.get(0, 1)[1]).to.equal(265358);
             expect(table.get(0, 1)[2]).to.equal(979324);
@@ -71,36 +71,42 @@ describe('hash_table', () => {
         const nativeHashTable = new NativeHashTable(BENCHMARK_HASH_TABLE_SIZE);
         const nativeSingleHashTable = new NativeSingleHashTable(BENCHMARK_HASH_TABLE_SIZE);
 
-        it('benchmark HashTable', () => {
+        it('benchmark HashTable set', () => {
             // Set first
             for (var i = 0; i < TEST_LOOPS; i++) {
                 hashTable.set(i, i, i);
             }
+        });
 
+        it('benchmark HashTable get', () => {
             // Get second
             for (var i = 0; i < TEST_LOOPS; i++) {
                 hashTable.get(i, i);
             }
         });
 
-        it('benchmark NativeHashTable', () => {
+        it('benchmark NativeHashTable set', () => {
             // Set first
             for (var i = 0; i < TEST_LOOPS; i++) {
-                nativeHashTable.set(i, i, i);
+                nativeHashTable.set(i, i, [i]);
             }
+        });
 
+        it('benchmark NativeHashTable get', () => {
             // Get second
             for (var i = 0; i < TEST_LOOPS; i++) {
                 nativeHashTable.get(i, i);
             }
         });
 
-        it('benchmark NativeSingleHashTable', () => {
+        it('benchmark NativeSingleHashTable set', () => {
             // Set first
             for (var i = 0; i < TEST_LOOPS; i++) {
                 nativeSingleHashTable.set(i, i, i);
             }
+        });
 
+        it('benchmark NativeSingleHashTable get', () => {
             // Get second
             for (var i = 0; i < TEST_LOOPS; i++) {
                 nativeSingleHashTable.get(i, i);

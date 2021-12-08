@@ -39,7 +39,7 @@ class NativeHashTable {
         this.table.fill(fillValue);
     }
 
-    set(loHash, hiHash, ...value) {
+    set(loHash, hiHash, value) {
         var offset = (loHash & this.bits) * this.multiplier;
         this.table[offset] = loHash;
         this.table[offset + 1] = hiHash;
