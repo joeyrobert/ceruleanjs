@@ -1,11 +1,11 @@
 'use strict';
 
-const { HashTable } = require('./hash_table');
+const { NativeSingleHashTable } = require('./hash_table');
 const utils = require('./utils');
 
 module.exports = class Perft {
     set hashSize(exponent) {
-        this.perftTable = exponent ? new HashTable(exponent) : undefined;
+        this.perftTable = exponent ? new NativeSingleHashTable(exponent) : undefined;
     }
 
     perft(board, depth) {
@@ -14,10 +14,10 @@ module.exports = class Perft {
         }
 
         if (this.perftTable) {
-            var savedPerft = this.perftTable.get(board.loHash, board.hiHash);
+            var savedPerft = this.perftTable.get(board.loHash ^ depth, board.hiHash);
 
-            if (savedPerft && savedPerft[depth]) {
-                return savedPerft[depth];
+            if (savedPerft) {
+                return savedPerft;
             }
         }
 
@@ -37,9 +37,7 @@ module.exports = class Perft {
         board.subtractHistory();
 
         if (this.perftTable) {
-            var value = this.perftTable.get(board.loHash, board.hiHash) || [];
-            value[depth] = total;
-            this.perftTable.set(board.loHash, board.hiHash, value);
+            this.perftTable.set(board.loHash ^ depth, board.hiHash, total);
         }
 
         return total;

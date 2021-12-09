@@ -3,7 +3,6 @@
 const readline = require('readline');
 const constants = require('./constants');
 const Board = require('./board');
-const Evaluate = require('./evaluate');
 const Opening = require('./opening');
 const Perft = require('./perft');
 const Search = require('./search');
@@ -16,15 +15,13 @@ module.exports = class Xboard {
         this._opening = new Opening();
         this._perft = new Perft();
         this._search = new Search();
-        this._evaluate = new Evaluate();
-        this._search.evaluate = this._evaluate;
-        this._engineTime = 0;
-        this._opponentTime = 0;
 
         // 40/4
         this._movesPerTimeControl = 40;
         this._base = 4 * 60 * 1000; // to ms
         this._increment = 0;
+        this._engineTime = this._base;
+        this._opponentTime = this._base;
         this._updateTimePerMove();
         this._gameOver = false;
         this._maxDepth = 64;
@@ -40,7 +37,7 @@ module.exports = class Xboard {
         };
 
         if (process.browser) {
-            onmessage = evt => this._sendLine(evt.data);
+            onmessage = evt => this.sendLine(evt.data);
 
             console.log = function () {
                 var args = Array.prototype.slice.call(arguments);
@@ -51,11 +48,11 @@ module.exports = class Xboard {
                 input: process.stdin
             });
 
-            rl.on('line', line => this._sendLine(line));
+            rl.on('line', line => this.sendLine(line));
         }
     }
 
-    _sendLine(line) {
+    sendLine(line) {
         var parts = line.split(' ');
         var action = parts[0];
 
@@ -178,7 +175,7 @@ module.exports = class Xboard {
     }
 
     evaluate() {
-        this._evaluate.evaluate(this._board, true);
+        this._search.evaluate.evaluate(this._board, true);
     }
 
     perft(depth) {
@@ -192,6 +189,12 @@ module.exports = class Xboard {
         var timeDiff = new Date() - startTime;
 
         console.log(`${total}\ntime ${timeDiff} ms\nfreq ${Math.floor(total / timeDiff * 1000)} Hz`);
+    }
+
+    perfthash(exponent) {
+        exponent = parseInt(exponent, 10) || 0;
+        this._perft.hashSize = exponent;
+        console.log(exponent ? `Perft hash size set to 2^${exponent} = ${(1 << exponent)}` : 'Perft hash table removed');
     }
 
     moves() {
@@ -244,6 +247,7 @@ module.exports = class Xboard {
             moveString = this._board.polyglotMoveToMoveString(polyglotMove);
             move = this._board.addMoveString(moveString);
         } else {
+            this._updateTimePerMove();
             move = this._search.iterativeDeepening(this._board, this._timePerMove, this._maxDepth);
             this._board.addMove(move);
             moveString = utils.moveToString(move);
@@ -290,11 +294,12 @@ module.exports = class Xboard {
     }
 
     time(time) {
-        this._engineTime = time;
+        this._engineTime = parseInt(time, 10) * 10; // cs => ms
+        this._updateTimePerMove();
     }
 
     otim(otim) {
-        this._opponentTime = otim;
+        this._opponentTime = parseInt(otim, 10) * 10; // cs => ms
     }
 
     level(line) {
@@ -306,15 +311,18 @@ module.exports = class Xboard {
         var args = line.split(' ');
         var baseTimes = args[1].split(':');
 
-        this._movesPerTimeControl = parseInt(args[0]) || 60; // Assume 60 moves
+        this._movesPerTimeControl = parseInt(args[0]);
         this._base = (parseInt(baseTimes[0], 10) * 60 + (parseInt(baseTimes[1], 10) || 0)) * 1000; // to ms
         this._increment = (parseInt(args[2], 10) || 0) * 1000;
+        this._engineTime = this._base;
+        this._opponentTime = this._base;
         this._updateTimePerMove();
     }
 
     _updateTimePerMove() {
-        var totalTime = this._base + this._movesPerTimeControl * this._increment;
-        this._timePerMove =  totalTime / this._movesPerTimeControl;
+        const ideal = this._base / (this._movesPerTimeControl || 50) + this._increment;
+        const remaining = this._engineTime / 2; // only use up to 50% of time remaining, a la Zeno's
+        this._timePerMove = Math.min(remaining, ideal);
     }
 
     nps(nodeRate) {
@@ -384,6 +392,7 @@ Commands
 
 display                     Draws the board
 perft [INT]                 Perfts the current board to specified depth
+perfthash [INT]             Sets perft hashtable exponent (size 2^exponent)
 memory [INT]                Sets the memory used by the engine in megabytes
 divide [INT]                Divides the current board to specified depth
 moves                       Lists valid moves for this position

@@ -1,13 +1,21 @@
 'use strict';
 
 const constants = require('./constants');
-const evaluate = require('./evaluate');
+const Evaluate = require('./evaluate');
 const { HashTable } = require('./hash_table');
 const utils = require('./utils');
 
 module.exports = class Search {
+    constructor() {
+        this._evaluate = new Evaluate();
+    }
+
     set hashSize(exponent) {
         this.searchTable = exponent ? new HashTable(exponent) : undefined;
+    }
+
+    get evaluate() {
+        return this._evaluate;
     }
 
     set evaluate(evaluate) {
@@ -49,7 +57,6 @@ module.exports = class Search {
         }
 
         if (this.timeDiff() >= this.timePerMove) {
-            console.log('ENDING EARLY', this.timeDiff(), this.timePerMove)
             this.endedEarly = true;
             return;
         }
@@ -140,7 +147,6 @@ module.exports = class Search {
 
         if (this.timeDiff() >= this.timePerMove) {
             this.endedEarly = true;
-            console.log('ENDING EARLY QSEARCH')
             return;
         }
 
@@ -189,7 +195,7 @@ module.exports = class Search {
 
     iterativeDeepening(board, timePerMove, maxDepth, hideDisplay) {
         this.startTime = performance.now();
-        this.timePerMove = timePerMove;
+        this.timePerMove = timePerMove - 1.0; // go under by just a MS
         this.ply = 1;
         this.endedEarly = false;
         this.pv = [];
