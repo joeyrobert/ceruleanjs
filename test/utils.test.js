@@ -43,25 +43,28 @@ describe('utils', () => {
         it('runs quicksort fast', () => {
             var a;
             for (var i = 0; i < 100000; i++) {
-                a = (new Array(50)).fill(1).map(() => Math.random());
+                a = (new Array(50)).fill(1).map(() => utils.getRandomInt(0, 100));
                 utils.quickSort(a);
             }
+            console.log(a[0]);
         });
 
         it('runs Array#sort fast', () => {
             var a;
             for (var i = 0; i < 100000; i++) {
-                a = (new Array(50)).fill(1).map(() => Math.random());
-                a.sort();
+                a = (new Array(50)).fill(1).map(() => utils.getRandomInt(0, 100));
+                a.sort(utils.reverseOrder);
             }
+            console.log(a[0]);
         });
 
         it('runs TypedArray#sort fast', () => {
             var a;
             for (var i = 0; i < 100000; i++) {
-                a = Uint32Array.from((new Array(50)).fill(1).map(() => Math.random()));
-                a.sort();
+                a = Uint32Array.from((new Array(50)).fill(1).map(() => utils.getRandomInt(0, 100)));
+                a.sort(utils.reverseOrder);
             }
+            console.log(a[0]);
         });
     });
 });

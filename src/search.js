@@ -75,8 +75,7 @@ module.exports = class Search {
             moves[i] = utils.moveAddOrder(moves[i], board.mvvLva(moves[i]));
         }
         // moves = utils.quickSort(moves);
-        moves = Uint32Array.from(moves);
-        moves.sort();
+        moves.sort(utils.reverseOrder);
 
         board.addHistory();
 
@@ -182,7 +181,7 @@ module.exports = class Search {
         }
         // moves = utils.quickSort(moves);
         moves = Uint32Array.from(moves);
-        moves.sort();
+        moves.sort(utils.reverseOrder);
 
         board.addHistory();
 

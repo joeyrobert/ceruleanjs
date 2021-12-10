@@ -354,6 +354,8 @@ function getExponentForMemory(megabytes, bytesPerEntry=24) {
     return Math.floor(Math.log2(entries));
 }
 
+function reverseOrder(a, b) { return b - a; }
+
 module.exports = {
     isNumeric,
     rankFileToIndex,
@@ -387,5 +389,6 @@ module.exports = {
     bufferToArrayBuffer,
     getEmptyBoardArray,
     getRandomInt,
-    getExponentForMemory
+    getExponentForMemory,
+    reverseOrder,
 };
