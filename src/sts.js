@@ -4,11 +4,11 @@ const Board = require('./board');
 const Search = require('./search');
 const utils = require('./utils');
 
-function sts() {
+function sts(timePerMove=100) {
     console.log('Running Strategic Test Suite\n');
+    const startTime = performance.now();
     var board = new Board();
     var search = new Search();
-    var timePerMove = 1 * 1000;
     var pointTotal = 0;
     var maxDepth = 64;
     var limit = 10;
@@ -55,9 +55,15 @@ function sts() {
         });
     }
 
+    const duration = performance.now() - startTime;
     console.log(`STS Total Points: ${pointTotal} / ${limit * 100 * 10}`);
+    console.log(`Duration: ${(duration/1000.0).toFixed(3)}s`)
 
     return pointTotal;
+}
+
+if (typeof require !== 'undefined' && require.main === module) {
+    sts(parseInt(process.argv[2] || 100, 10));
 }
 
 module.exports = sts;

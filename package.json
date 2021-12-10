@@ -35,7 +35,7 @@
     "build-windows": "copy /Y node_modules\\ceruleanjs_opening_books\\gm2001.bin dist\\book.bin && nexe -i ./index.js -o ./dist/ceruleanjs.exe --build --verbose",
     "debug": "node --inspect ./index.js",
     "debug-test": "node --inspect node_modules/.bin/mocha --no-timeouts --exit",
-    "deoptigate": "rm isolate-*.log && node --trace-ic --trace-opt --trace-deopt src/sts.js && deoptigate",
+    "deoptigate": "deoptigate src/sts.js",
     "lint": "eslint src/*.js test/*.js",
     "start": "node --max-old-space-size=16384 ./index.js",
     "sts": "node  --max-old-space-size=16384 ./src/sts.js",

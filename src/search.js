@@ -2,16 +2,17 @@
 
 const constants = require('./constants');
 const Evaluate = require('./evaluate');
-const { HashTable } = require('./hash_table');
+const { NativeHashTable } = require('./hash_table');
 const utils = require('./utils');
 
 module.exports = class Search {
     constructor() {
         this._evaluate = new Evaluate();
+        this.searchTable = new NativeHashTable(5);
     }
 
-    set hashSize(exponent) {
-        this.searchTable = exponent ? new HashTable(exponent) : undefined;
+    set hashSize(exponent=1) {
+        this.searchTable = new NativeHashTable(exponent);
     }
 
     get evaluate() {
@@ -150,9 +151,19 @@ module.exports = class Search {
             return;
         }
 
+        // include alpha beta in search key
+        const loHash = board.loHash ^ alpha;
+        const hiHash = board.hiHash ^ beta;
+
+        const hashLookup = this.searchTable.get(loHash, hiHash);
+        if (hashLookup) {
+            return hashLookup[0];
+        }
+
         var standPat = this._evaluate.evaluate(board);
 
         if (standPat >= beta) {
+            this.searchTable.set(loHash, hiHash, beta);
             return beta;
         }
 
@@ -180,6 +191,7 @@ module.exports = class Search {
 
                 if (score >= beta) {
                     board.subtractHistory();
+                    this.searchTable.set(loHash, hiHash, beta);
                     return beta;
                 }
 
@@ -190,6 +202,7 @@ module.exports = class Search {
         }
 
         board.subtractHistory();
+        this.searchTable.set(loHash, hiHash, alpha);
         return alpha;
     }
 

@@ -237,6 +237,37 @@ const ATTACK_PIECE_ORDER = new Uint32Array([
     QUEEN,
 ]);
 
+const XBOARD_COMMANDS = [
+    'black',
+    'book',
+    'book',
+    'display',
+    'divide',
+    'e2e4',
+    'evaluate',
+    'exit',
+    'go',
+    'go',
+    'help',
+    'level',
+    'memory',
+    'moves',
+    'new',
+    'otim',
+    'perft',
+    'perfthash',
+    'quit',
+    'result',
+    'sd',
+    'setboard',
+    'st',
+    'sts',
+    'time',
+    'undo',
+    'version',
+    'white',
+];
+
 module.exports = {
     WHITE,
     BLACK,
@@ -308,4 +339,5 @@ module.exports = {
     ATTACK_KING,
     ATTACK_PAWN,
     ATTACK_PIECE_ORDER,
+    XBOARD_COMMANDS,
 };

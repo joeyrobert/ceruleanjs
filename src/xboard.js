@@ -58,7 +58,7 @@ module.exports = class Xboard {
 
         if (constants.MOVE_REGEX.test(action)) {
             this.usermove(action);
-        } else if (this[action]) {
+        } else if (constants.XBOARD_COMMANDS.includes(action) && this[action]) {
             this[action].call(this, parts.slice(1).join(' '));
         } else {
             console.log('Error (invalid command):', line);
@@ -383,7 +383,15 @@ module.exports = class Xboard {
     }
 
     memory(mb) {
-        mb = parseInt(mb, 10) || 0;
+        const mbInt = parseInt(mb, 10) || 0;
+        const bInt = mbInt * 1024 * 1024;
+        const entriesPerHash = 3;
+        const bytesPerEntry = 4;
+        const exponent = Math.floor(Math.log2(bInt / (entriesPerHash * bytesPerEntry)));
+        const entries = Math.pow(2, exponent);
+        const size = entries * entriesPerHash * bytesPerEntry;
+        console.log(`Exponent: ${exponent}, Entries: ${entries}, Size: ${size} bytes`);
+        this._search.hashSize = exponent;
     }
 
     help() {
