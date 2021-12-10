@@ -3,6 +3,14 @@
 const expect = require('chai').expect;
 const Board = require('../src/board');
 const utils = require('../src/utils');
+const {
+    HASH_EXACT,
+    HASH_LOWER,
+    HASH_UPPER,
+    KING,
+    MATE_VALUE,
+    PIECE_VALUES,
+} = require('../src/constants');
 
 describe('utils', () => {
     describe('moveToShortString', () => {
@@ -65,6 +73,25 @@ describe('utils', () => {
                 a.sort(utils.reverseOrder);
             }
             console.log(a[0]);
+        });
+    });
+
+    describe('packs search entries', () => {
+        it('packs and unpacks successfully', () => {
+            const depths = [64, 63, 5, 1, 0];
+            const flags = [HASH_UPPER, HASH_LOWER, HASH_EXACT];
+            const scores = [-MATE_VALUE - PIECE_VALUES[KING], -PIECE_VALUES[KING], 0, PIECE_VALUES[KING], MATE_VALUE + PIECE_VALUES[KING]];
+
+            depths.forEach(expectedDepth => {
+                flags.forEach(expectedFlag => {
+                    scores.forEach(expectedScore => {
+                        const [depth, flag, score] = utils.unpackSearchEntry(utils.packSearchEntry(expectedDepth, expectedFlag, expectedScore));
+                        expect(depth).to.equal(expectedDepth);
+                        expect(flag).to.equal(expectedFlag);
+                        expect(score).to.equal(expectedScore);
+                    });
+                });
+            });
         });
     });
 });

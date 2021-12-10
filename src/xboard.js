@@ -385,13 +385,26 @@ module.exports = class Xboard {
     memory(mb) {
         const mbInt = parseInt(mb, 10) || 0;
         const bInt = mbInt * 1024 * 1024;
-        const entriesPerHash = 3;
         const bytesPerEntry = 4;
-        const exponent = Math.floor(Math.log2(bInt / (entriesPerHash * bytesPerEntry)));
-        const entries = Math.pow(2, exponent);
-        const size = entries * entriesPerHash * bytesPerEntry;
-        // console.log(`Exponent: ${exponent}, Entries: ${entries}, Size: ${size} bytes`);
-        this._search.hashSize = exponent;
+
+        // Search table (50%)
+        const searchEntriesPerHash = 4; // lohash, hihash, move, depth+type+score
+        const searchBInt = bInt * 0.5;
+        const searchExponent = Math.floor(Math.log2(searchBInt / (searchEntriesPerHash * bytesPerEntry)));
+        const searchEntries = Math.pow(2, searchExponent);
+        const searchSize = searchEntries * searchEntriesPerHash * bytesPerEntry;
+
+        // Eval table (50%)
+        const evalEntriesPerHash = 3;
+        const evalBEvalInt = bInt * 0.5;
+        const evalExponent = Math.floor(Math.log2(evalBEvalInt / (evalEntriesPerHash * bytesPerEntry)));
+        const evalEntries = Math.pow(2, evalExponent);
+        const evalSize = evalEntries * evalEntriesPerHash * bytesPerEntry;
+
+        // console.log(`# SEARCH: Exponent: ${searchExponent}, Entries: ${searchEntries}, Size: ${searchSize} bytes`);
+        // console.log(`# EVAL:   Exponent: ${evalExponent}, Entries: ${evalEntries}, Size: ${evalSize} bytes`);
+        this._search.hashSize = searchExponent;
+        this._search._evaluate.hashSize = evalExponent;
     }
 
     help() {

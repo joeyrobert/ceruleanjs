@@ -23,6 +23,10 @@ const {
     PAWN,
     WHITE,
     WIDTH,
+    HASH_FLAG_OFFSET,
+    HASH_SCORE_OFFSET,
+    HASH_FLAG_MASK,
+    HASH_DEPTH_MASK,
 } = require('./constants');
 
 function isNumeric(n) {
@@ -354,7 +358,21 @@ function getExponentForMemory(megabytes, bytesPerEntry=24) {
     return Math.floor(Math.log2(entries));
 }
 
-function reverseOrder(a, b) { return b - a; }
+function reverseOrder(a, b) {
+    return b - a;
+}
+
+function packSearchEntry(depth, flag, score) {
+    return depth + (flag << HASH_FLAG_OFFSET) + (score << HASH_SCORE_OFFSET);
+}
+
+function unpackSearchEntry(entry) {
+    return [
+        entry & HASH_DEPTH_MASK,
+        (entry & HASH_FLAG_MASK) >> HASH_FLAG_OFFSET,
+        entry >> HASH_SCORE_OFFSET,
+    ];
+}
 
 module.exports = {
     isNumeric,
@@ -391,4 +409,6 @@ module.exports = {
     getRandomInt,
     getExponentForMemory,
     reverseOrder,
+    packSearchEntry,
+    unpackSearchEntry,
 };

@@ -91,15 +91,6 @@ MVV_LVA_PIECE_VALUES[QUEEN]     = 4;
 MVV_LVA_PIECE_VALUES[KING]      = 5;
 MVV_LVA_PIECE_VALUES[EMPTY]     = 0;
 
-var SEE_PIECE_VALUES        = [];
-SEE_PIECE_VALUES[PAWN]      = 1;
-SEE_PIECE_VALUES[KNIGHT]    = 3;
-SEE_PIECE_VALUES[BISHOP]    = 3;
-SEE_PIECE_VALUES[ROOK]      = 5;
-SEE_PIECE_VALUES[QUEEN]     = 9;
-SEE_PIECE_VALUES[KING]      = 31;
-SEE_PIECE_VALUES[EMPTY]     = 0;
-
 const MATE_VALUE = 100000;
 
 const DELTA_KNIGHT = new Int32Array([
@@ -196,7 +187,7 @@ const PAWN_LAST_RANK = [
     [138, 145]
 ];
 
-const SEARCH_LIMIT_CHECK = 10000;
+const SEARCH_LIMIT_CHECK = 1000;
 
 const FEN_BOARD_REGEX = /^\s*([rnbqkpRNBQKP1-8]+\/){7}([rnbqkpRNBQKP1-8]+)\s[bw]\s(-|K?Q?k?q?)\s(-|[a-h][36])/;
 const MOVE_REGEX = /^[a-h][1-8][a-h][1-8][bnrq]?$/;
@@ -268,6 +259,14 @@ const XBOARD_COMMANDS = [
     'white',
 ];
 
+const HASH_EXACT = 0;
+const HASH_UPPER = 1;
+const HASH_LOWER = 2;
+const HASH_FLAG_OFFSET = 7;
+const HASH_SCORE_OFFSET = 9;
+const HASH_FLAG_MASK  = 0b110000000;
+const HASH_DEPTH_MASK   = 0b1111111;
+
 module.exports = {
     WHITE,
     BLACK,
@@ -310,7 +309,6 @@ module.exports = {
     PIECE_DISPLAY_MAP,
     PIECE_VALUES,
     MVV_LVA_PIECE_VALUES,
-    SEE_PIECE_VALUES,
     MATE_VALUE,
     DELTA_KNIGHT,
     DELTA_KING,
@@ -340,4 +338,11 @@ module.exports = {
     ATTACK_PAWN,
     ATTACK_PIECE_ORDER,
     XBOARD_COMMANDS,
+    HASH_EXACT,
+    HASH_UPPER,
+    HASH_LOWER,
+    HASH_FLAG_OFFSET,
+    HASH_SCORE_OFFSET,
+    HASH_DEPTH_MASK,
+    HASH_FLAG_MASK,
 };

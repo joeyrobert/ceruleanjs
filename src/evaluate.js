@@ -1,7 +1,7 @@
 'use strict';
 
 const constants = require('./constants');
-const { HashTable } = require('./hash_table');
+const { NativeSingleHashTable } = require('./hash_table');
 const utils = require('./utils');
 
 /*
@@ -158,11 +158,11 @@ piecesToLoop.forEach(piece => {
 module.exports = class Evaluate {
     constructor() {
         this.evalCount = 0;
-        this.evalTable = new HashTable(1);
+        this.evalTable = new NativeSingleHashTable(15);
     }
 
     set hashSize(exponent) {
-        this.evalTable = new HashTable(exponent || 1);
+        this.evalTable = new NativeSingleHashTable(exponent || 15);
     }
 
     evaluate(board, display) {

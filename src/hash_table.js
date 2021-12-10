@@ -35,7 +35,7 @@ class NativeHashTable {
         // each entry consists of [loHash, hiHash, ...value]
         this.valuesPerEntry = valuesPerEntry;
         this.multiplier = valuesPerEntry + 2;
-        this.table = new Uint32Array(this.multiplier * this.size);
+        this.table = new Int32Array(this.multiplier * this.size);
         this.table.fill(fillValue);
     }
 
@@ -65,7 +65,7 @@ class NativeSingleHashTable {
         this.exponent = exponent || 16;
         this.size = (1 << this.exponent);
         this.bits = this.size - 1;
-        this.table = new Uint32Array(3 * this.size);
+        this.table = new Int32Array(3 * this.size);
         this.table.fill(fillValue);
     }
 

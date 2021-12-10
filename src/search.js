@@ -1,6 +1,13 @@
 'use strict';
 
-const constants = require('./constants');
+const {
+    HASH_EXACT,
+    HASH_UPPER,
+    HASH_LOWER,
+    HASH_TYPE_OFFSET,
+    HASH_SCORE_OFFSET,
+    MATE_VALUE,
+} = require('./constants');
 const Evaluate = require('./evaluate');
 const { NativeHashTable } = require('./hash_table');
 const utils = require('./utils');
@@ -9,6 +16,8 @@ module.exports = class Search {
     constructor() {
         this._evaluate = new Evaluate();
         this.searchTable = new NativeHashTable(5, 3);
+        this.timeDiffCount = 0;
+        this.lastTime = 0;
     }
 
     set hashSize(exponent=1) {
@@ -132,7 +141,7 @@ module.exports = class Search {
 
         if (searchedMoves === 0) {
             if (board.isInCheck()) {
-                return -1 * (constants.MATE_VALUE + depth);
+                return -1 * (MATE_VALUE + depth);
             } else {
                 // DRAW
                 return 0;
@@ -152,19 +161,9 @@ module.exports = class Search {
             return;
         }
 
-        // include alpha beta in search key
-        const loHash = board.loHash;
-        const hiHash = board.hiHash;
-
-        const hashLookup = this.searchTable.get(loHash, hiHash);
-        if (hashLookup) {
-            return hashLookup[0];
-        }
-
         var standPat = this._evaluate.evaluate(board);
 
         if (standPat >= beta) {
-            this.searchTable.set(loHash, hiHash, [score, beta]);
             return beta;
         }
 
@@ -180,7 +179,6 @@ module.exports = class Search {
             moves[i] = utils.moveAddOrder(moves[i], board.mvvLva(moves[i]));
         }
         // moves = utils.quickSort(moves);
-        moves = Uint32Array.from(moves);
         moves.sort(utils.reverseOrder);
 
         board.addHistory();
@@ -194,7 +192,6 @@ module.exports = class Search {
 
                 if (score >= beta) {
                     board.subtractHistory();
-                    this.searchTable.set(loHash, hiHash, beta);
                     return beta;
                 }
 
@@ -205,7 +202,6 @@ module.exports = class Search {
         }
 
         board.subtractHistory();
-        this.searchTable.set(loHash, hiHash, alpha);
         return alpha;
     }
 
