@@ -206,6 +206,8 @@ function moveAddOrder(move, order) {
 
 // Recursive quicksort, apparently faster than Array.prototype.sort()
 // See https://jsperf.com/javascript-sort/103
+// Update Dec 2021: Converting to a typed array and sorting significantly faster
+// than either quickSort or Array#sort, e.g. a = Uint32Array.from(arr); a.sort()
 function quickSort(arr) {
     if (arr.length <= 1) {
         return arr;

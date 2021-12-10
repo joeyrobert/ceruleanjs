@@ -38,4 +38,30 @@ describe('utils', () => {
             expect(utils.moveToShortString(board, board.moveStringToMove('a7b7'))).to.equal('Q7xb7+');
         });
     });
+
+    describe('quicksort benchmark', () => {
+        it('runs quicksort fast', () => {
+            var a;
+            for (var i = 0; i < 100000; i++) {
+                a = (new Array(50)).fill(1).map(() => Math.random());
+                utils.quickSort(a);
+            }
+        });
+
+        it('runs Array#sort fast', () => {
+            var a;
+            for (var i = 0; i < 100000; i++) {
+                a = (new Array(50)).fill(1).map(() => Math.random());
+                a.sort();
+            }
+        });
+
+        it('runs TypedArray#sort fast', () => {
+            var a;
+            for (var i = 0; i < 100000; i++) {
+                a = Uint32Array.from((new Array(50)).fill(1).map(() => Math.random()));
+                a.sort();
+            }
+        });
+    });
 });

@@ -8,11 +8,11 @@ const utils = require('./utils');
 module.exports = class Search {
     constructor() {
         this._evaluate = new Evaluate();
-        this.searchTable = new NativeHashTable(5);
+        this.searchTable = new NativeHashTable(5, 3);
     }
 
     set hashSize(exponent=1) {
-        this.searchTable = new NativeHashTable(exponent);
+        this.searchTable = new NativeHashTable(exponent, 3);
     }
 
     get evaluate() {
@@ -74,7 +74,9 @@ module.exports = class Search {
         for (var i = 0; i < moves.length; i++) {
             moves[i] = utils.moveAddOrder(moves[i], board.mvvLva(moves[i]));
         }
-        moves = utils.quickSort(moves);
+        // moves = utils.quickSort(moves);
+        moves = Uint32Array.from(moves);
+        moves.sort();
 
         board.addHistory();
 
@@ -152,8 +154,8 @@ module.exports = class Search {
         }
 
         // include alpha beta in search key
-        const loHash = board.loHash ^ alpha;
-        const hiHash = board.hiHash ^ beta;
+        const loHash = board.loHash;
+        const hiHash = board.hiHash;
 
         const hashLookup = this.searchTable.get(loHash, hiHash);
         if (hashLookup) {
@@ -163,7 +165,7 @@ module.exports = class Search {
         var standPat = this._evaluate.evaluate(board);
 
         if (standPat >= beta) {
-            this.searchTable.set(loHash, hiHash, beta);
+            this.searchTable.set(loHash, hiHash, [score, beta]);
             return beta;
         }
 
@@ -178,7 +180,9 @@ module.exports = class Search {
         for (var i = 0; i < moves.length; i++) {
             moves[i] = utils.moveAddOrder(moves[i], board.mvvLva(moves[i]));
         }
-        moves = utils.quickSort(moves);
+        // moves = utils.quickSort(moves);
+        moves = Uint32Array.from(moves);
+        moves.sort();
 
         board.addHistory();
 

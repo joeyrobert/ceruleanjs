@@ -390,7 +390,7 @@ module.exports = class Xboard {
         const exponent = Math.floor(Math.log2(bInt / (entriesPerHash * bytesPerEntry)));
         const entries = Math.pow(2, exponent);
         const size = entries * entriesPerHash * bytesPerEntry;
-        console.log(`Exponent: ${exponent}, Entries: ${entries}, Size: ${size} bytes`);
+        // console.log(`Exponent: ${exponent}, Entries: ${entries}, Size: ${size} bytes`);
         this._search.hashSize = exponent;
     }
 
