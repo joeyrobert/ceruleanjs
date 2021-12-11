@@ -1,0 +1,132 @@
+warning: LF will be replaced by CRLF in src/evaluate.js.
+The file will have its original line endings in your working directory.
+warning: LF will be replaced by CRLF in src/search.js.
+The file will have its original line endings in your working directory.
+[1mdiff --git a/src/evaluate.js b/src/evaluate.js[m
+[1mindex 4b0694f..6d06a74 100644[m
+[1m--- a/src/evaluate.js[m
+[1m+++ b/src/evaluate.js[m
+[36m@@ -158,11 +158,11 @@[m [mpiecesToLoop.forEach(piece => {[m
+ module.exports = class Evaluate {[m
+     constructor() {[m
+         this.evalCount = 0;[m
+[31m-        this.evalTable = new NativeSingleHashTable(15);[m
+[32m+[m[32m        this.evalTable = new NativeSingleHashTable(10);[m
+     }[m
+ [m
+     set hashSize(exponent) {[m
+[31m-        this.evalTable = new NativeSingleHashTable(exponent || 15);[m
+[32m+[m[32m        this.evalTable = new NativeSingleHashTable(exponent || 10);[m
+     }[m
+ [m
+     evaluate(board, display=false) {[m
+[1mdiff --git a/src/search.js b/src/search.js[m
+[1mindex 42b2cba..34f26db 100644[m
+[1m--- a/src/search.js[m
+[1m+++ b/src/search.js[m
+[36m@@ -16,7 +16,7 @@[m [mconst utils = require('./utils');[m
+ module.exports = class Search {[m
+     constructor() {[m
+         this.evaluate = new Evaluate();[m
+[31m-        this.searchTable = new NativeHashTable(15, 2);[m
+[32m+[m[32m        this.searchTable = new NativeHashTable(10, 2);[m
+         this.timeDiffCount = 0;[m
+         this.lastTime = 0;[m
+     }[m
+[36m@@ -66,22 +66,19 @@[m [mmodule.exports = class Search {[m
+ [m
+         var ttEntry = this.searchTable.get(board.loHash, board.hiHash);[m
+         var maxMove = 0;[m
+[32m+[m[32m        var ttMove, ttData, ttDepth = 0, ttFlag, ttScore;[m
+ [m
+         if (ttEntry) {[m
+[31m-            var [ttMove, ttData] = ttEntry;[m
+[31m-            var [ttDepth, ttFlag, ttScore] = utils.unpackSearchEntry(ttData);[m
+[32m+[m[32m            [ttMove, ttData] = ttEntry;[m
+[32m+[m[32m            [ttDepth, ttFlag, ttScore] = utils.unpackSearchEntry(ttData);[m
+ [m
+             if (ttDepth >= depth) {[m
+                 maxMove = ttMove;[m
+                 if (ttFlag === HASH_ALPHA && ttScore <= alpha) {[m
+                     alpha = ttScore > alpha ? ttScore : alpha;[m
+[31m-                    // return ttScore;[m
+                 } else if (ttFlag === HASH_BETA && ttScore >= beta) {[m
+[31m-                    // console.log('BETA')[m
+                     beta = ttScore < beta ? ttScore : beta;[m
+[31m-                    // return ttScore;[m
+                 } else if (ttFlag === HASH_EXACT) {[m
+[31m-                    // console.log('EXACT')[m
+                     this.pv[this.ply][depth] = ttMove;[m
+                     return ttScore;[m
+                 }[m
+[36m@@ -99,13 +96,10 @@[m [mmodule.exports = class Search {[m
+         // Add move ordering (Hash + iterative deepening PV + MVV/LVA)[m
+         for (var i = 0; i < moves.length; i++) {[m
+             if (moves[i] === maxMove) {[m
+[31m-                // console.log('FIRST');[m
+                 moves[i] = utils.moveAddOrder(moves[i], MOVE_ORDER_FIRST);[m
+             } else if (this.pv[this.ply].length && moves[i] === this.pv[this.ply - 1][this.ply - 1]) {[m
+[31m-                // console.log('SECOND')[m
+                 moves[i] = utils.moveAddOrder(moves[i], MOVE_ORDER_SECOND);[m
+             } else {[m
+[31m-                // console.log('MVV/LVA')[m
+                 moves[i] = utils.moveAddOrder(moves[i], board.mvvLva(moves[i]));[m
+             }[m
+         }[m
+[36m@@ -135,7 +129,12 @@[m [mmodule.exports = class Search {[m
+                 board.subtractMove(move);[m
+ [m
+                 if (score >= beta) {[m
+[31m-                    this.searchTable.set(board.loHash, board.hiHash, [move, utils.packSearchEntry(depth, HASH_BETA, score)]);[m
+[32m+[m[32m                    if (depth > ttDepth) {[m
+[32m+[m[32m                        // console.log('SET')[m
+[32m+[m[32m                        this.searchTable.set(board.loHash, board.hiHash, [move, utils.packSearchEntry(depth, HASH_BETA, score)]);[m
+[32m+[m[32m                    } else {[m
+[32m+[m[32m                        // console.log('NOT SET')[m
+[32m+[m[32m                    }[m
+                     board.subtractHiswarning: LF will be replaced by CRLF in src/xboard.js.
+The file will have its original line endings in your working directory.
+warning: LF will be replaced by CRLF in test/hash_table.test.js.
+The file will have its original line endings in your working directory.
+tory();[m
+                     return beta;[m
+                 }[m
+[36m@@ -155,7 +154,12 @@[m [mmodule.exports = class Search {[m
+             evalType = HASH_EXACT;[m
+         }[m
+ [m
+[31m-        this.searchTable.set(board.loHash, board.hiHash, [alphaMove, utils.packSearchEntry(depth, evalType, alpha)]);[m
+[32m+[m[32m        if (depth > ttDepth) {[m
+[32m+[m[32m            this.searchTable.set(board.loHash, board.hiHash, [alphaMove, utils.packSearchEntry(depth, evalType, alpha)]);[m
+[32m+[m[32m            // console.log('GOOD')[m
+[32m+[m[32m        } else {[m
+[32m+[m[32m            // console.log('FUCK')[m
+[32m+[m[32m        }[m
+         board.subtractHistory();[m
+ [m
+         if (searchedMoves === 0) {[m
+[1mdiff --git a/src/xboard.js b/src/xboard.js[m
+[1mindex edf172d..704e36a 100644[m
+[1m--- a/src/xboard.js[m
+[1m+++ b/src/xboard.js[m
+[36m@@ -36,6 +36,8 @@[m [mmodule.exports = class Xboard {[m
+             usermove: 1[m
+         };[m
+ [m
+[32m+[m[32m        this.memory('100'); // use 100mb for tables by default[m
+[32m+[m
+         if (process.browser) {[m
+             onmessage = evt => this.sendLine(evt.data);[m
+ [m
+[1mdiff --git a/test/hash_table.test.js b/test/hash_table.test.js[m
+[1mindex f9d5a60..83bc575 100644[m
+[1m--- a/test/hash_table.test.js[m
+[1m+++ b/test/hash_table.test.js[m
+[36m@@ -6,7 +6,6 @@[m [mconst {[m
+     NativeHashTable,[m
+     NativeSingleHashTable,[m
+ } = require('../src/hash_table');[m
+[31m-const { getRandomInt } = require('../src/utils');[m
+ [m
+ const HASH_TABLE_SIZE = 15; // 2^15 == 32768[m
+ const BENCHMARK_HASH_TABLE_SIZE = 20; // 2^20 == 1048576[m

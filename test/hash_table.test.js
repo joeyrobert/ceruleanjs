@@ -6,7 +6,6 @@ const {
     NativeHashTable,
     NativeSingleHashTable,
 } = require('../src/hash_table');
-const { getRandomInt } = require('../src/utils');
 
 const HASH_TABLE_SIZE = 15; // 2^15 == 32768
 const BENCHMARK_HASH_TABLE_SIZE = 20; // 2^20 == 1048576

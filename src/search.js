@@ -16,7 +16,7 @@ const utils = require('./utils');
 module.exports = class Search {
     constructor() {
         this.evaluate = new Evaluate();
-        this.searchTable = new NativeHashTable(15, 2);
+        this.searchTable = new NativeHashTable(10, 2);
         this.timeDiffCount = 0;
         this.lastTime = 0;
     }
@@ -66,22 +66,19 @@ module.exports = class Search {
 
         var ttEntry = this.searchTable.get(board.loHash, board.hiHash);
         var maxMove = 0;
+        var ttMove, ttData, ttDepth = 0, ttFlag, ttScore;
 
         if (ttEntry) {
-            var [ttMove, ttData] = ttEntry;
-            var [ttDepth, ttFlag, ttScore] = utils.unpackSearchEntry(ttData);
+            [ttMove, ttData] = ttEntry;
+            [ttDepth, ttFlag, ttScore] = utils.unpackSearchEntry(ttData);
 
             if (ttDepth >= depth) {
                 maxMove = ttMove;
                 if (ttFlag === HASH_ALPHA && ttScore <= alpha) {
                     alpha = ttScore > alpha ? ttScore : alpha;
-                    // return ttScore;
                 } else if (ttFlag === HASH_BETA && ttScore >= beta) {
-                    // console.log('BETA')
                     beta = ttScore < beta ? ttScore : beta;
-                    // return ttScore;
                 } else if (ttFlag === HASH_EXACT) {
-                    // console.log('EXACT')
                     this.pv[this.ply][depth] = ttMove;
                     return ttScore;
                 }
@@ -99,13 +96,10 @@ module.exports = class Search {
         // Add move ordering (Hash + iterative deepening PV + MVV/LVA)
         for (var i = 0; i < moves.length; i++) {
             if (moves[i] === maxMove) {
-                // console.log('FIRST');
                 moves[i] = utils.moveAddOrder(moves[i], MOVE_ORDER_FIRST);
             } else if (this.pv[this.ply].length && moves[i] === this.pv[this.ply - 1][this.ply - 1]) {
-                // console.log('SECOND')
                 moves[i] = utils.moveAddOrder(moves[i], MOVE_ORDER_SECOND);
             } else {
-                // console.log('MVV/LVA')
                 moves[i] = utils.moveAddOrder(moves[i], board.mvvLva(moves[i]));
             }
         }
@@ -135,7 +129,9 @@ module.exports = class Search {
                 board.subtractMove(move);
 
                 if (score >= beta) {
-                    this.searchTable.set(board.loHash, board.hiHash, [move, utils.packSearchEntry(depth, HASH_BETA, score)]);
+                    if (depth > ttDepth) {
+                        this.searchTable.set(board.loHash, board.hiHash, [move, utils.packSearchEntry(depth, HASH_BETA, score)]);
+                    }
                     board.subtractHistory();
                     return beta;
                 }
@@ -155,7 +151,9 @@ module.exports = class Search {
             evalType = HASH_EXACT;
         }
 
-        this.searchTable.set(board.loHash, board.hiHash, [alphaMove, utils.packSearchEntry(depth, evalType, alpha)]);
+        if (depth > ttDepth) {
+            this.searchTable.set(board.loHash, board.hiHash, [alphaMove, utils.packSearchEntry(depth, evalType, alpha)]);
+        }
         board.subtractHistory();
 
         if (searchedMoves === 0) {

@@ -158,11 +158,11 @@ piecesToLoop.forEach(piece => {
 module.exports = class Evaluate {
     constructor() {
         this.evalCount = 0;
-        this.evalTable = new NativeSingleHashTable(15);
+        this.evalTable = new NativeSingleHashTable(10);
     }
 
     set hashSize(exponent) {
-        this.evalTable = new NativeSingleHashTable(exponent || 15);
+        this.evalTable = new NativeSingleHashTable(exponent || 10);
     }
 
     evaluate(board, display=false) {

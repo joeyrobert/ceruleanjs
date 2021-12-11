@@ -36,6 +36,8 @@ module.exports = class Xboard {
             usermove: 1
         };
 
+        this.memory('100'); // use 100mb for tables by default
+
         if (process.browser) {
             onmessage = evt => this.sendLine(evt.data);
 
