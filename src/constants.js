@@ -18,11 +18,14 @@ const MOVE_PROMOTION_MASK           = 0b00000000000000011100000000000000;
 const MOVE_CAPTURED_MASK            = 0b00000000000011100000000000000000;
 const MOVE_BITS_MASK                = 0b00000000011100000000000000000000;
 const MOVE_ORDER_MASK               = 0b11111111100000000000000000000000;
+const MOVE_SANS_ORDER_MASK          = ~MOVE_ORDER_MASK;
 const MOVE_TO_SHIFT                 = 7;
 const MOVE_PROMOTION_SHIFT          = 14;
 const MOVE_CAPTURED_SHIFT           = 17;
-const MOVE_ORDER_SHIFT              = 26;
+const MOVE_ORDER_SHIFT              = 23;
 const MOVE_INDEX_OFFSET             = 33;
+const MOVE_ORDER_FIRST              = 255;
+const MOVE_ORDER_SECOND             = 254;
 const JUST_PIECE                    = 0b1110;
 const PAWN                          = 0;
 const KNIGHT                        = 2;
@@ -257,11 +260,12 @@ const XBOARD_COMMANDS = [
     'undo',
     'version',
     'white',
+    'cachestat',
 ];
 
 const HASH_EXACT = 0;
-const HASH_UPPER = 1;
-const HASH_LOWER = 2;
+const HASH_ALPHA = 1;
+const HASH_BETA = 2;
 const HASH_FLAG_OFFSET = 7;
 const HASH_SCORE_OFFSET = 9;
 const HASH_FLAG_MASK  = 0b110000000;
@@ -286,11 +290,14 @@ module.exports = {
     MOVE_CAPTURED_MASK,
     MOVE_BITS_MASK,
     MOVE_ORDER_MASK,
+    MOVE_SANS_ORDER_MASK,
     MOVE_TO_SHIFT,
     MOVE_PROMOTION_SHIFT,
     MOVE_CAPTURED_SHIFT,
     MOVE_ORDER_SHIFT,
     MOVE_INDEX_OFFSET,
+    MOVE_ORDER_FIRST,
+    MOVE_ORDER_SECOND,
     JUST_PIECE,
     PAWN,
     KNIGHT,
@@ -339,8 +346,8 @@ module.exports = {
     ATTACK_PIECE_ORDER,
     XBOARD_COMMANDS,
     HASH_EXACT,
-    HASH_UPPER,
-    HASH_LOWER,
+    HASH_ALPHA,
+    HASH_BETA,
     HASH_FLAG_OFFSET,
     HASH_SCORE_OFFSET,
     HASH_DEPTH_MASK,

@@ -5,8 +5,8 @@ const Board = require('../src/board');
 const utils = require('../src/utils');
 const {
     HASH_EXACT,
-    HASH_LOWER,
-    HASH_UPPER,
+    HASH_ALPHA,
+    HASH_BETA,
     KING,
     MATE_VALUE,
     PIECE_VALUES,
@@ -79,7 +79,7 @@ describe('utils', () => {
     describe('packs search entries', () => {
         it('packs and unpacks successfully', () => {
             const depths = [64, 63, 5, 1, 0];
-            const flags = [HASH_UPPER, HASH_LOWER, HASH_EXACT];
+            const flags = [HASH_ALPHA, HASH_BETA, HASH_EXACT];
             const scores = [-MATE_VALUE - PIECE_VALUES[KING], -PIECE_VALUES[KING], 0, PIECE_VALUES[KING], MATE_VALUE + PIECE_VALUES[KING]];
 
             depths.forEach(expectedDepth => {

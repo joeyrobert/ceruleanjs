@@ -8,6 +8,8 @@ class HashTable {
         this.size = (1 << this.exponent);
         this.bits = this.size - 1;
         this.table = [];
+        this.cacheHit = 0;
+        this.cacheMiss = 0;
 
         for (var i = 0; i < this.size; i++) {
             this.table.push([0, 0, undefined]);
@@ -23,7 +25,11 @@ class HashTable {
 
     get(loHash, hiHash) {
         var value = this.table[loHash & this.bits];
-        return value && value[0] === loHash && value[1] === hiHash ? value[2] : undefined;
+        if (value && value[0] === loHash && value[1] === hiHash) {
+            this.cacheHit++;
+            return value[2];
+        }
+        this.cacheMiss++;
     }
 }
 
@@ -36,7 +42,10 @@ class NativeHashTable {
         this.valuesPerEntry = valuesPerEntry;
         this.multiplier = valuesPerEntry + 2;
         this.table = new Int32Array(this.multiplier * this.size);
-        this.table.fill(fillValue);
+        this.fillValue = fillValue;
+        this.cacheHit = 0;
+        this.cacheMiss = 0;
+        this.clear();
     }
 
     set(loHash, hiHash, value) {
@@ -51,12 +60,22 @@ class NativeHashTable {
     get(loHash, hiHash) {
         var offset = (loHash & this.bits) * this.multiplier;
         if (this.table[offset] === loHash && this.table[offset + 1] === hiHash) {
+            this.cacheHit++;
             if (this.valuesPerEntry === 1) {
                 return this.table[offset + 2];
             }
 
             return this.table.subarray(offset + 2, offset + 2 + this.valuesPerEntry);
         }
+        this.cacheMiss++;
+    }
+
+    clear() {
+        this.table.fill(this.fillValue);
+    }
+
+    get bytes() {
+        return this.size * this.multiplier * 4;
     }
 }
 
@@ -66,7 +85,10 @@ class NativeSingleHashTable {
         this.size = (1 << this.exponent);
         this.bits = this.size - 1;
         this.table = new Int32Array(3 * this.size);
-        this.table.fill(fillValue);
+        this.fillValue = fillValue;
+        this.cacheHit = 0;
+        this.cacheMiss = 0;
+        this.clear();
     }
 
     set(loHash, hiHash, value) {
@@ -79,8 +101,18 @@ class NativeSingleHashTable {
     get(loHash, hiHash) {
         var offset = (loHash & this.bits) * 3;
         if (this.table[offset] === loHash && this.table[offset + 1] === hiHash) {
+            this.cacheHit++;
             return this.table[offset + 2];
         }
+        this.cacheMiss++;
+    }
+
+    clear() {
+        this.table.fill(this.fillValue);
+    }
+
+    get bytes() {
+        return this.size * 3 * 4;
     }
 }
 

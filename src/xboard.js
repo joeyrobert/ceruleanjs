@@ -401,10 +401,15 @@ module.exports = class Xboard {
         const evalEntries = Math.pow(2, evalExponent);
         const evalSize = evalEntries * evalEntriesPerHash * bytesPerEntry;
 
-        // console.log(`# SEARCH: Exponent: ${searchExponent}, Entries: ${searchEntries}, Size: ${searchSize} bytes`);
-        // console.log(`# EVAL:   Exponent: ${evalExponent}, Entries: ${evalEntries}, Size: ${evalSize} bytes`);
         this._search.hashSize = searchExponent;
-        this._search._evaluate.hashSize = evalExponent;
+        this._search.evaluate.hashSize = evalExponent;
+    }
+
+    cachestat() {
+        const { searchTable } = this._search;
+        const { evalTable } = this._search.evaluate;
+        console.log(`SEARCH: Entries: ${searchTable.size} Size: ${searchTable.bytes} bytes Hits: ${searchTable.cacheHit} Misses: ${searchTable.cacheMiss} Hit rate: ${(searchTable.cacheHit * 100.0 / (searchTable.cacheHit + searchTable.cacheMiss)).toFixed(2)}%`);
+        console.log(`EVAL:   Entries: ${evalTable.size} Size: ${evalTable.bytes} bytes Hits: ${evalTable.cacheHit} Misses: ${evalTable.cacheMiss} Hit rate: ${(evalTable.cacheHit * 100.0 / (evalTable.cacheHit + evalTable.cacheMiss)).toFixed(2)}%`);
     }
 
     help() {

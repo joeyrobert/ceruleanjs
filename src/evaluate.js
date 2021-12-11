@@ -165,14 +165,17 @@ module.exports = class Evaluate {
         this.evalTable = new NativeSingleHashTable(exponent || 15);
     }
 
-    evaluate(board, display) {
+    evaluate(board, display=false) {
         this.evalCount++;
 
         var savedEval = this.evalTable.get(board.loHash, board.hiHash);
 
-        if (savedEval && !display) {
+        if (savedEval !== undefined && !display) {
+            // console.log('SAVED EVAL', savedEval);
             return savedEval;
         }
+
+        this.cacheMiss++;
 
         // Summed values
         var material        = [0, 0];

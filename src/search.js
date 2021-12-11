@@ -2,11 +2,12 @@
 
 const {
     HASH_EXACT,
-    HASH_UPPER,
-    HASH_LOWER,
-    HASH_TYPE_OFFSET,
-    HASH_SCORE_OFFSET,
+    HASH_ALPHA,
+    HASH_BETA,
     MATE_VALUE,
+    MOVE_ORDER_FIRST,
+    MOVE_ORDER_SECOND,
+    MOVE_SANS_ORDER_MASK,
 } = require('./constants');
 const Evaluate = require('./evaluate');
 const { NativeHashTable } = require('./hash_table');
@@ -14,27 +15,19 @@ const utils = require('./utils');
 
 module.exports = class Search {
     constructor() {
-        this._evaluate = new Evaluate();
-        this.searchTable = new NativeHashTable(5, 3);
+        this.evaluate = new Evaluate();
+        this.searchTable = new NativeHashTable(15, 2);
         this.timeDiffCount = 0;
         this.lastTime = 0;
     }
 
     set hashSize(exponent=1) {
-        this.searchTable = new NativeHashTable(exponent, 3);
-    }
-
-    get evaluate() {
-        return this._evaluate;
-    }
-
-    set evaluate(evaluate) {
-        this._evaluate = evaluate;
+        this.searchTable = new NativeHashTable(exponent, 2);
     }
 
     minimax(board, depth) {
         if (depth === 0) {
-            return this._evaluate.evaluate(board);
+            return this.evaluate.evaluate(board);
         }
 
         var max = -Infinity, score, bestMove;
@@ -71,6 +64,30 @@ module.exports = class Search {
             return;
         }
 
+        var ttEntry = this.searchTable.get(board.loHash, board.hiHash);
+        var maxMove = 0;
+
+        if (ttEntry) {
+            var [ttMove, ttData] = ttEntry;
+            var [ttDepth, ttFlag, ttScore] = utils.unpackSearchEntry(ttData);
+
+            if (ttDepth >= depth) {
+                maxMove = ttMove;
+                if (ttFlag === HASH_ALPHA && ttScore <= alpha) {
+                    alpha = ttScore > alpha ? ttScore : alpha;
+                    // return ttScore;
+                } else if (ttFlag === HASH_BETA && ttScore >= beta) {
+                    // console.log('BETA')
+                    beta = ttScore < beta ? ttScore : beta;
+                    // return ttScore;
+                } else if (ttFlag === HASH_EXACT) {
+                    // console.log('EXACT')
+                    this.pv[this.ply][depth] = ttMove;
+                    return ttScore;
+                }
+            }
+        }
+
         if (depth === 0) {
             return this.qsearch(board, alpha, beta);
         }
@@ -79,31 +96,28 @@ module.exports = class Search {
         var searchedMoves = 0;
         var move, moves = board.generateMoves();
 
-        // Add MVV/LVA
+        // Add move ordering (Hash + iterative deepening PV + MVV/LVA)
         for (var i = 0; i < moves.length; i++) {
-            moves[i] = utils.moveAddOrder(moves[i], board.mvvLva(moves[i]));
+            if (moves[i] === maxMove) {
+                // console.log('FIRST');
+                moves[i] = utils.moveAddOrder(moves[i], MOVE_ORDER_FIRST);
+            } else if (this.pv[this.ply].length && moves[i] === this.pv[this.ply - 1][this.ply - 1]) {
+                // console.log('SECOND')
+                moves[i] = utils.moveAddOrder(moves[i], MOVE_ORDER_SECOND);
+            } else {
+                // console.log('MVV/LVA')
+                moves[i] = utils.moveAddOrder(moves[i], board.mvvLva(moves[i]));
+            }
         }
-        // moves = utils.quickSort(moves);
         moves.sort(utils.reverseOrder);
 
         board.addHistory();
 
-        // Put last best PV move first
-        if (this.pv[this.ply].length) {
-            var movesIndex = moves.indexOf(this.pv[this.ply - 1][this.ply - 1]);
-
-            if (movesIndex > 0) {
-                var swap = moves[0]
-                moves[0] = moves[movesIndex];
-                moves[movesIndex] = swap;
-            }
-        }
-
         // PVS search
-        var alphaMove;
+        var alphaMove = 0;
 
         for (var i = 0; i < moves.length; i++) {
-            move = moves[i];
+            move = moves[i] & MOVE_SANS_ORDER_MASK;
 
             if (board.addMove(move)) {
                 searchedMoves++;
@@ -121,6 +135,7 @@ module.exports = class Search {
                 board.subtractMove(move);
 
                 if (score >= beta) {
+                    this.searchTable.set(board.loHash, board.hiHash, [move, utils.packSearchEntry(depth, HASH_BETA, score)]);
                     board.subtractHistory();
                     return beta;
                 }
@@ -133,10 +148,14 @@ module.exports = class Search {
             }
         }
 
+        var evalType = HASH_ALPHA;
+
         if (alphaMove) {
             this.pv[this.ply][depth] = alphaMove;
+            evalType = HASH_EXACT;
         }
 
+        this.searchTable.set(board.loHash, board.hiHash, [alphaMove, utils.packSearchEntry(depth, evalType, alpha)]);
         board.subtractHistory();
 
         if (searchedMoves === 0) {
@@ -161,7 +180,7 @@ module.exports = class Search {
             return;
         }
 
-        var standPat = this._evaluate.evaluate(board);
+        var standPat = this.evaluate.evaluate(board);
 
         if (standPat >= beta) {
             return beta;
@@ -216,7 +235,7 @@ module.exports = class Search {
         for (var depth = 1; depth <= maxDepth; depth++) {
             this.ply = depth;
             this.pv[this.ply] = [];
-            this._evaluate.resetEvalCount();
+            this.evaluate.resetEvalCount();
             score = this.search(board, -Infinity, +Infinity, depth);
 
             if (utils.isNumeric(score)) {
@@ -226,7 +245,7 @@ module.exports = class Search {
                 }
 
                 if (!this.endedEarly && !hideDisplay) {
-                    console.log(`${depth} ${score} ${Math.round(this.timeDiff() / 10)} ${this._evaluate.evalCount} ${moveStrings.join(' ')}`);
+                    console.log(`${depth} ${score} ${Math.round(this.timeDiff() / 10)} ${this.evaluate.evalCount} ${moveStrings.join(' ')}`);
                 }
             }
 
@@ -238,7 +257,7 @@ module.exports = class Search {
         if (this.endedEarly) {
             this.ply--;
         }
-
+        this.searchTable.clear();
         return this.pv[this.ply][this.ply];
     }
 
