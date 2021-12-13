@@ -260,6 +260,10 @@ module.exports = class Search {
     }
 
     timeDiff() {
-        return performance.now() - this.startTime;
+        if (this.timeDiffCount % 1000 === 0) {
+            this.lastTime = performance.now();
+        }
+        this.timeDiffCount++;
+        return this.lastTime - this.startTime;
     }
 };
