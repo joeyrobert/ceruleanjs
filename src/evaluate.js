@@ -1,6 +1,17 @@
 'use strict';
 
-const constants = require('./constants');
+const {
+    BISHOP,
+    JUST_PIECE,
+    KING,
+    KNIGHT,
+    PAWN,
+    PIECE_VALUES,
+    QUEEN,
+    ROOK,
+    WHITE,
+    WIDTH,
+} = require('./constants');
 const { NativeSingleHashTable } = require('./hash_table');
 const utils = require('./utils');
 
@@ -42,7 +53,6 @@ const ROOK_ON_SEVENTH_BONUS = 20;
 /*
  * Piece square tables
  */
-var PIECE_SQUARE_TABLES = [];
 
 /*
  * a8 b8 c8 d8 e8 f8 g8 h8
@@ -55,7 +65,7 @@ var PIECE_SQUARE_TABLES = [];
  * a1 b1 c1 d1 e1 f1 g1 h1
  */
 
-PIECE_SQUARE_TABLES[constants.PAWN] = [
+const PIECE_SQUARE_TABLES_PAWN = new Int32Array([
     0,   0,   0,   0,   0,   0,   0,   0,
     5,  10,  15,  20,  20,  15,  10,   5,
     4,   8,  12,  16,  16,  12,   8,   4,
@@ -64,9 +74,9 @@ PIECE_SQUARE_TABLES[constants.PAWN] = [
     1,   2,   3, -10, -10,   3,   2,   1,
     0,   0,   0, -40, -40,   0,   0,   0,
     0,   0,   0,   0,   0,   0,   0,   0
-];
+]);
 
-PIECE_SQUARE_TABLES[constants.KNIGHT] = [
+const PIECE_SQUARE_TABLES_KNIGHT = new Int32Array([
     -10, -10, -10, -10, -10, -10, -10, -10,
     -10,   0,   0,   0,   0,   0,   0, -10,
     -10,   0,   5,   5,   5,   5,   0, -10,
@@ -75,9 +85,9 @@ PIECE_SQUARE_TABLES[constants.KNIGHT] = [
     -10,   0,   5,   5,   5,   5,   0, -10,
     -10,   0,   0,   0,   0,   0,   0, -10,
     -10, -30, -10, -10, -10, -10, -30, -10
-];
+]);
 
-PIECE_SQUARE_TABLES[constants.BISHOP] = [
+const PIECE_SQUARE_TABLES_BISHOP = new Int32Array([
     -10, -10, -10, -10, -10, -10, -10, -10,
     -10,   0,   0,   0,   0,   0,   0, -10,
     -10,   0,   5,   5,   5,   5,   0, -10,
@@ -86,9 +96,9 @@ PIECE_SQUARE_TABLES[constants.BISHOP] = [
     -10,   0,   5,   5,   5,   5,   0, -10,
     -10,   0,   0,   0,   0,   0,   0, -10,
     -10, -10, -20, -10, -10, -20, -10, -10
-];
+]);
 
-PIECE_SQUARE_TABLES[constants.ROOK] = [
+const PIECE_SQUARE_TABLES_ROOK = new Int32Array([
       0,  0,  0,  0,  0,  0,  0,  0,
       5, 10, 10, 10, 10, 10, 10,  5,
      -5,  0,  0,  0,  0,  0,  0, -5,
@@ -97,9 +107,9 @@ PIECE_SQUARE_TABLES[constants.ROOK] = [
      -5,  0,  0,  0,  0,  0,  0, -5,
      -5,  0,  0,  0,  0,  0,  0, -5,
       0,  0,  0,  5,  5,  0,  0,  0
-];
+]);
 
-PIECE_SQUARE_TABLES[constants.QUEEN] = [
+const PIECE_SQUARE_TABLES_QUEEN = new Int32Array([
     -10, -5, -5, -1, -1, -5, -5,-10,
      -5,  0,  0,  0,  0,  0,  0, -5,
      -5,  0,  1,  1,  1,  1,  0, -5,
@@ -108,11 +118,10 @@ PIECE_SQUARE_TABLES[constants.QUEEN] = [
      -5,  1,  1,  1,  1,  1,  0, -5,
      -5,  0,  1,  0,  0,  0,  0, -5,
     -10, -5, -5, -1, -1, -5, -5,-10
-];
+]);
 
 // Two piece square tables for king, interpolate between them based on game phase
-PIECE_SQUARE_TABLES[constants.KING] = [
-[
+const PIECE_SQUARE_TABLES_KING_EARLY = new Int32Array([
     -40, -40, -40, -40, -40, -40, -40, -40,
     -40, -40, -40, -40, -40, -40, -40, -40,
     -40, -40, -40, -40, -40, -40, -40, -40,
@@ -121,8 +130,9 @@ PIECE_SQUARE_TABLES[constants.KING] = [
     -40, -40, -40, -40, -40, -40, -40, -40,
     -20, -20, -20, -20, -20, -20, -20, -20,
       0,  20,  40, -20,   0, -20,  40,  20
-],
-[
+]);
+
+const PIECE_SQUARE_TABLES_KING_LATE = new Int32Array([
       0,  10,  20,  30,  30,  20,  10,   0,
      10,  20,  30,  40,  40,  30,  20,  10,
      20,  30,  40,  50,  50,  40,  30,  20,
@@ -131,29 +141,7 @@ PIECE_SQUARE_TABLES[constants.KING] = [
      20,  30,  40,  50,  50,  40,  30,  20,
      10,  20,  30,  40,  40,  30,  20,  10,
       0,  10,  20,  30,  30,  20,  10,   0
-]];
-
-// Map 64 arrays to 180 arrays
-var piecesToLoop = [
-    constants.PAWN,
-    constants.KNIGHT,
-    constants.BISHOP,
-    constants.ROOK,
-    constants.QUEEN,
-    constants.KING
-];
-var PADDED_PIECE_SQUARE_TABLES = [];
-
-piecesToLoop.forEach(piece => {
-    if (piece === constants.KING) {
-        PADDED_PIECE_SQUARE_TABLES[piece] = [
-            utils.padIndices(PIECE_SQUARE_TABLES[piece][0]),
-            utils.padIndices(PIECE_SQUARE_TABLES[piece][1])
-        ];
-    } else {
-        PADDED_PIECE_SQUARE_TABLES[piece] = utils.padIndices(PIECE_SQUARE_TABLES[piece]);
-    }
-});
+]);
 
 module.exports = class Evaluate {
     constructor() {
@@ -196,13 +184,13 @@ module.exports = class Evaluate {
 
         // Pawn preprocessing
         for (turn = 0; turn < 2; turn++) {
-            pawns = board.pieces[turn].pieces[constants.PAWN];
+            pawns = board.pieces[turn].pieces[PAWN];
 
             for (i = 0; i < pawns.length; i++) {
                 index = pawns.indices[i];
                 rank = utils.indexToRank(index);
                 file = utils.indexToFile(index);
-                pawnRankOffset = turn === constants.WHITE ? 7 - rank : rank;
+                pawnRankOffset = turn === WHITE ? 7 - rank : rank;
                 pawnsByFile[turn][file] += 1;
 
                 // Pawn rank to be positive
@@ -254,6 +242,7 @@ module.exports = class Evaluate {
         var file;
         var turn;
         var pawnRankOffset;
+        var pstIndex;
 
         // Loop over every piece for piece bonuses, material and PST
         for (turn = 0; turn < 2; turn++) {
@@ -261,41 +250,42 @@ module.exports = class Evaluate {
 
             for (i = 0; i < pieces.length; i++) {
                 index = pieces.indices[i];
-                piece = board.board[index] & constants.JUST_PIECE;
-                material[turn] += constants.PIECE_VALUES[piece];
+                piece = board.board[index] & JUST_PIECE;
+                material[turn] += PIECE_VALUES[piece];
+                pstIndex = utils.getPstIndex(index, turn);
 
                 switch (piece) {
-                    case constants.PAWN:
-                        pst[turn] += PADDED_PIECE_SQUARE_TABLES[piece][turn][index];
+                    case PAWN:
+                        pst[turn] += PIECE_SQUARE_TABLES_PAWN[pstIndex];
                         if (savedPawn === undefined) {
                             pawnStructure[turn] += this.pawn(board, index, turn, pawnsByFile, pawnRank);
                         }
                         break;
-                    case constants.KNIGHT:
-                        pst[turn] += PADDED_PIECE_SQUARE_TABLES[piece][turn][index];
+                    case KNIGHT:
+                        pst[turn] += PIECE_SQUARE_TABLES_KNIGHT[pstIndex];
                         pieceBonuses[turn] += this.knight(board, index, turn, gameClosed, pawnRank);
                         break;
-                    case constants.BISHOP:
-                        pst[turn] += PADDED_PIECE_SQUARE_TABLES[piece][turn][index];
+                    case BISHOP:
+                        pst[turn] += PIECE_SQUARE_TABLES_BISHOP[pstIndex];
                         pieceBonuses[turn] += this.bishop(board, index, turn, pawnNumber);
                         break;
-                    case constants.ROOK:
-                        pst[turn] += PADDED_PIECE_SQUARE_TABLES[piece][turn][index];
+                    case ROOK:
+                        pst[turn] += PIECE_SQUARE_TABLES_ROOK[pstIndex];
                         pieceBonuses[turn] += this.rook(board, index, turn, pawnRank);
                         break;
-                    case constants.QUEEN:
-                        pst[turn] += PADDED_PIECE_SQUARE_TABLES[piece][turn][index];
+                    case QUEEN:
+                        pst[turn] += PIECE_SQUARE_TABLES_QUEEN[pstIndex];
                         pieceBonuses[turn] += this.queen(board, index, turn);
                         break;
-                    case constants.KING:
-                        pst[turn] += this.interpolate(PADDED_PIECE_SQUARE_TABLES[piece][0][turn][index], PADDED_PIECE_SQUARE_TABLES[piece][1][turn][index], gamePhase);
+                    case KING:
+                        pst[turn] += this.interpolate(PIECE_SQUARE_TABLES_KING_EARLY[pstIndex], PIECE_SQUARE_TABLES_KING_LATE[pstIndex], gamePhase);
                         kingSafety[turn] += this.king(board, index, turn);
                         break;
                 }
             }
         }
 
-        var turnCoefficient = board.turn === constants.WHITE ? 1 : -1;
+        var turnCoefficient = board.turn === WHITE ? 1 : -1;
 
         var total =
             MATERIAL_COEFF      * (material[1] - material[0]) +
@@ -331,17 +321,17 @@ module.exports = class Evaluate {
 
     pawn(board, index, turn, pawnsByFile, pawnRank) {
         var bonus = 0;
-        var behindCoefficient = turn === constants.WHITE ? -1 : 1;
+        var behindCoefficient = turn === WHITE ? -1 : 1;
         var file = utils.indexToFile(index);
         var rank = utils.indexToRank(index);
-        var pawnRankOffset = turn === constants.WHITE ? 7 - rank : rank;
+        var pawnRankOffset = turn === WHITE ? 7 - rank : rank;
         var inversePawnRankOffset = 7 - pawnRankOffset;
-        var behind = index + behindCoefficient * constants.WIDTH;
-        var left = index + behindCoefficient * (constants.WIDTH - 1);
-        var right = index + behindCoefficient * (constants.WIDTH + 1);
+        var behind = index + behindCoefficient * WIDTH;
+        var left = index + behindCoefficient * (WIDTH - 1);
+        var right = index + behindCoefficient * (WIDTH + 1);
 
         // Doubled pawn
-        if (board.board[behind] === constants.PAWN && board.board[behind] % 2 === board.turn) {
+        if (board.board[behind] === PAWN && board.board[behind] % 2 === board.turn) {
             bonus -= DOUBLED_PAWN_PENALTY;
         }
 
@@ -363,8 +353,8 @@ module.exports = class Evaluate {
         }
 
         // Protected pawn
-        if ((board.board[left] === constants.PAWN && board.board[left] % 2 === turn) ||
-            (board.board[right] === constants.PAWN && board.board[right] % 2 === turn)) {
+        if ((board.board[left] === PAWN && board.board[left] % 2 === turn) ||
+            (board.board[right] === PAWN && board.board[right] % 2 === turn)) {
             bonus += PROTECTED_PAWN_BONUS;
         }
 
@@ -373,9 +363,9 @@ module.exports = class Evaluate {
 
     knight(board, index, turn, gameClosed, pawnRank) {
         var bonus = 0;
-        var behindCoefficient = turn === constants.WHITE ? 1 : -1;
-        var left = index + behindCoefficient * (constants.WIDTH - 1);
-        var right = index + behindCoefficient * (constants.WIDTH + 1);
+        var behindCoefficient = turn === WHITE ? 1 : -1;
+        var left = index + behindCoefficient * (WIDTH - 1);
+        var right = index + behindCoefficient * (WIDTH + 1);
 
         // Closed game bonus
         if (gameClosed >= 0.5) {
@@ -384,12 +374,12 @@ module.exports = class Evaluate {
 
         // Outpost bonus
         var rank = utils.indexToRank(index);
-        var pawnRankOffset = turn === constants.WHITE ? 7 - rank : rank;
+        var pawnRankOffset = turn === WHITE ? 7 - rank : rank;
 
         if (pawnRankOffset > 3 &&
             // Protected
-            ((board.board[left] === constants.PAWN && board.board[left] % 2 === board.turn) ||
-            (board.board[right] === constants.PAWN && board.board[right] % 2 === board.turn))) {
+            ((board.board[left] === PAWN && board.board[left] % 2 === board.turn) ||
+            (board.board[right] === PAWN && board.board[right] % 2 === board.turn))) {
             bonus += KNIGHT_OUTPOST_BONUS;
         }
 
@@ -398,16 +388,16 @@ module.exports = class Evaluate {
 
     bishop(board, index, turn, pawnNumber) {
         var bonus = 0;
-        var bishops = board.pieces[turn].pieces[constants.BISHOP];
+        var bishops = board.pieces[turn].pieces[BISHOP];
 
         // Bishop pair
         // TODO: Extend this to up to 10 bishops
         if (bishops.length === 2) {
             bonus += BISHOP_DOUBLE_BONUS;
 
-            if (bishops[0] % 2 !== bishops[1] % 2) {
-                bonus += BISHOP_PAIR_BONUS;
-            }
+            // if (bishops[0] % 2 !== bishops[1] % 2) {
+            //     bonus += BISHOP_PAIR_BONUS;
+            // }
         }
 
         // Close if they have many pawns on that diagonal
@@ -420,7 +410,7 @@ module.exports = class Evaluate {
         var bonus = 0;
         var rank = utils.indexToRank(index);
         var file = utils.indexToRank(index);
-        var pawnRankOffset = turn === constants.WHITE ? 7 - rank : rank;
+        var pawnRankOffset = turn === WHITE ? 7 - rank : rank;
 
         // Open file
         if (pawnRank[turn][file] === 0) {
@@ -459,10 +449,10 @@ module.exports = class Evaluate {
         var phaseCheck = 24;
 
         for (var turn = 0; turn < 2; turn++) {
-            phaseCheck -= board.pieces[turn].pieces[constants.KNIGHT].length;
-            phaseCheck -= board.pieces[turn].pieces[constants.BISHOP].length;
-            phaseCheck -= board.pieces[turn].pieces[constants.ROOK].length * 2;
-            phaseCheck -= board.pieces[turn].pieces[constants.QUEEN].length * 4;
+            phaseCheck -= board.pieces[turn].pieces[KNIGHT].length;
+            phaseCheck -= board.pieces[turn].pieces[BISHOP].length;
+            phaseCheck -= board.pieces[turn].pieces[ROOK].length * 2;
+            phaseCheck -= board.pieces[turn].pieces[QUEEN].length * 4;
         }
 
         return phaseCheck / 24;
@@ -471,7 +461,7 @@ module.exports = class Evaluate {
     closedGame(board) {
         // 0.0 for open game (minimal pawns)
         // 1.0 for closed game (maximal pawns)
-        return (16 - (board.pieces[0].pieces[constants.PAWN].length + board.pieces[1].pieces[constants.PAWN].length)) / 16;
+        return (16 - (board.pieces[0].pieces[PAWN].length + board.pieces[1].pieces[PAWN].length)) / 16;
     }
 
     // Linear interpolation between two values based on phase.
