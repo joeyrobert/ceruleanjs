@@ -25,6 +25,7 @@ class HashTable {
 
     get(loHash, hiHash) {
         var value = this.table[loHash & this.bits];
+
         if (value && value[0] === loHash && value[1] === hiHash) {
             this.cacheHit++;
             return value[2];
@@ -67,6 +68,9 @@ class NativeHashTable {
 
             return this.table.subarray(offset + 2, offset + 2 + this.valuesPerEntry);
         }
+
+
+
         this.cacheMiss++;
     }
 
@@ -100,6 +104,7 @@ class NativeSingleHashTable {
 
     get(loHash, hiHash) {
         var offset = (loHash & this.bits) * 3;
+
         if (this.table[offset] === loHash && this.table[offset + 1] === hiHash) {
             this.cacheHit++;
             return this.table[offset + 2];

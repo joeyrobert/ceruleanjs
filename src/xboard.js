@@ -396,22 +396,31 @@ module.exports = class Xboard {
         const searchEntries = Math.pow(2, searchExponent);
         const searchSize = searchEntries * searchEntriesPerHash * bytesPerEntry;
 
-        // Eval table (50%)
+        // Eval table (25%)
         const evalEntriesPerHash = 3;
-        const evalBEvalInt = bInt * 0.5;
+        const evalBEvalInt = bInt * 0.25;
         const evalExponent = Math.floor(Math.log2(evalBEvalInt / (evalEntriesPerHash * bytesPerEntry)));
         const evalEntries = Math.pow(2, evalExponent);
         const evalSize = evalEntries * evalEntriesPerHash * bytesPerEntry;
 
+        // Pawn table (25%)
+        const pawnEntriesPerHash = 3;
+        const pawnBEvalInt = bInt * 0.25;
+        const pawnExponent = Math.floor(Math.log2(pawnBEvalInt / (pawnEntriesPerHash * bytesPerEntry)));
+        const pawnEntries = Math.pow(2, pawnExponent);
+        const pawnSize = evalEntries * evalEntriesPerHash * bytesPerEntry;
+
         this._search.hashSize = searchExponent;
         this._search.evaluate.hashSize = evalExponent;
+        this._search.evaluate.pawnHashSize = evalExponent;
     }
 
     cachestat() {
         const { searchTable } = this._search;
-        const { evalTable } = this._search.evaluate;
+        const { evalTable, pawnTable } = this._search.evaluate;
         console.log(`SEARCH: Entries: ${searchTable.size} Size: ${searchTable.bytes} bytes Hits: ${searchTable.cacheHit} Misses: ${searchTable.cacheMiss} Hit rate: ${(searchTable.cacheHit * 100.0 / (searchTable.cacheHit + searchTable.cacheMiss)).toFixed(2)}%`);
         console.log(`EVAL:   Entries: ${evalTable.size} Size: ${evalTable.bytes} bytes Hits: ${evalTable.cacheHit} Misses: ${evalTable.cacheMiss} Hit rate: ${(evalTable.cacheHit * 100.0 / (evalTable.cacheHit + evalTable.cacheMiss)).toFixed(2)}%`);
+        console.log(`PAWN:   Entries: ${pawnTable.size} Size: ${pawnTable.bytes} bytes Hits: ${pawnTable.cacheHit} Misses: ${pawnTable.cacheMiss} Hit rate: ${(pawnTable.cacheHit * 100.0 / (pawnTable.cacheHit + pawnTable.cacheMiss)).toFixed(2)}%`);
     }
 
     help() {

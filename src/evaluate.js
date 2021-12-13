@@ -159,50 +159,25 @@ module.exports = class Evaluate {
     constructor() {
         this.evalCount = 0;
         this.evalTable = new NativeSingleHashTable(10);
+        this.pawnTable = new NativeSingleHashTable(10);
     }
 
     set hashSize(exponent) {
         this.evalTable = new NativeSingleHashTable(exponent || 10);
     }
 
-    evaluate(board, display=false) {
-        this.evalCount++;
+    set pawnHashSize(exponent) {
+        this.pawnTable = new NativeSingleHashTable(exponent || 10);
+    }
 
-        var savedEval = this.evalTable.get(board.loHash, board.hiHash);
-
-        if (savedEval !== undefined && !display) {
-            // console.log('SAVED EVAL', savedEval);
-            return savedEval;
-        }
-
-        this.cacheMiss++;
-
-        // Summed values
-        var material        = [0, 0];
-        var pst             = [0, 0];
-        var mobility        = [0, 0];
-        var pawnStructure   = [0, 0];
-        var kingSafety      = [0, 0];
-        var pieceBonuses    = [0, 0];
-
-        // Mobility
-        //mobility[board.turn] = legalMoves.length;
-
-        // Game phase and close
-        var gamePhase = this.phase(board);
-        var gameClosed = this.closedGame(board);
-
-        // Evaluation variables
+    pawnPreprocess(board) {
         var i;
         var index;
-        var pieces;
-        var piece;
         var pawns;
         var rank;
         var file;
         var turn;
         var pawnRankOffset;
-
         var pawnsByFile = [
             [0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0]
@@ -239,6 +214,47 @@ module.exports = class Evaluate {
             }
         }
 
+        return [pawnsByFile, pawnRank, pawnNumber];
+    }
+
+    evaluate(board, display=false) {
+        this.evalCount++;
+
+        var savedEval = this.evalTable.get(board.loHash, board.hiHash);
+
+        if (savedEval !== undefined && !display) {
+            return savedEval;
+        }
+
+        var [pawnsByFile, pawnRank, pawnNumber] = this.pawnPreprocess(board);
+
+        // Summed values
+        var material        = [0, 0];
+        var pst             = [0, 0];
+        var mobility        = [0, 0];
+        var pawnStructure   = [0, 0];
+        var kingSafety      = [0, 0];
+        var pieceBonuses    = [0, 0];
+        var savedPawn       = this.pawnTable.get(board.pawnLoHash, board.pawnHiHash);
+
+        // Mobility
+        //mobility[board.turn] = legalMoves.length;
+
+        // Game phase and close
+        var gamePhase = this.phase(board);
+        var gameClosed = this.closedGame(board);
+
+        // Evaluation variables
+        var i;
+        var index;
+        var pieces;
+        var piece;
+        var pawns;
+        var rank;
+        var file;
+        var turn;
+        var pawnRankOffset;
+
         // Loop over every piece for piece bonuses, material and PST
         for (turn = 0; turn < 2; turn++) {
             pieces = board.pieces[turn];
@@ -251,7 +267,9 @@ module.exports = class Evaluate {
                 switch (piece) {
                     case constants.PAWN:
                         pst[turn] += PADDED_PIECE_SQUARE_TABLES[piece][turn][index];
-                        pawnStructure[turn] += this.pawn(board, index, turn, pawnsByFile, pawnRank);
+                        if (savedPawn === undefined) {
+                            pawnStructure[turn] += this.pawn(board, index, turn, pawnsByFile, pawnRank);
+                        }
                         break;
                     case constants.KNIGHT:
                         pst[turn] += PADDED_PIECE_SQUARE_TABLES[piece][turn][index];
@@ -286,6 +304,12 @@ module.exports = class Evaluate {
             MOBILITY_COEFF      * (mobility[1] - mobility[0]) +
             KING_SAFETY_COEFF   * (kingSafety[1] - kingSafety[0]) +
             PIECE_BONUSES_COEFF * (pieceBonuses[1] - pieceBonuses[0]);
+
+        if (savedPawn !== undefined) {
+            total += PAWN_STRUCT_COEFF * savedPawn;
+        } else {
+            this.pawnTable.set(board.pawnLoHash, board.pawnHiHash, pawnStructure[1] - pawnStructure[0]);
+        }
 
         total = Math.round(turnCoefficient * total / TOTAL_COEFFICIENT);
 
