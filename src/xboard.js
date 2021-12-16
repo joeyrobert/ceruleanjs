@@ -323,7 +323,7 @@ module.exports = class Xboard {
 
     _updateTimePerMove() {
         const ideal = this._base / (this._movesPerTimeControl || 50) + this._increment;
-        const remaining = this._engineTime / 2; // only use up to 50% of time remaining, a la Zeno's
+        const remaining = this._engineTime / 3; // only use up to 33% of time remaining
         this._timePerMove = Math.min(remaining, ideal);
     }
 

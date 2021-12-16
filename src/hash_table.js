@@ -68,9 +68,6 @@ class NativeHashTable {
 
             return this.table.subarray(offset + 2, offset + 2 + this.valuesPerEntry);
         }
-
-
-
         this.cacheMiss++;
     }
 

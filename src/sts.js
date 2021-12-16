@@ -63,7 +63,7 @@ function sts(timePerMove=100) {
 }
 
 if (typeof require !== 'undefined' && require.main === module) {
-    sts(parseInt(process.argv[2] || 100, 10));
+    sts(parseInt(process.argv[2] || 1000, 10));
 }
 
 module.exports = sts;

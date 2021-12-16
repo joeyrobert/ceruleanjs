@@ -9,7 +9,7 @@
     "ceruleanjs_opening_books": "^1.0.0"
   },
   "engines": {
-    "node": ">=10.0.0"
+    "node": ">=16.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.16.0",
