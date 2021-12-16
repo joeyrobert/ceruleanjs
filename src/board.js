@@ -1028,21 +1028,6 @@ module.exports = class Board {
         return utils.unsignedHexString(this.pawnHiHash) + utils.unsignedHexString(this.pawnLoHash);
     }
 
-    // Outputs MVV/LVA score for move, scaled from 0-63
-    // Inspired by Laser's implementation
-    mvvLva(move) {
-        var captured = utils.moveCaptured(move);
-
-        if (captured === EMPTY) {
-            return 0;
-        }
-
-        var fromIndex = utils.moveFrom(move);
-        var attacker = this.board[fromIndex] & JUST_PIECE;
-
-        return (MVV_LVA_PIECE_VALUES[captured] * 5 + 5 - MVV_LVA_PIECE_VALUES[attacker]) | 0;
-    }
-
     maxRepetitions() {
         var repetitionsByKey = {};
         var key;

@@ -37,6 +37,10 @@ function rankFileToIndex(rankIndex, fileIndex) {
     return (rankIndex + 1) * 15 + fileIndex + 18;
 }
 
+function rankFileToIndex64(rankIndex, fileIndex) {
+    return rankIndex * 8 + fileIndex;
+}
+
 function indexToRank(index) {
     return ((index / 15) >> 0) - 2;
 }
@@ -65,12 +69,22 @@ function index64ToIndex180(index64) {
     return index180;
 }
 
+function index180ToIndex64(index) {
+    var rank = indexToRank(index);
+    var file = indexToFile(index);
+    return rankFileToIndex64(rank, file);
+}
+
 function index64ToRank(index64) {
     return (index64 / 8) >> 0;
 }
 
 function index64ToFile(index64) {
     return index64 % 8;
+}
+
+function historyIndex(move) {
+    return index180ToIndex64(moveFrom(move)) * 8 + index180ToIndex64(moveTo(move));
 }
 
 function getPstIndex(index, turn) {
@@ -384,6 +398,8 @@ module.exports = {
     index64ToIndex180,
     index64ToRank,
     index64ToFile,
+    index180ToIndex64,
+    historyIndex,
     getPstIndex,
     moveToString,
     moveToShortString,

@@ -94,4 +94,14 @@ describe('utils', () => {
             });
         });
     });
+
+    describe('index180ToIndex64', () => {
+        it('works', () => {
+            expect(utils.index180ToIndex64(33)).to.equal(0);
+            expect(utils.index180ToIndex64(40)).to.equal(7);
+            expect(utils.index180ToIndex64(97)).to.equal(36);
+            expect(utils.index180ToIndex64(138)).to.equal(56);
+            expect(utils.index180ToIndex64(145)).to.equal(63);
+        });
+    });
 });
