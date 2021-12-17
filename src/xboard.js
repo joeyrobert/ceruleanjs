@@ -64,6 +64,7 @@ module.exports = class Xboard {
             this.usermove(action);
         } else if (this[action]) {
             this[action].call(this, parts.slice(1).join(' '));
+        } else if (action === '?') {
         } else {
             console.log('Error (invalid command):', line);
         }
@@ -399,6 +400,10 @@ module.exports = class Xboard {
         console.log(`SEARCH: Entries: ${searchTable.size} Size: ${searchTable.bytes} bytes Hits: ${searchTable.cacheHit} Misses: ${searchTable.cacheMiss} Hit rate: ${(searchTable.cacheHit * 100.0 / (searchTable.cacheHit + searchTable.cacheMiss)).toFixed(2)}%`);
         console.log(`EVAL:   Entries: ${evalTable.size} Size: ${evalTable.bytes} bytes Hits: ${evalTable.cacheHit} Misses: ${evalTable.cacheMiss} Hit rate: ${(evalTable.cacheHit * 100.0 / (evalTable.cacheHit + evalTable.cacheMiss)).toFixed(2)}%`);
         console.log(`PAWN:   Entries: ${pawnTable.size} Size: ${pawnTable.bytes} bytes Hits: ${pawnTable.cacheHit} Misses: ${pawnTable.cacheMiss} Hit rate: ${(pawnTable.cacheHit * 100.0 / (pawnTable.cacheHit + pawnTable.cacheMiss)).toFixed(2)}%`);
+    }
+
+    ping(n) {
+        console.log(`pong ${n}`);
     }
 
     // Noop commands
