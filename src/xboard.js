@@ -9,6 +9,8 @@ const Search = require('./search');
 const sts = require('./sts');
 const utils = require('./utils');
 
+const VERSION = '0.2.0';
+
 module.exports = class Xboard {
     constructor() {
         this._board = new Board();
@@ -29,7 +31,7 @@ module.exports = class Xboard {
         this._moveHistory = [];
         this._useBook = true;
         this._features = {
-            myname: `CeruleanJS 0.1.2 by Joey Robert`,
+            myname: `CeruleanJS ${VERSION} by Joey Robert`,
             setboard: 1,
             memory: 1,
             time: 1,
@@ -203,11 +205,6 @@ module.exports = class Xboard {
         console.log(this._board.generateLegalMoves().map(move => utils.moveToShortString(this._board, move)).join('\n'));
     }
 
-    xboard() {
-        console.log('');
-        this._xboardSet = true;
-    }
-
     usermove(moveString) {
         if (this._gameOver) {
             return;
@@ -327,10 +324,6 @@ module.exports = class Xboard {
         this._timePerMove = Math.min(remaining, ideal);
     }
 
-    nps(nodeRate) {
-
-    }
-
     st(timePerMove) {
         this._timePerMove = timePerMove * 1000; // ms
     }
@@ -339,20 +332,9 @@ module.exports = class Xboard {
         this._maxDepth = depth;
     }
 
-    random() {
-
-    }
-
-    post() {
-
-    }
-
-    hard() {
-
-    }
-
-    easy() {
-
+    xboard() {
+        console.log('');
+        this._xboardSet = true;
     }
 
     protover(number) {
@@ -361,10 +343,6 @@ module.exports = class Xboard {
                 `feature ${name}="${this._features[name]}"` :
                 `feature ${name}=${this._features[name]}`;
         }).join('\n'));
-    }
-
-    accepted() {
-
     }
 
     sts() {
@@ -423,8 +401,37 @@ module.exports = class Xboard {
         console.log(`PAWN:   Entries: ${pawnTable.size} Size: ${pawnTable.bytes} bytes Hits: ${pawnTable.cacheHit} Misses: ${pawnTable.cacheMiss} Hit rate: ${(pawnTable.cacheHit * 100.0 / (pawnTable.cacheHit + pawnTable.cacheMiss)).toFixed(2)}%`);
     }
 
+    // Noop commands
+    nps(nodeRate) {
+
+    }
+
+    random() {
+
+    }
+
+    post() {
+
+    }
+
+    hard() {
+
+    }
+
+    easy() {
+
+    }
+
+    accepted() {
+
+    }
+
     help() {
         var helpMenu = `
+CeruleanJS ${VERSION}, Javascript Chess Engine by Joey Robert
+
+More info at https://ceruleanjs.joeyrobert.org/
+
 Commands
 
 display                     Draws the board

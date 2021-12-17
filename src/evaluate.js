@@ -2,6 +2,11 @@
 
 const {
     BISHOP,
+    DELTA_KNIGHT,
+    DELTA_KING,
+    DELTA_BISHOP,
+    DELTA_ROOK,
+    DELTA_PAWN,
     JUST_PIECE,
     KING,
     KNIGHT,
@@ -14,41 +19,36 @@ const {
 } = require('./constants');
 const { NativeSingleHashTable } = require('./hash_table');
 const utils = require('./utils');
+const {
+    DOUBLED_PAWN_PENALTY,
+    ISOLATED_PAWN_PENALTY,
+    BACKWARD_PAWN_PENALTY,
+    PASSED_PAWN_BONUS,
+    PROTECTED_PAWN_BONUS,
+    KNIGHT_CLOSED_GAME_BONUS,
+    KNIGHT_OUTPOST_BONUS,
+    KNIGHT_MOBILITY_BONUS,
+    BISHOP_DOUBLE_BONUS,
+    BISHOP_PAIR_BONUS,
+    BISHOP_PAIRITY_PENALTY,
+    BISHOP_MOBILITY_BONUS,
+    ROOK_SEMI_OPEN_FILE_BONUS,
+    ROOK_OPEN_FILE_BONUS,
+    ROOK_ON_SEVENTH_BONUS,
+    ROOK_MOBILITY_BONUS,
+    QUEEN_MOBILITY_BONUS,
+    KING_MOBILITY_BONUS,
+} = require('./eval_params.json');
 
 /*
  * Coefficients
  */
 const MATERIAL_COEFF = 100;
-const PST_COEFF = 60;
-const MOBILITY_COEFF = 0;
-const PIECE_BONUSES_COEFF = 10;
-const PAWN_STRUCT_COEFF = 10;
-const KING_SAFETY_COEFF = 0;
-const TOTAL_COEFFICIENT =
-    MATERIAL_COEFF +
-    PST_COEFF +
-    MOBILITY_COEFF +
-    PIECE_BONUSES_COEFF +
-    PAWN_STRUCT_COEFF +
-    KING_SAFETY_COEFF;
-
-const DOUBLED_PAWN_PENALTY = 20;
-const ISOLATED_PAWN_PENALTY = 10;
-const BACKWARD_PAWN_PENALTY = 8;
-const PASSED_PAWN_BONUS = 30;
-const PROTECTED_PAWN_BONUS = 10;
-
-const KNIGHT_CLOSED_GAME_BONUS = 5;
-const KNIGHT_OUTPOST_BONUS = 10;
-
-const BISHOP_DOUBLE_BONUS = 5;
-const BISHOP_PAIR_BONUS = 10;
-const BISHOP_PAIRITY_PENALTY = 10;
-
-const ROOK_SEMI_OPEN_FILE_BONUS = 10;
-const ROOK_OPEN_FILE_BONUS = 15;
-const ROOK_ON_SEVENTH_BONUS = 20;
-// const ROOK_CONNECTED_BONUS = 20;
+const MOBILITY_COEFF = 100;
+const PST_COEFF = 100;
+const PIECE_BONUSES_COEFF = 100;
+const PAWN_STRUCT_COEFF = 100;
+const TOTAL_COEFFICIENT = MATERIAL_COEFF + PST_COEFF + MATERIAL_COEFF + PIECE_BONUSES_COEFF;
 
 /*
  * Piece square tables
@@ -220,13 +220,9 @@ module.exports = class Evaluate {
         var material        = [0, 0];
         var pst             = [0, 0];
         var mobility        = [0, 0];
-        var pawnStructure   = [0, 0];
-        var kingSafety      = [0, 0];
         var pieceBonuses    = [0, 0];
+        var pawnStructure   = [0, 0];
         var savedPawn       = this.pawnTable.get(board.pawnLoHash, board.pawnHiHash);
-
-        // Mobility
-        //mobility[board.turn] = legalMoves.length;
 
         // Game phase and close
         var gamePhase = this.phase(board);
@@ -243,6 +239,7 @@ module.exports = class Evaluate {
         var turn;
         var pawnRankOffset;
         var pstIndex;
+        var moveCount;
 
         // Loop over every piece for piece bonuses, material and PST
         for (turn = 0; turn < 2; turn++) {
@@ -264,22 +261,32 @@ module.exports = class Evaluate {
                     case KNIGHT:
                         pst[turn] += PIECE_SQUARE_TABLES_KNIGHT[pstIndex];
                         pieceBonuses[turn] += this.knight(board, index, turn, gameClosed, pawnRank);
+                        moveCount = board.deltaMoveCount(DELTA_KNIGHT, index, turn);
+                        mobility[turn] += KNIGHT_MOBILITY_BONUS * moveCount;
                         break;
                     case BISHOP:
                         pst[turn] += PIECE_SQUARE_TABLES_BISHOP[pstIndex];
                         pieceBonuses[turn] += this.bishop(board, index, turn, pawnNumber);
+                        moveCount = board.slidingMoveCount(DELTA_BISHOP, index, turn);
+                        mobility[turn] += BISHOP_MOBILITY_BONUS * moveCount;
                         break;
                     case ROOK:
                         pst[turn] += PIECE_SQUARE_TABLES_ROOK[pstIndex];
                         pieceBonuses[turn] += this.rook(board, index, turn, pawnRank);
+                        moveCount = board.slidingMoveCount(DELTA_ROOK, index, turn);
+                        mobility[turn] += ROOK_MOBILITY_BONUS * moveCount;
                         break;
                     case QUEEN:
                         pst[turn] += PIECE_SQUARE_TABLES_QUEEN[pstIndex];
                         pieceBonuses[turn] += this.queen(board, index, turn);
+                        moveCount = board.slidingMoveCount(DELTA_BISHOP, index, turn) + board.slidingMoveCount(DELTA_ROOK, index, turn);
+                        mobility[turn] += QUEEN_MOBILITY_BONUS * moveCount;
                         break;
                     case KING:
                         pst[turn] += this.interpolate(PIECE_SQUARE_TABLES_KING_EARLY[pstIndex], PIECE_SQUARE_TABLES_KING_LATE[pstIndex], gamePhase);
-                        kingSafety[turn] += this.king(board, index, turn);
+                        pieceBonuses[turn] += this.king(board, index, turn);
+                        moveCount = board.deltaMoveCount(DELTA_KING, index, turn);
+                        mobility[turn] += KING_MOBILITY_BONUS * moveCount;
                         break;
                 }
             }
@@ -290,9 +297,7 @@ module.exports = class Evaluate {
         var total =
             MATERIAL_COEFF      * (material[1] - material[0]) +
             PST_COEFF           * (pst[1] - pst[0]) +
-            PAWN_STRUCT_COEFF   * (pawnStructure[1] - pawnStructure[0]) +
             MOBILITY_COEFF      * (mobility[1] - mobility[0]) +
-            KING_SAFETY_COEFF   * (kingSafety[1] - kingSafety[0]) +
             PIECE_BONUSES_COEFF * (pieceBonuses[1] - pieceBonuses[0]);
 
         if (savedPawn !== undefined) {
@@ -305,10 +310,9 @@ module.exports = class Evaluate {
 
         if (display) {
             console.log('Material:      ', MATERIAL_COEFF,      '* (' + material[1]      + ' - ' + material[0]       + ') =', MATERIAL_COEFF * (material[1] - material[0]));
+            console.log('Pawn Structure:', PAWN_STRUCT_COEFF,   '* (' + pawnStructure[1] + ' - ' + pawnStructure[0]  + ') =', PAWN_STRUCT_COEFF * (pst[1] - pst[0]));
             console.log('PST:           ', PST_COEFF,           '* (' + pst[1]           + ' - ' + pst[0]            + ') =', PST_COEFF * (pst[1] - pst[0]));
-            console.log('Pawn structure:', PAWN_STRUCT_COEFF,   '* (' + pawnStructure[1] + ' - ' + pawnStructure[0]  + ') =', PAWN_STRUCT_COEFF * (pawnStructure[1] - pawnStructure[0]));
             console.log('Mobility:      ', MOBILITY_COEFF,      '* (' + mobility[1]      + ' - ' + mobility[0]       + ') =', MOBILITY_COEFF * (mobility[1] - mobility[0]));
-            console.log('King safety:   ', KING_SAFETY_COEFF,   '* (' + kingSafety[1]    + ' - ' + kingSafety[0]     + ') =', KING_SAFETY_COEFF * (kingSafety[1] - kingSafety[0]));
             console.log('Piece Bonuses: ', PIECE_BONUSES_COEFF, '* (' + pieceBonuses[1]  + ' - ' + pieceBonuses[0]   + ') =', PIECE_BONUSES_COEFF * (pieceBonuses[1] - pieceBonuses[0]));
             console.log('Total:         ', total);
         }
@@ -429,7 +433,9 @@ module.exports = class Evaluate {
     }
 
     queen(board, index, turn) {
-        return 0;
+        var bonus = 0;
+
+        return bonus;
     }
 
     king(board, index, turn) {
@@ -437,6 +443,8 @@ module.exports = class Evaluate {
 
 
         // King tropism
+
+
 
         return 0;
     }

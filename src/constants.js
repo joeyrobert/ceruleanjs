@@ -267,6 +267,13 @@ const XBOARD_COMMANDS = [
     'version',
     'white',
     'cachestat',
+    'protover',
+    'xboard',
+    'random',
+    'post',
+    'hard',
+    'easy',
+    'accepted',
 ];
 
 const HASH_EXACT = 0;
