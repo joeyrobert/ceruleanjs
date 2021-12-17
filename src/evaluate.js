@@ -19,26 +19,6 @@ const {
 } = require('./constants');
 const { NativeSingleHashTable } = require('./hash_table');
 const utils = require('./utils');
-const {
-    DOUBLED_PAWN_PENALTY,
-    ISOLATED_PAWN_PENALTY,
-    BACKWARD_PAWN_PENALTY,
-    PASSED_PAWN_BONUS,
-    PROTECTED_PAWN_BONUS,
-    KNIGHT_CLOSED_GAME_BONUS,
-    KNIGHT_OUTPOST_BONUS,
-    KNIGHT_MOBILITY_BONUS,
-    BISHOP_DOUBLE_BONUS,
-    BISHOP_PAIR_BONUS,
-    BISHOP_PAIRITY_PENALTY,
-    BISHOP_MOBILITY_BONUS,
-    ROOK_SEMI_OPEN_FILE_BONUS,
-    ROOK_OPEN_FILE_BONUS,
-    ROOK_ON_SEVENTH_BONUS,
-    ROOK_MOBILITY_BONUS,
-    QUEEN_MOBILITY_BONUS,
-    KING_MOBILITY_BONUS,
-} = require('./eval_params.json');
 
 /*
  * Coefficients
@@ -148,6 +128,7 @@ module.exports = class Evaluate {
         this.evalCount = 0;
         this.evalTable = new NativeSingleHashTable(10);
         this.pawnTable = new NativeSingleHashTable(10);
+        this.loadParams();
     }
 
     set hashSize(exponent) {
@@ -156,6 +137,10 @@ module.exports = class Evaluate {
 
     set pawnHashSize(exponent) {
         this.pawnTable = new NativeSingleHashTable(exponent || 10);
+    }
+
+    loadParams() {
+        Object.assign(this, require('./eval_params.json'));
     }
 
     pawnPreprocess(board) {
@@ -262,31 +247,31 @@ module.exports = class Evaluate {
                         pst[turn] += PIECE_SQUARE_TABLES_KNIGHT[pstIndex];
                         pieceBonuses[turn] += this.knight(board, index, turn, gameClosed, pawnRank);
                         moveCount = board.deltaMoveCount(DELTA_KNIGHT, index, turn);
-                        mobility[turn] += KNIGHT_MOBILITY_BONUS * moveCount;
+                        mobility[turn] += this.KNIGHT_MOBILITY_BONUS * moveCount;
                         break;
                     case BISHOP:
                         pst[turn] += PIECE_SQUARE_TABLES_BISHOP[pstIndex];
                         pieceBonuses[turn] += this.bishop(board, index, turn, pawnNumber);
                         moveCount = board.slidingMoveCount(DELTA_BISHOP, index, turn);
-                        mobility[turn] += BISHOP_MOBILITY_BONUS * moveCount;
+                        mobility[turn] += this.BISHOP_MOBILITY_BONUS * moveCount;
                         break;
                     case ROOK:
                         pst[turn] += PIECE_SQUARE_TABLES_ROOK[pstIndex];
                         pieceBonuses[turn] += this.rook(board, index, turn, pawnRank);
                         moveCount = board.slidingMoveCount(DELTA_ROOK, index, turn);
-                        mobility[turn] += ROOK_MOBILITY_BONUS * moveCount;
+                        mobility[turn] += this.ROOK_MOBILITY_BONUS * moveCount;
                         break;
                     case QUEEN:
                         pst[turn] += PIECE_SQUARE_TABLES_QUEEN[pstIndex];
                         pieceBonuses[turn] += this.queen(board, index, turn);
                         moveCount = board.slidingMoveCount(DELTA_BISHOP, index, turn) + board.slidingMoveCount(DELTA_ROOK, index, turn);
-                        mobility[turn] += QUEEN_MOBILITY_BONUS * moveCount;
+                        mobility[turn] += this.QUEEN_MOBILITY_BONUS * moveCount;
                         break;
                     case KING:
                         pst[turn] += this.interpolate(PIECE_SQUARE_TABLES_KING_EARLY[pstIndex], PIECE_SQUARE_TABLES_KING_LATE[pstIndex], gamePhase);
                         pieceBonuses[turn] += this.king(board, index, turn);
                         moveCount = board.deltaMoveCount(DELTA_KING, index, turn);
-                        mobility[turn] += KING_MOBILITY_BONUS * moveCount;
+                        mobility[turn] += this.KING_MOBILITY_BONUS * moveCount;
                         break;
                 }
             }
@@ -336,30 +321,30 @@ module.exports = class Evaluate {
 
         // Doubled pawn
         if (board.board[behind] === PAWN && board.board[behind] % 2 === board.turn) {
-            bonus -= DOUBLED_PAWN_PENALTY;
+            bonus -= this.DOUBLED_PAWN_PENALTY;
         }
 
         // Isolated pawn
         if (pawnsByFile[turn][file - 1] === 0 && pawnsByFile[turn][file + 1] === 0) {
-            bonus -= ISOLATED_PAWN_PENALTY;
+            bonus -= this.ISOLATED_PAWN_PENALTY;
         }
 
         // Backward pawn
         if (pawnRank[turn][file - 1] > pawnRankOffset && pawnRank[turn][file + 1] > pawnRankOffset) {
-            bonus -= BACKWARD_PAWN_PENALTY;
+            bonus -= this.BACKWARD_PAWN_PENALTY;
         }
 
         // Passed pawn
         if ((file - 1 < 0 || pawnRank[turn ^ 1][file - 1] <= inversePawnRankOffset) &&
            (pawnRank[turn ^ 1][file] <= inversePawnRankOffset) &&
            (file + 1 > 7 || pawnRank[turn ^ 1][file + 1] <= inversePawnRankOffset)) {
-            bonus += PASSED_PAWN_BONUS;
+            bonus += this.PASSED_PAWN_BONUS;
         }
 
         // Protected pawn
         if ((board.board[left] === PAWN && board.board[left] % 2 === turn) ||
             (board.board[right] === PAWN && board.board[right] % 2 === turn)) {
-            bonus += PROTECTED_PAWN_BONUS;
+            bonus += this.PROTECTED_PAWN_BONUS;
         }
 
         return bonus;
@@ -373,7 +358,7 @@ module.exports = class Evaluate {
 
         // Closed game bonus
         if (gameClosed >= 0.5) {
-            bonus += KNIGHT_CLOSED_GAME_BONUS;
+            bonus += this.KNIGHT_CLOSED_GAME_BONUS;
         }
 
         // Outpost bonus
@@ -384,7 +369,7 @@ module.exports = class Evaluate {
             // Protected
             ((board.board[left] === PAWN && board.board[left] % 2 === board.turn) ||
             (board.board[right] === PAWN && board.board[right] % 2 === board.turn))) {
-            bonus += KNIGHT_OUTPOST_BONUS;
+            bonus += this.KNIGHT_OUTPOST_BONUS;
         }
 
         return bonus;
@@ -397,7 +382,7 @@ module.exports = class Evaluate {
         // Bishop pair
         // TODO: Extend this to up to 10 bishops
         if (bishops.length === 2) {
-            bonus += BISHOP_DOUBLE_BONUS;
+            bonus += this.BISHOP_DOUBLE_BONUS;
 
             // if (bishops[0] % 2 !== bishops[1] % 2) {
             //     bonus += BISHOP_PAIR_BONUS;
@@ -405,7 +390,7 @@ module.exports = class Evaluate {
         }
 
         // Close if they have many pawns on that diagonal
-        bonus -= BISHOP_PAIRITY_PENALTY * pawnNumber[turn ^ 1][index % 2];
+        bonus -= this.BISHOP_PAIRITY_PENALTY * pawnNumber[turn ^ 1][index % 2];
 
         return bonus;
     }
@@ -419,14 +404,14 @@ module.exports = class Evaluate {
         // Open file
         if (pawnRank[turn][file] === 0) {
             if (pawnRank[turn ^ 1][file] === 0) {
-                bonus += ROOK_OPEN_FILE_BONUS;
+                bonus += this.ROOK_OPEN_FILE_BONUS;
             } else {
-                bonus += ROOK_SEMI_OPEN_FILE_BONUS;
+                bonus += this.ROOK_SEMI_OPEN_FILE_BONUS;
             }
         }
 
         if (pawnRankOffset === 6) {
-            bonus += ROOK_ON_SEVENTH_BONUS;
+            bonus += this.ROOK_ON_SEVENTH_BONUS;
         }
 
         return bonus;

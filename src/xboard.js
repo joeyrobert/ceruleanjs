@@ -181,6 +181,7 @@ module.exports = class Xboard {
 
     evaluate() {
         this._search.evaluate.evaluate(this._board, true);
+        // console.log(this._search.evaluate);
     }
 
     perft(depth) {
@@ -404,6 +405,14 @@ module.exports = class Xboard {
 
     ping(n) {
         console.log(`pong ${n}`);
+    }
+
+    option(arg) {
+        const [name, value] = arg.split('=');
+
+        if (this._search.evaluate[name] !== undefined) {
+            this._search.evaluate[name] = parseInt(value, 10);
+        }
     }
 
     // Noop commands
