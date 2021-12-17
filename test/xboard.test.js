@@ -56,6 +56,7 @@ describe('xboard', () => {
             'version',
             'help',
             'cachestat',
+            'option DOUBLED_PAWN_PENALTY=10',
             // 'sts',
             // 'exit',
             // 'quit',
