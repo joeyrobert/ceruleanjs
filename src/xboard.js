@@ -62,7 +62,7 @@ module.exports = class Xboard {
 
         if (constants.MOVE_REGEX.test(action)) {
             this.usermove(action);
-        } else if (constants.XBOARD_COMMANDS.includes(action) && this[action]) {
+        } else if (this[action]) {
             this[action].call(this, parts.slice(1).join(' '));
         } else {
             console.log('Error (invalid command):', line);

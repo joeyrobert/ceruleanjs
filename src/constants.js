@@ -237,45 +237,6 @@ const ATTACK_PIECE_ORDER = new Uint32Array([
     QUEEN,
 ]);
 
-const XBOARD_COMMANDS = [
-    'black',
-    'book',
-    'book',
-    'display',
-    'divide',
-    'e2e4',
-    'evaluate',
-    'exit',
-    'go',
-    'go',
-    'help',
-    'level',
-    'memory',
-    'moves',
-    'new',
-    'otim',
-    'perft',
-    'perfthash',
-    'quit',
-    'result',
-    'sd',
-    'setboard',
-    'st',
-    'sts',
-    'time',
-    'undo',
-    'version',
-    'white',
-    'cachestat',
-    'protover',
-    'xboard',
-    'random',
-    'post',
-    'hard',
-    'easy',
-    'accepted',
-];
-
 const HASH_EXACT = 0;
 const HASH_ALPHA = 1;
 const HASH_BETA = 2;
@@ -359,7 +320,6 @@ module.exports = {
     ATTACK_KING,
     ATTACK_PAWN,
     ATTACK_PIECE_ORDER,
-    XBOARD_COMMANDS,
     HASH_EXACT,
     HASH_ALPHA,
     HASH_BETA,
