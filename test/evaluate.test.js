@@ -21,7 +21,7 @@ describe('evaluate', () => {
         board.fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 
         for (var i = 0; i < 1000000; i++) {
-            var score = evaluate.evaluate(board);
+            score = evaluate.evaluate(board);
         }
 
         expect(score).to.equal(0);

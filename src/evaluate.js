@@ -6,7 +6,6 @@ const {
     DELTA_KING,
     DELTA_BISHOP,
     DELTA_ROOK,
-    DELTA_PAWN,
     JUST_PIECE,
     KING,
     KNIGHT,
@@ -218,11 +217,7 @@ module.exports = class Evaluate {
         var index;
         var pieces;
         var piece;
-        var pawns;
-        var rank;
-        var file;
         var turn;
-        var pawnRankOffset;
         var pstIndex;
         var moveCount;
 
@@ -245,7 +240,7 @@ module.exports = class Evaluate {
                         break;
                     case KNIGHT:
                         pst[turn] += PIECE_SQUARE_TABLES_KNIGHT[pstIndex];
-                        pieceBonuses[turn] += this.knight(board, index, turn, gameClosed, pawnRank);
+                        pieceBonuses[turn] += this.knight(board, index, turn, gameClosed);
                         moveCount = board.deltaMoveCount(DELTA_KNIGHT, index, turn);
                         mobility[turn] += this.KNIGHT_MOBILITY_BONUS * moveCount;
                         break;
@@ -263,13 +258,13 @@ module.exports = class Evaluate {
                         break;
                     case QUEEN:
                         pst[turn] += PIECE_SQUARE_TABLES_QUEEN[pstIndex];
-                        pieceBonuses[turn] += this.queen(board, index, turn);
+                        pieceBonuses[turn] += this.queen();
                         moveCount = board.slidingMoveCount(DELTA_BISHOP, index, turn) + board.slidingMoveCount(DELTA_ROOK, index, turn);
                         mobility[turn] += this.QUEEN_MOBILITY_BONUS * moveCount;
                         break;
                     case KING:
                         pst[turn] += this.interpolate(PIECE_SQUARE_TABLES_KING_EARLY[pstIndex], PIECE_SQUARE_TABLES_KING_LATE[pstIndex], gamePhase);
-                        pieceBonuses[turn] += this.king(board, index, turn);
+                        pieceBonuses[turn] += this.king();
                         moveCount = board.deltaMoveCount(DELTA_KING, index, turn);
                         mobility[turn] += this.KING_MOBILITY_BONUS * moveCount;
                         break;
@@ -350,7 +345,7 @@ module.exports = class Evaluate {
         return bonus;
     }
 
-    knight(board, index, turn, gameClosed, pawnRank) {
+    knight(board, index, turn, gameClosed) {
         var bonus = 0;
         var behindCoefficient = turn === WHITE ? 1 : -1;
         var left = index + behindCoefficient * (WIDTH - 1);
@@ -417,20 +412,11 @@ module.exports = class Evaluate {
         return bonus;
     }
 
-    queen(board, index, turn) {
-        var bonus = 0;
-
-        return bonus;
+    queen() {
+        return 0;
     }
 
-    king(board, index, turn) {
-        // Pawn shield
-
-
-        // King tropism
-
-
-
+    king() {
         return 0;
     }
 

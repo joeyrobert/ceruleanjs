@@ -28,7 +28,7 @@ function sts(timePerMove=100) {
     }
 
     // Run em
-    for (var i = 0; i < epds.length; i++) {
+    for (i = 0; i < epds.length; i++) {
         var lines = epds[i].split('\n');
         var fens = lines.map(line => line.split('bm')[0].trim() + ' 0 1');
         var ids = lines.map(line => /id "(.*?)"/.exec(line)[1]);

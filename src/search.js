@@ -45,7 +45,7 @@ module.exports = class Search {
             return this.evaluate.evaluate(board);
         }
 
-        var max = -Infinity, score, bestMove;
+        var max = -Infinity, score;
         var move, moves = board.generateMoves();
         board.addHistory();
 
@@ -151,7 +151,7 @@ module.exports = class Search {
         // PVS search
         var alphaMove = 0;
 
-        for (var i = 0; i < moves.length; i++) {
+        for (i = 0; i < moves.length; i++) {
             move = moves[i] & MOVE_SANS_ORDER_MASK;
             const historyIndex = utils.historyIndex(move);
 
@@ -243,7 +243,7 @@ module.exports = class Search {
 
         board.addHistory();
 
-        for (var i = 0; i < moves.length; i++) {
+        for (i = 0; i < moves.length; i++) {
             move = moves[i];
 
             if (board.addMove(move)) {

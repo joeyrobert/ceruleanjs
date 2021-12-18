@@ -65,6 +65,7 @@ module.exports = class Xboard {
         } else if (this[action]) {
             this[action].call(this, parts.slice(1).join(' '));
         } else if (action === '?') {
+            console.log('');
         } else {
             console.log('Error (invalid command):', line);
         }
@@ -154,7 +155,7 @@ module.exports = class Xboard {
 
         display += '   ';
 
-        for (var fileIndex = 0; fileIndex <= 7; fileIndex++) {
+        for (fileIndex = 0; fileIndex <= 7; fileIndex++) {
             display += ` ${String.fromCharCode(96 + fileIndex + 1)} `;
         }
 
@@ -339,7 +340,7 @@ module.exports = class Xboard {
         this._xboardSet = true;
     }
 
-    protover(number) {
+    protover() {
         console.log(Object.keys(this._features).map(name => {
             return typeof this._features[name] === 'string' ?
                 `feature ${name}="${this._features[name]}"` :
@@ -373,26 +374,26 @@ module.exports = class Xboard {
         const searchEntriesPerHash = 4; // lohash, hihash, move, depth+type+score
         const searchBInt = bInt * 0.5;
         const searchExponent = Math.floor(Math.log2(searchBInt / (searchEntriesPerHash * bytesPerEntry)));
-        const searchEntries = Math.pow(2, searchExponent);
-        const searchSize = searchEntries * searchEntriesPerHash * bytesPerEntry;
+        // const searchEntries = Math.pow(2, searchExponent);
+        // const searchSize = searchEntries * searchEntriesPerHash * bytesPerEntry;
 
         // Eval table (25%)
         const evalEntriesPerHash = 3;
         const evalBEvalInt = bInt * 0.25;
         const evalExponent = Math.floor(Math.log2(evalBEvalInt / (evalEntriesPerHash * bytesPerEntry)));
-        const evalEntries = Math.pow(2, evalExponent);
-        const evalSize = evalEntries * evalEntriesPerHash * bytesPerEntry;
+        // const evalEntries = Math.pow(2, evalExponent);
+        // const evalSize = evalEntries * evalEntriesPerHash * bytesPerEntry;
 
         // Pawn table (25%)
         const pawnEntriesPerHash = 3;
         const pawnBEvalInt = bInt * 0.25;
         const pawnExponent = Math.floor(Math.log2(pawnBEvalInt / (pawnEntriesPerHash * bytesPerEntry)));
-        const pawnEntries = Math.pow(2, pawnExponent);
-        const pawnSize = evalEntries * evalEntriesPerHash * bytesPerEntry;
+        // const pawnEntries = Math.pow(2, pawnExponent);
+        // const pawnSize = evalEntries * evalEntriesPerHash * bytesPerEntry;
 
         this._search.hashSize = searchExponent;
         this._search.evaluate.hashSize = evalExponent;
-        this._search.evaluate.pawnHashSize = evalExponent;
+        this._search.evaluate.pawnHashSize = pawnExponent;
     }
 
     cachestat() {
@@ -416,7 +417,7 @@ module.exports = class Xboard {
     }
 
     // Noop commands
-    nps(nodeRate) {
+    nps() {
 
     }
 

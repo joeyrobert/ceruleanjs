@@ -3,7 +3,6 @@
 const expect = require('chai').expect;
 const fs = require('fs');
 const Board = require('../src/board');
-const utils = require('../src/utils');
 
 describe('board', () => {
     let board;
