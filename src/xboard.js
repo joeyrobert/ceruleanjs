@@ -8,8 +8,7 @@ const Perft = require('./perft');
 const Search = require('./search');
 const sts = require('./sts');
 const utils = require('./utils');
-
-const VERSION = '0.2.0';
+const pkg = require('../package.json');
 
 module.exports = class Xboard {
     constructor() {
@@ -31,7 +30,7 @@ module.exports = class Xboard {
         this._moveHistory = [];
         this._useBook = true;
         this._features = {
-            myname: `CeruleanJS ${VERSION} by Joey Robert`,
+            myname: `CeruleanJS ${pkg.version} by Joey Robert`,
             setboard: 1,
             memory: 1,
             time: 1,
@@ -443,7 +442,7 @@ module.exports = class Xboard {
 
     help() {
         var helpMenu = `
-CeruleanJS ${VERSION}, Javascript Chess Engine by Joey Robert
+CeruleanJS ${pkg.version}, Javascript Chess Engine by Joey Robert
 
 More info at https://ceruleanjs.joeyrobert.org/
 
