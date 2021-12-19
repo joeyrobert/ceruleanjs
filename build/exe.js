@@ -7,7 +7,7 @@ const homedir = require('os').homedir();
 const EXE = path.join(homedir, '.nexe', process.version.replace('v', ''), 'out/Release/node.exe');
 
 rcedit(EXE, {
-    'icon': path.resolve('./icon.ico'),
+    'icon': path.resolve('./build/icon.ico'),
     'file-version': package.version,
     'product-version': package.version,
     'version-string': {
