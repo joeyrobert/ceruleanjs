@@ -270,7 +270,7 @@ function padIndices(pieceSquareTable) {
 
 function colors(squareEven, turn, text) {
     var squareColor = squareEven ? 'bgWhite' : 'bgCyan';
-    var turnColor = 'black';
+    var turnColor = turn ? 'brightYellow' : 'yellow';
 
     return [
         ANSI_COLORS[squareColor],

@@ -203,13 +203,15 @@ const MOVE_REGEX = /^[a-h][1-8][a-h][1-8][bnrq]?$/;
 const LEVEL_REGEX = /^\d+ \d+(:\d{2})? \d+$/;
 
 const ANSI_COLORS = {
-    white:      '\u001b[39m',
-    black:      '\u001b[30m',
-    bgWhite:    '\u001b[47m',
-    bgBlack:    '\u001b[40m',
-    bgGreen:    '\u001b[42m',
-    bgYellow:   '\u001b[43m',
-    reset:      '\u001b[0m'
+    white:        '\u001b[39m',
+    black:        '\u001b[30m',
+    yellow:       '\u001b[33m',
+    brightYellow: '\u001b[93m',
+    bgWhite:      '\u001b[47m',
+    bgBlack:      '\u001b[40m',
+    bgGreen:      '\u001b[42m',
+    bgYellow:     '\u001b[43m',
+    reset:        '\u001b[0m',
 };
 
 const POLYGLOT_PROMOTION_STRINGS = [
