@@ -21,6 +21,7 @@
     "eslint": "^8.4.1",
     "mocha": "^9.1.3",
     "nexe": "4.0.0-beta.19",
+    "nyc": "^15.1.0",
     "rcedit": "3.0.1",
     "uglify-js": "^3.14.4"
   },
@@ -43,6 +44,7 @@
     "lint": "eslint src/*.js test/*.js",
     "start": "node --max-old-space-size=8192 ./src/index.js",
     "sts": "node  --max-old-space-size=8192 ./src/sts.js",
-    "test": "mocha --no-timeouts --exit"
+    "test": "mocha --no-timeouts --exit",
+    "test-coverage": "nyc --reporter=text --reporter=html mocha --no-timeouts --exit"
   }
 }
