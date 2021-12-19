@@ -443,10 +443,9 @@ module.exports = class Xboard {
     help() {
         var helpMenu = `
 CeruleanJS ${pkg.version}, Javascript Chess Engine by Joey Robert
-
 More info at https://ceruleanjs.joeyrobert.org/
 
-Commands
+Command                     Description
 
 display                     Draws the board
 perft [INT]                 Perfts the current board to specified depth

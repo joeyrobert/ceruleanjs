@@ -13,8 +13,6 @@ JavaScript Chess Engine
 
 Official Website: http://ceruleanjs.joeyrobert.org/
 
-[![Build Status](https://travis-ci.org/joeyrobert/ceruleanjs.svg?branch=master)](https://travis-ci.org/joeyrobert/ceruleanjs)
-
 ## Introduction
 
 CeruleanJS is an XBoard chess engine for NodeJS, written by [Joey Robert](https://joeyrobert.org/).
@@ -29,7 +27,7 @@ CeruleanJS aims to be ranked on the CCRL.
 
 ## Requirements
 
-* Node >= 4.0
+* Node >= 16.0
 
 ## Setup
 
@@ -58,8 +56,8 @@ To generate a Windows binary executable using nexe, run:
 
     npm run build-windows
 
-This requires Microsoft Visual Studio 2015 to be installed. It will generate
-`ceruleanjs.exe` and `book.bok` in `dist`.
+This requires Microsoft Visual Studio 2015/2019/2022 to be installed. It will generate
+`ceruleanjs.exe` and `book.bin` in `dist`.
 
 To generate a web build, run:
 
@@ -74,11 +72,15 @@ CeruleanJS supports the XBoard/winboard/CECP format for communicating with
 interfaces or other chess engines. It's also usable directly through
 STDIN/OUT. Here's the list of commands:
 
-    Commands
+    CeruleanJS 0.2.0, Javascript Chess Engine by Joey Robert
+    More info at https://ceruleanjs.joeyrobert.org/
+
+    Command                     Description
 
     display                     Draws the board
     perft [INT]                 Perfts the current board to specified depth
     perfthash [INT]             Sets perft hashtable exponent (size 2^exponent)
+    memory [INT]                Sets the memory used by the engine in megabytes
     divide [INT]                Divides the current board to specified depth
     moves                       Lists valid moves for this position
     e2e4                        Moves from the current position and thinks
@@ -116,6 +118,20 @@ docs/TECHNICAL.md](docs/TECHNICAL.md)
 CeruleanJS is licensed under the [GNU GPL v3](LICENSE).
 
 ## Changelog
+
+* v0.2.0 *(Cobalt)* - 2021-12-19
+    * Upgrade to Node 16+ (big speed boost)
+    * Improved `isAttacked` function based on piece lists for faster move generation, using generated attack tables
+    * Transposition table in search, evaluation and pawn evaluation. Hash move is ordered first in move ordering.
+    * Switch to Array#sort and away from custom quicksort for move ordering
+    * Use [Relative History Heuristic](https://www.chessprogramming.org/Relative_History_Heuristic) in conjunction with MVV/LVA for move ordering
+    * Support memory command in xboard interface, much tighter memory consumption than previous version
+    * Improved timing on iterative deepening code to prevent the engine from running out of time
+    * Added `bitbucket-pipelines.yml` for unit tests on every commit
+    * Added `.eslintrc` for JS linting
+    * Improved search timing using `performance.now()`
+    * Updated icon and metadata for `ceruleanjs.exe`
+
 * v0.1.1 *(Blizzard)* - 2016-01-20
     * Fixed Polyglot castling bug
 

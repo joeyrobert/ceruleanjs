@@ -33,9 +33,9 @@
   },
   "scripts": {
     "build-web": "browserify ./src/index.js -o ./dist/ceruleanjs.js -t [ babelify --presets [ @babel/preset-env ] ] && uglifyjs --compress -o ./dist/ceruleanjs.min.js -- ./dist/ceruleanjs.js",
-    "build-windows": "nexe -i ./src/index.js -o ./dist/ceruleanjs.exe --build --verbose",
+    "build-windows": "mkdirp dist && npm run copy-book && npm run build-windows-exe && npm run sign-windows && npm run build-windows-exe",
+    "build-windows-exe": "nexe -i ./src/index.js -o ./dist/ceruleanjs.exe --build --verbose",
     "sign-windows": "node ./build/exe.js",
-    "full-build-windows": "mkdirp dist && npm run copy-book && npm run build-windows && npm run sign-windows && npm run build-windows",
     "copy-book": "copy /Y node_modules\\ceruleanjs_opening_books\\gm2001.bin dist\\book.bin",
     "debug": "node --inspect ./src/index.js",
     "debug-test": "node --inspect node_modules/.bin/mocha --no-timeouts --exit",
