@@ -4,11 +4,11 @@ const Board = require('./board');
 const Search = require('./search');
 const utils = require('./utils');
 
-function sts() {
+function sts(timePerMove=100) {
     console.log('Running Strategic Test Suite\n');
+    const startTime = performance.now();
     var board = new Board();
     var search = new Search();
-    var timePerMove = 1 * 1000;
     var pointTotal = 0;
     var maxDepth = 64;
     var limit = 10;
@@ -28,12 +28,12 @@ function sts() {
     }
 
     // Run em
-    for (var i = 0; i < epds.length; i++) {
+    for (i = 0; i < epds.length; i++) {
         var lines = epds[i].split('\n');
         var fens = lines.map(line => line.split('bm')[0].trim() + ' 0 1');
         var ids = lines.map(line => /id "(.*?)"/.exec(line)[1]);
         var points = lines.map(line => {
-            var movesByPoints = /c0 \"(.*?)\"/.exec(line)[1].split(', ');
+            var movesByPoints = /c0 "(.*?)"/.exec(line)[1].split(', ');
             var movePoints = {};
             movesByPoints.forEach(movesAndPoints => {
                 var moves = movesAndPoints.split('=');
@@ -55,9 +55,15 @@ function sts() {
         });
     }
 
+    const duration = performance.now() - startTime;
     console.log(`STS Total Points: ${pointTotal} / ${limit * 100 * 10}`);
+    console.log(`Duration: ${(duration/1000.0).toFixed(3)}s`)
 
     return pointTotal;
+}
+
+if (typeof require !== 'undefined' && require.main === module) {
+    sts(parseInt(process.argv[2] || 1000, 10));
 }
 
 module.exports = sts;

@@ -1,3 +1,5 @@
+'use strict';
+
 const HI_HASH = new Uint32Array([
    0x9D39247E, 0x2AF73980, 0x44DB0150, 0x9C15F73E,
    0x75834465, 0x3290AC3A, 0x0FBBAD1F, 0xE83A908F,

@@ -3,12 +3,12 @@
 const readline = require('readline');
 const constants = require('./constants');
 const Board = require('./board');
-const evaluate = require('./evaluate');
 const Opening = require('./opening');
 const Perft = require('./perft');
 const Search = require('./search');
 const sts = require('./sts');
 const utils = require('./utils');
+const pkg = require('../package.json');
 
 module.exports = class Xboard {
     constructor() {
@@ -16,13 +16,13 @@ module.exports = class Xboard {
         this._opening = new Opening();
         this._perft = new Perft();
         this._search = new Search();
-        this._engineTime = 0;
-        this._opponentTime = 0;
 
         // 40/4
         this._movesPerTimeControl = 40;
         this._base = 4 * 60 * 1000; // to ms
         this._increment = 0;
+        this._engineTime = this._base;
+        this._opponentTime = this._base;
         this._updateTimePerMove();
         this._gameOver = false;
         this._maxDepth = 64;
@@ -30,15 +30,17 @@ module.exports = class Xboard {
         this._moveHistory = [];
         this._useBook = true;
         this._features = {
-            myname: `CeruleanJS 0.1.1 by Joey Robert`,
+            myname: `CeruleanJS ${pkg.version} by Joey Robert`,
             setboard: 1,
-            memory: 0,
+            memory: 1,
             time: 1,
             usermove: 1
         };
 
+        this.memory('100'); // use 100mb for tables by default
+
         if (process.browser) {
-            onmessage = evt => this._sendLine(evt.data);
+            onmessage = evt => this.sendLine(evt.data);
 
             console.log = function () {
                 var args = Array.prototype.slice.call(arguments);
@@ -49,11 +51,11 @@ module.exports = class Xboard {
                 input: process.stdin
             });
 
-            rl.on('line', line => this._sendLine(line));
+            rl.on('line', line => this.sendLine(line));
         }
     }
 
-    _sendLine(line) {
+    sendLine(line) {
         var parts = line.split(' ');
         var action = parts[0];
 
@@ -61,6 +63,8 @@ module.exports = class Xboard {
             this.usermove(action);
         } else if (this[action]) {
             this[action].call(this, parts.slice(1).join(' '));
+        } else if (action === '?') {
+            console.log('');
         } else {
             console.log('Error (invalid command):', line);
         }
@@ -150,7 +154,7 @@ module.exports = class Xboard {
 
         display += '   ';
 
-        for (var fileIndex = 0; fileIndex <= 7; fileIndex++) {
+        for (fileIndex = 0; fileIndex <= 7; fileIndex++) {
             display += ` ${String.fromCharCode(96 + fileIndex + 1)} `;
         }
 
@@ -176,7 +180,8 @@ module.exports = class Xboard {
     }
 
     evaluate() {
-        evaluate.evaluate(this._board, true);
+        this._search.evaluate.evaluate(this._board, true);
+        // console.log(this._search.evaluate);
     }
 
     perft(depth) {
@@ -200,11 +205,6 @@ module.exports = class Xboard {
 
     moves() {
         console.log(this._board.generateLegalMoves().map(move => utils.moveToShortString(this._board, move)).join('\n'));
-    }
-
-    xboard() {
-        console.log('');
-        this._xboardSet = true;
     }
 
     usermove(moveString) {
@@ -248,6 +248,7 @@ module.exports = class Xboard {
             moveString = this._board.polyglotMoveToMoveString(polyglotMove);
             move = this._board.addMoveString(moveString);
         } else {
+            this._updateTimePerMove();
             move = this._search.iterativeDeepening(this._board, this._timePerMove, this._maxDepth);
             this._board.addMove(move);
             moveString = utils.moveToString(move);
@@ -294,11 +295,12 @@ module.exports = class Xboard {
     }
 
     time(time) {
-        this._engineTime = time;
+        this._engineTime = parseInt(time, 10) * 10; // cs => ms
+        this._updateTimePerMove();
     }
 
     otim(otim) {
-        this._opponentTime = otim;
+        this._opponentTime = parseInt(otim, 10) * 10; // cs => ms
     }
 
     level(line) {
@@ -310,19 +312,18 @@ module.exports = class Xboard {
         var args = line.split(' ');
         var baseTimes = args[1].split(':');
 
-        this._movesPerTimeControl = parseInt(args[0]) || 60; // Assume 60 moves
+        this._movesPerTimeControl = parseInt(args[0]);
         this._base = (parseInt(baseTimes[0], 10) * 60 + (parseInt(baseTimes[1], 10) || 0)) * 1000; // to ms
         this._increment = (parseInt(args[2], 10) || 0) * 1000;
+        this._engineTime = this._base;
+        this._opponentTime = this._base;
         this._updateTimePerMove();
     }
 
     _updateTimePerMove() {
-        var totalTime = this._base + this._movesPerTimeControl * this._increment;
-        this._timePerMove =  totalTime / this._movesPerTimeControl;
-    }
-
-    nps(nodeRate) {
-
+        const ideal = this._base / (this._movesPerTimeControl || 50) + this._increment;
+        const remaining = this._engineTime / 3; // only use up to 33% of time remaining
+        this._timePerMove = Math.min(remaining, ideal);
     }
 
     st(timePerMove) {
@@ -333,32 +334,17 @@ module.exports = class Xboard {
         this._maxDepth = depth;
     }
 
-    random() {
-
+    xboard() {
+        console.log('');
+        this._xboardSet = true;
     }
 
-    post() {
-
-    }
-
-    hard() {
-
-    }
-
-    easy() {
-
-    }
-
-    protover(number) {
+    protover() {
         console.log(Object.keys(this._features).map(name => {
             return typeof this._features[name] === 'string' ?
                 `feature ${name}="${this._features[name]}"` :
                 `feature ${name}=${this._features[name]}`;
         }).join('\n'));
-    }
-
-    accepted() {
-
     }
 
     sts() {
@@ -378,13 +364,93 @@ module.exports = class Xboard {
         process.exit(0);
     }
 
+    memory(mb) {
+        const mbInt = parseInt(mb, 10) || 0;
+        const bInt = mbInt * 1024 * 1024;
+        const bytesPerEntry = 4;
+
+        // Search table (50%)
+        const searchEntriesPerHash = 4; // lohash, hihash, move, depth+type+score
+        const searchBInt = bInt * 0.5;
+        const searchExponent = Math.floor(Math.log2(searchBInt / (searchEntriesPerHash * bytesPerEntry)));
+        // const searchEntries = Math.pow(2, searchExponent);
+        // const searchSize = searchEntries * searchEntriesPerHash * bytesPerEntry;
+
+        // Eval table (25%)
+        const evalEntriesPerHash = 3;
+        const evalBEvalInt = bInt * 0.25;
+        const evalExponent = Math.floor(Math.log2(evalBEvalInt / (evalEntriesPerHash * bytesPerEntry)));
+        // const evalEntries = Math.pow(2, evalExponent);
+        // const evalSize = evalEntries * evalEntriesPerHash * bytesPerEntry;
+
+        // Pawn table (25%)
+        const pawnEntriesPerHash = 3;
+        const pawnBEvalInt = bInt * 0.25;
+        const pawnExponent = Math.floor(Math.log2(pawnBEvalInt / (pawnEntriesPerHash * bytesPerEntry)));
+        // const pawnEntries = Math.pow(2, pawnExponent);
+        // const pawnSize = evalEntries * evalEntriesPerHash * bytesPerEntry;
+
+        this._search.hashSize = searchExponent;
+        this._search.evaluate.hashSize = evalExponent;
+        this._search.evaluate.pawnHashSize = pawnExponent;
+    }
+
+    cachestat() {
+        const { searchTable } = this._search;
+        const { evalTable, pawnTable } = this._search.evaluate;
+        console.log(`SEARCH: Entries: ${searchTable.size} Size: ${searchTable.bytes} bytes Hits: ${searchTable.cacheHit} Misses: ${searchTable.cacheMiss} Hit rate: ${(searchTable.cacheHit * 100.0 / (searchTable.cacheHit + searchTable.cacheMiss)).toFixed(2)}%`);
+        console.log(`EVAL:   Entries: ${evalTable.size} Size: ${evalTable.bytes} bytes Hits: ${evalTable.cacheHit} Misses: ${evalTable.cacheMiss} Hit rate: ${(evalTable.cacheHit * 100.0 / (evalTable.cacheHit + evalTable.cacheMiss)).toFixed(2)}%`);
+        console.log(`PAWN:   Entries: ${pawnTable.size} Size: ${pawnTable.bytes} bytes Hits: ${pawnTable.cacheHit} Misses: ${pawnTable.cacheMiss} Hit rate: ${(pawnTable.cacheHit * 100.0 / (pawnTable.cacheHit + pawnTable.cacheMiss)).toFixed(2)}%`);
+    }
+
+    ping(n) {
+        console.log(`pong ${n}`);
+    }
+
+    option(arg) {
+        const [name, value] = arg.split('=');
+
+        if (this._search.evaluate[name] !== undefined) {
+            this._search.evaluate[name] = parseInt(value, 10);
+        }
+    }
+
+    // Noop commands
+    nps() {
+
+    }
+
+    random() {
+
+    }
+
+    post() {
+
+    }
+
+    hard() {
+
+    }
+
+    easy() {
+
+    }
+
+    accepted() {
+
+    }
+
     help() {
         var helpMenu = `
-Commands
+CeruleanJS ${pkg.version}, Javascript Chess Engine by Joey Robert
+More info at https://ceruleanjs.joeyrobert.org/
+
+Command                     Description
 
 display                     Draws the board
 perft [INT]                 Perfts the current board to specified depth
 perfthash [INT]             Sets perft hashtable exponent (size 2^exponent)
+memory [INT]                Sets the memory used by the engine in megabytes
 divide [INT]                Divides the current board to specified depth
 moves                       Lists valid moves for this position
 e2e4                        Moves from the current position and thinks

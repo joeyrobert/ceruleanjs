@@ -3,12 +3,13 @@
 const expect = require('chai').expect;
 const fs = require('fs');
 const Board = require('../src/board');
-const evaluate = require('../src/evaluate');
+const Evaluate = require('../src/evaluate');
 
 describe('evaluate', () => {
-    let board = new Board();
-    let epd = fs.readFileSync('suites/epd/perftsuite.epd', 'utf8');
-    let fens = epd.split('\n').map(line => line.split(';')[0].trim());
+    const board = new Board();
+    const epd = fs.readFileSync('suites/epd/perftsuite.epd', 'utf8');
+    const fens = epd.split('\n').map(line => line.split(';')[0].trim());
+    const evaluate = new Evaluate();
 
     fens.forEach(fen => {
         board.fen = fen;
@@ -20,7 +21,7 @@ describe('evaluate', () => {
         board.fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 
         for (var i = 0; i < 1000000; i++) {
-            var score = evaluate.evaluate(board);
+            score = evaluate.evaluate(board);
         }
 
         expect(score).to.equal(0);

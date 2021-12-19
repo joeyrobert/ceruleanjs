@@ -6,3 +6,5 @@ Thumbs.db
 npm-debug.log
 tmp
 dist
+coverage
+.nyc_output

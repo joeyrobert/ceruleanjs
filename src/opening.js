@@ -48,8 +48,8 @@ module.exports = class Opening {
         for (var byteOffset = 0; byteOffset < bookDataView.byteLength - 8; byteOffset += 8) {
             var key = utils.unsignedHexString(bookDataView.getUint32(byteOffset)) + utils.unsignedHexString(bookDataView.getUint32(byteOffset + 4));
             var move = bookDataView.getUint16(byteOffset + 8);
-            var weight = bookDataView.getUint16(byteOffset + 10);
-            var learn = bookDataView.getUint32(byteOffset + 12);
+            // var weight = bookDataView.getUint16(byteOffset + 10);
+            // var learn = bookDataView.getUint32(byteOffset + 12);
 
             if (!this.openingTable[key]) {
                 this.openingTable[key] = [];

@@ -18,11 +18,14 @@ const MOVE_PROMOTION_MASK           = 0b00000000000000011100000000000000;
 const MOVE_CAPTURED_MASK            = 0b00000000000011100000000000000000;
 const MOVE_BITS_MASK                = 0b00000000011100000000000000000000;
 const MOVE_ORDER_MASK               = 0b11111111100000000000000000000000;
+const MOVE_SANS_ORDER_MASK          = ~MOVE_ORDER_MASK;
 const MOVE_TO_SHIFT                 = 7;
 const MOVE_PROMOTION_SHIFT          = 14;
 const MOVE_CAPTURED_SHIFT           = 17;
-const MOVE_ORDER_SHIFT              = 26;
+const MOVE_ORDER_SHIFT              = 23;
 const MOVE_INDEX_OFFSET             = 33;
+const MOVE_ORDER_FIRST              = 255;
+const MOVE_ORDER_SECOND             = 254;
 const JUST_PIECE                    = 0b1110;
 const PAWN                          = 0;
 const KNIGHT                        = 2;
@@ -81,6 +84,7 @@ PIECE_VALUES[BISHOP]    = 310;
 PIECE_VALUES[ROOK]      = 500;
 PIECE_VALUES[QUEEN]     = 975;
 PIECE_VALUES[KING]      = 20000;
+PIECE_VALUES = new Uint32Array(PIECE_VALUES);
 
 var MVV_LVA_PIECE_VALUES        = [];
 MVV_LVA_PIECE_VALUES[PAWN]      = 1;
@@ -90,15 +94,11 @@ MVV_LVA_PIECE_VALUES[ROOK]      = 3;
 MVV_LVA_PIECE_VALUES[QUEEN]     = 4;
 MVV_LVA_PIECE_VALUES[KING]      = 5;
 MVV_LVA_PIECE_VALUES[EMPTY]     = 0;
+MVV_LVA_PIECE_VALUES = new Uint32Array(MVV_LVA_PIECE_VALUES);
 
-var SEE_PIECE_VALUES        = [];
-SEE_PIECE_VALUES[PAWN]      = 1;
-SEE_PIECE_VALUES[KNIGHT]    = 3;
-SEE_PIECE_VALUES[BISHOP]    = 3;
-SEE_PIECE_VALUES[ROOK]      = 5;
-SEE_PIECE_VALUES[QUEEN]     = 9;
-SEE_PIECE_VALUES[KING]      = 31;
-SEE_PIECE_VALUES[EMPTY]     = 0;
+const MVV_LVA_OFFSET = 190;
+
+const RELATIVE_HISTORY_SCALE = 189;
 
 const MATE_VALUE = 100000;
 
@@ -136,6 +136,14 @@ const DELTA_ROOK = new Int32Array([
     -1,
     1,
     15
+]);
+
+// Pawns have a directional component, this doesn't consider that
+const DELTA_PAWN = new Int32Array([
+    -16,
+    -14,
+    14,
+    16
 ]);
 
 const DELTA_MAP = [
@@ -188,20 +196,22 @@ const PAWN_LAST_RANK = [
     [138, 145]
 ];
 
-const SEARCH_LIMIT_CHECK = 10000;
+const SEARCH_LIMIT_CHECK = 1000;
 
-const FEN_BOARD_REGEX = /^\s*([rnbqkpRNBQKP1-8]+\/){7}([rnbqkpRNBQKP1-8]+)\s[bw]\s(-|K?Q?k?q?)\s(-|[a-h‌​][36])/;
+const FEN_BOARD_REGEX = /^\s*([rnbqkpRNBQKP1-8]+\/){7}([rnbqkpRNBQKP1-8]+)\s[bw]\s(-|K?Q?k?q?)\s(-|[a-h][36])/;
 const MOVE_REGEX = /^[a-h][1-8][a-h][1-8][bnrq]?$/;
 const LEVEL_REGEX = /^\d+ \d+(:\d{2})? \d+$/;
 
 const ANSI_COLORS = {
-    white:      '\u001b[39m',
-    black:      '\u001b[30m',
-    bgWhite:    '\u001b[47m',
-    bgBlack:    '\u001b[40m',
-    bgGreen:    '\u001b[42m',
-    bgYellow:   '\u001b[43m',
-    reset:      '\u001b[0m'
+    white:        '\u001b[39m',
+    black:        '\u001b[30m',
+    yellow:       '\u001b[33m',
+    brightYellow: '\u001b[93m',
+    bgWhite:      '\u001b[47m',
+    bgBlack:      '\u001b[40m',
+    bgGreen:      '\u001b[42m',
+    bgYellow:     '\u001b[43m',
+    reset:        '\u001b[0m',
 };
 
 const POLYGLOT_PROMOTION_STRINGS = [
@@ -211,6 +221,31 @@ const POLYGLOT_PROMOTION_STRINGS = [
     'R',
     'Q'
 ];
+
+// Attack lookup table entries
+const ATTACK_NONE        = 0b000000; // 0
+const ATTACK_DIAGONAL    = 0b000001; // 1
+const ATTACK_HORIZONTAL  = 0b000010; // 2
+const ATTACK_VERTICAL    = 0b000100; // 4
+const ATTACK_KNIGHT      = 0b001000; // 8
+const ATTACK_KING        = 0b010000; // 16
+const ATTACK_PAWN        = 0b100000; // 32
+const ATTACK_PIECE_ORDER = new Uint32Array([
+    PAWN,
+    KNIGHT,
+    KING,
+    BISHOP,
+    ROOK,
+    QUEEN,
+]);
+
+const HASH_EXACT = 0;
+const HASH_ALPHA = 1;
+const HASH_BETA = 2;
+const HASH_FLAG_OFFSET = 7;
+const HASH_SCORE_OFFSET = 9;
+const HASH_FLAG_MASK  = 0b110000000;
+const HASH_DEPTH_MASK   = 0b1111111;
 
 module.exports = {
     WHITE,
@@ -231,11 +266,14 @@ module.exports = {
     MOVE_CAPTURED_MASK,
     MOVE_BITS_MASK,
     MOVE_ORDER_MASK,
+    MOVE_SANS_ORDER_MASK,
     MOVE_TO_SHIFT,
     MOVE_PROMOTION_SHIFT,
     MOVE_CAPTURED_SHIFT,
     MOVE_ORDER_SHIFT,
     MOVE_INDEX_OFFSET,
+    MOVE_ORDER_FIRST,
+    MOVE_ORDER_SECOND,
     JUST_PIECE,
     PAWN,
     KNIGHT,
@@ -254,12 +292,14 @@ module.exports = {
     PIECE_DISPLAY_MAP,
     PIECE_VALUES,
     MVV_LVA_PIECE_VALUES,
-    SEE_PIECE_VALUES,
+    MVV_LVA_OFFSET,
+    RELATIVE_HISTORY_SCALE,
     MATE_VALUE,
     DELTA_KNIGHT,
     DELTA_KING,
     DELTA_BISHOP,
     DELTA_ROOK,
+    DELTA_PAWN,
     DELTA_MAP,
     CASTLING,
     CASTLING_INFO,
@@ -273,5 +313,20 @@ module.exports = {
     MOVE_REGEX,
     LEVEL_REGEX,
     ANSI_COLORS,
-    POLYGLOT_PROMOTION_STRINGS
+    POLYGLOT_PROMOTION_STRINGS,
+    ATTACK_NONE,
+    ATTACK_DIAGONAL,
+    ATTACK_HORIZONTAL,
+    ATTACK_VERTICAL,
+    ATTACK_KNIGHT,
+    ATTACK_KING,
+    ATTACK_PAWN,
+    ATTACK_PIECE_ORDER,
+    HASH_EXACT,
+    HASH_ALPHA,
+    HASH_BETA,
+    HASH_FLAG_OFFSET,
+    HASH_SCORE_OFFSET,
+    HASH_DEPTH_MASK,
+    HASH_FLAG_MASK,
 };

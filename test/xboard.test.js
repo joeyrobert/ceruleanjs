@@ -27,4 +27,45 @@ describe('xboard', () => {
             expect(xb.result(true)).to.equal(false);
         });
     });
+
+    describe('run every command with valid input', () => {
+        const commands = [
+            'display',
+            'perft 4',
+            'perfthash 5',
+            'memory 10',
+            'divide 4',
+            'moves',
+            'e2e4',
+            'undo',
+            'new',
+            'setboard 8/1B3k2/4Rbp1/3Pp1p1/5p2/5P1P/3r2PK/8 b - - bm g4',
+            'evaluate',
+            'result',
+            'level 40 5 0',
+            'book on',
+            'go',
+            'book off',
+            'go',
+            'white',
+            'black',
+            'time 1000',
+            'otim 1000',
+            'sd 15',
+            'st 1000',
+            'version',
+            'help',
+            'cachestat',
+            'option DOUBLED_PAWN_PENALTY=10',
+            // 'sts',
+            // 'exit',
+            // 'quit',
+        ];
+
+        commands.forEach(command => {
+            it(`runs ${command} without error`, () => {
+                xb.sendLine(command);
+            });
+        });
+    });
 });
