@@ -530,14 +530,14 @@ module.exports = class Board {
         var moves = this.generateMoves();
         this.addHistory();
 
-        var legalMoves = moves.filter(move => {
+        var legalMoves = [];
+        for (var i = 0; i < moves.length; i++) {
+            var move = moves[i];
             if (this.addMove(move)) {
                 this.subtractMove(move);
-                return true;
+                legalMoves.push(move);
             }
-
-            return false;
-        });
+        }
 
         this.subtractHistory();
 
@@ -736,6 +736,9 @@ module.exports = class Board {
                     moves.push(utils.createMove(index, newMove));
                 } else if (square !== OUT_OF_BOUNDS && square % 2 !== this.turn) {
                     moves.push(utils.createMove(index, newMove, MOVE_BITS_CAPTURE, square));
+                    break;
+                } else {
+                    break;
                 }
             } while (square === EMPTY);
         }
@@ -759,6 +762,9 @@ module.exports = class Board {
                     count++;
                 } else if (square !== OUT_OF_BOUNDS && square % 2 !== turn) {
                     count++;
+                    break;
+                } else {
+                    break;
                 }
             } while (square === EMPTY);
         }
@@ -817,144 +823,90 @@ module.exports = class Board {
         }
     }
 
-    isAttackedPawn(index, turn) {
-        var newMove = 0;
-        var square = 0;
+    isAttacked(index, turn) {
+        if (this.isAttackedByPawn(index, turn)) return true;
+        if (this.isAttackedByKnight(index, turn)) return true;
+        if (this.isAttackedByBishopOrQueen(index, turn)) return true;
+        if (this.isAttackedByRookOrQueen(index, turn)) return true;
+        if (this.isAttackedByKing(index, turn)) return true;
+        return false;
+    }
 
-        // Pawns
-        for (var j = 0; j < 2; j++) {
-            newMove = index + (14 + 2 * j) * (turn === WHITE ? -1 : 1);
-            square = this.board[newMove];
-            if (square !== OUT_OF_BOUNDS && square % 2 === turn && (square & JUST_PIECE) === PAWN) {
+    isAttackedByPawn(index, turn) {
+        var direction = turn === WHITE ? -1 : 1;
+        var pawnPiece = PAWN | turn;
+        var attackIndices = [index + direction * 14, index + direction * 16];
+
+        for (var i = 0; i < 2; i++) {
+            var attackerIndex = attackIndices[i];
+            if (this.board[attackerIndex] === pawnPiece) {
                 return true;
             }
         }
         return false;
     }
 
-    isAttackedDelta(index, turn) {
-        var newMove = 0, deltas, deltaPiece;
-        var square = 0;
-        var j = 0;
-
-        // Delta attacks
-        for (var k = 2; k < 4; k++) {
-            deltas = DELTA_MAP[k][0];
-            deltaPiece = DELTA_MAP[k][1];
-
-            for (j = 0; j < 8; j++) {
-                newMove = deltas[j] + index;
-                square = this.board[newMove];
-                if (square !== OUT_OF_BOUNDS && square % 2 === turn && (square & JUST_PIECE) === deltaPiece) {
-                    return true;
-                }
+    isAttackedByKnight(index, turn) {
+        var knightPiece = KNIGHT | turn;
+        for (var i = 0; i < 8; i++) {
+            var attackerIndex = index + DELTA_KNIGHT[i];
+            if (this.board[attackerIndex] === knightPiece) {
+                return true;
             }
         }
         return false;
     }
 
-    isAttackedSliding(index, turn) {
-        var newMove, deltas, deltaPiece, pieceOnSquare, j, k, hasQueen;
-        var square = 0;
-
-        hasQueen = this.pieces[turn].pieces[QUEEN].length > 0;
-
-        // Sliding attacks
-        for (k = 0; k < 2; k++) {
-            deltas = DELTA_MAP[k][0];
-            deltaPiece = DELTA_MAP[k][1];
-
-            // Skip if there's no possible piece on the board
-            if (!hasQueen && this.pieces[turn].pieces[deltaPiece].length === 0) {
-                continue;
-            }
-
-            for (j = 0; j < 4; j++) {
-                newMove = index + deltas[j];
-                square = this.board[newMove];
-
-                while (square !== OUT_OF_BOUNDS && square === EMPTY) {
-                    newMove += deltas[j];
-                    square = this.board[newMove];
-                }
-
-                if (square % 2 === turn) {
-                    pieceOnSquare = square & JUST_PIECE;
-
-                    if (pieceOnSquare === deltaPiece || pieceOnSquare === QUEEN) {
-                        return true;
-                    }
-                }
+    isAttackedByKing(index, turn) {
+        var kingPiece = KING | turn;
+        for (var i = 0; i < 8; i++) {
+            var attackerIndex = index + DELTA_KING[i];
+            if (this.board[attackerIndex] === kingPiece) {
+                return true;
             }
         }
         return false;
     }
 
-    isAttackedOld(index, turn) {
-        return this.isAttackedPawn(index, turn) || this.isAttackedDelta(index, turn) ||  this.isAttackedSliding(index, turn);
-    }
-
-    isAttacked(index, turn) {
-        const rootPieceList = this.pieces[turn].pieces;
-        var i, j, attackPiece, pieceList, pieceIndex, diff, absDiff, attacks, delta;
-
-        for (i = 0; i < ATTACK_PIECE_ORDER.length; i++) {
-            attackPiece = ATTACK_PIECE_ORDER[i];
-            pieceList = rootPieceList[ATTACK_PIECE_ORDER[i]];
-
-            for (j = 0; j < pieceList.length; j++) {
-                pieceIndex = pieceList.indices[j];
-                diff = index - pieceIndex;
-                absDiff = Math.abs(diff);
-
-                // Determine if piece qualifies for an attack
-                attacks = ATTACK_LOOKUP[absDiff];
-
-                if (attacks === ATTACK_NONE) {
+    isAttackedByBishopOrQueen(index, turn) {
+        var bishopPiece = BISHOP | turn;
+        var queenPiece = QUEEN | turn;
+        for (var i = 0; i < 4; i++) {
+            var delta = DELTA_BISHOP[i];
+            var attackerIndex = index + delta;
+            while (this.board[attackerIndex] !== OUT_OF_BOUNDS) {
+                var piece = this.board[attackerIndex];
+                if (piece === EMPTY) {
+                    attackerIndex += delta;
                     continue;
-                }
-
-                // Delta check
-                if ((attacks & ATTACK_PAWN && attackPiece === PAWN && ((diff > 0 && turn === WHITE) || (diff < 0 && turn === BLACK))) ||
-                    (attacks & ATTACK_KNIGHT && attackPiece === KNIGHT) ||
-                    (attacks & ATTACK_KING && attackPiece === KING)) {
+                } else if (piece === bishopPiece || piece === queenPiece) {
                     return true;
-                }
-
-                // Sliding checks
-                if ((attacks & ATTACK_DIAGONAL && (attackPiece === BISHOP || attackPiece === QUEEN)) ||
-                    (attacks & ATTACK_VERTICAL && (attackPiece === ROOK || attackPiece === QUEEN)) ||
-                    (attacks & ATTACK_HORIZONTAL && (attackPiece === ROOK || attackPiece === QUEEN))) {
-
-                    // Lookup delta, match sign
-                    delta = DELTA_LOOKUP[absDiff];
-                    if (diff > 0) {
-                        delta = -1 * delta;
-                    }
-
-                    const emptyInBetween = this.isInBetweenEmpty(index, pieceIndex, delta);
-
-                    if (emptyInBetween) {
-                        return true;
-                    }
+                } else {
+                    break;
                 }
             }
         }
-
         return false;
     }
 
-    isInBetweenEmpty(index, otherIndex, delta) {
-        var newMove = index + delta;
-
-        while (this.board[newMove] === EMPTY && newMove !== otherIndex) {
-            newMove += delta;
+    isAttackedByRookOrQueen(index, turn) {
+        var rookPiece = ROOK | turn;
+        var queenPiece = QUEEN | turn;
+        for (var i = 0; i < 4; i++) {
+            var delta = DELTA_ROOK[i];
+            var attackerIndex = index + delta;
+            while (this.board[attackerIndex] !== OUT_OF_BOUNDS) {
+                var piece = this.board[attackerIndex];
+                if (piece === EMPTY) {
+                    attackerIndex += delta;
+                    continue;
+                } else if (piece === rookPiece || piece === queenPiece) {
+                    return true;
+                } else {
+                    break;
+                }
+            }
         }
-
-        if (newMove === otherIndex) {
-            return true;
-        }
-
         return false;
     }
 
@@ -1055,3 +1007,4 @@ module.exports = class Board {
         this.hiHash ^= polyglot.HI_HASH[polyglot.TURN_OFFSET];
     }
 };
+
