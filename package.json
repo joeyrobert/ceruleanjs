@@ -44,7 +44,9 @@
     "lint": "eslint src/*.js test/*.js",
     "start": "node --max-old-space-size=8192 ./src/index.js",
     "sts": "node  --max-old-space-size=8192 ./src/sts.js",
+    "sts-parallel": "node --max-old-space-size=8192 ./src/sts-parallel.js",
     "test": "mocha --no-timeouts --exit",
+    "perft-parallel": "node ./src/perft-parallel.js",
     "test-coverage": "nyc --reporter=text --reporter=html mocha --no-timeouts --exit"
   }
 }

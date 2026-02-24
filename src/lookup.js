@@ -21,6 +21,68 @@ const {
     getEmptyBoardArray
 } = require('./utils');
 
+function isValidIndex180(i) {
+    return i >= 33 && i <= 145 && (i - 33) % 15 < 8;
+}
+
+function generateKnightKingLookups() {
+    var KNIGHT_MOVES = [];
+    var KING_MOVES = [];
+    var i, j, target, targets;
+    for (i = 0; i < WIDTH * HEIGHT; i++) {
+        if (!isValidIndex180(i)) {
+            KNIGHT_MOVES[i] = [];
+            KING_MOVES[i] = [];
+            continue;
+        }
+        targets = [];
+        for (j = 0; j < 8; j++) {
+            target = i + DELTA_KNIGHT[j];
+            if (isValidIndex180(target)) targets.push(target);
+        }
+        KNIGHT_MOVES[i] = targets;
+        targets = [];
+        for (j = 0; j < 8; j++) {
+            target = i + DELTA_KING[j];
+            if (isValidIndex180(target)) targets.push(target);
+        }
+        KING_MOVES[i] = targets;
+    }
+    return { KNIGHT_MOVES, KING_MOVES };
+}
+
+const { KNIGHT_MOVES, KING_MOVES } = generateKnightKingLookups();
+
+// PAWN_ATTACK_FROM[index][turn] = squares from which a pawn of turn could attack index
+function generatePawnAttackFromLookup() {
+    var PAWN_ATTACK_FROM = [];
+    var i, targets;
+    for (i = 0; i < WIDTH * HEIGHT; i++) {
+        if (!isValidIndex180(i)) {
+            PAWN_ATTACK_FROM[i] = [];
+            continue;
+        }
+        targets = [];
+        if (isValidIndex180(i - 16)) targets.push(i - 16);
+        if (isValidIndex180(i - 14)) targets.push(i - 14);
+        PAWN_ATTACK_FROM[i] = targets;
+    }
+    var PAWN_ATTACK_FROM_BLACK = [];
+    for (i = 0; i < WIDTH * HEIGHT; i++) {
+        if (!isValidIndex180(i)) {
+            PAWN_ATTACK_FROM_BLACK[i] = [];
+            continue;
+        }
+        targets = [];
+        if (isValidIndex180(i + 14)) targets.push(i + 14);
+        if (isValidIndex180(i + 16)) targets.push(i + 16);
+        PAWN_ATTACK_FROM_BLACK[i] = targets;
+    }
+    return { PAWN_ATTACK_FROM, PAWN_ATTACK_FROM_BLACK };
+}
+
+const { PAWN_ATTACK_FROM, PAWN_ATTACK_FROM_BLACK } = generatePawnAttackFromLookup();
+
 // Attack lookup
 // See "delta truth table" in board.ods
 function generateAttackLookup() {
@@ -125,6 +187,10 @@ const {
 module.exports = {
     ATTACK_LOOKUP,
     DELTA_LOOKUP,
+    KNIGHT_MOVES,
+    KING_MOVES,
+    PAWN_ATTACK_FROM,
+    PAWN_ATTACK_FROM_BLACK,
     // RAY_LOOKUP,
     generateRayLookup,
 };

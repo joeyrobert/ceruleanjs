@@ -100,6 +100,18 @@ const MVV_LVA_OFFSET = 190;
 
 const RELATIVE_HISTORY_SCALE = 189;
 
+// RANK_INDEX[index], FILE_INDEX[index], SQ64_INDEX[index] for 180-board indices
+var RANK_INDEX = new Uint8Array(WIDTH * HEIGHT);
+var FILE_INDEX = new Uint8Array(WIDTH * HEIGHT);
+var SQ64_INDEX = new Uint8Array(WIDTH * HEIGHT);
+for (var i = 0; i < WIDTH * HEIGHT; i++) {
+    var r = ((i / 15) >> 0) - 2;
+    var f = i % 15 - 3;
+    RANK_INDEX[i] = r;
+    FILE_INDEX[i] = f;
+    SQ64_INDEX[i] = r >= 0 && r < 8 && f >= 0 && f < 8 ? r * 8 + f : 0;
+}
+
 const MATE_VALUE = 100000;
 
 const DELTA_KNIGHT = new Int32Array([
@@ -190,6 +202,12 @@ const PAWN_FIRST_RANK = [
     [123, 130],
     [48, 55]
 ];
+
+// Pawn move deltas: [BLACK, WHITE] - black moves down (negative), white up (positive)
+const PAWN_PUSH_ONE_DELTA = new Int8Array([-15, 15]);
+const PAWN_PUSH_TWO_DELTA = new Int8Array([-30, 30]);
+const PAWN_CAPTURE_LEFT_DELTA = new Int8Array([-14, 14]);
+const PAWN_CAPTURE_RIGHT_DELTA = new Int8Array([-16, 16]);
 
 const PAWN_LAST_RANK = [
     [33, 40],
@@ -294,6 +312,9 @@ module.exports = {
     MVV_LVA_PIECE_VALUES,
     MVV_LVA_OFFSET,
     RELATIVE_HISTORY_SCALE,
+    RANK_INDEX,
+    FILE_INDEX,
+    SQ64_INDEX,
     MATE_VALUE,
     DELTA_KNIGHT,
     DELTA_KING,
@@ -307,6 +328,10 @@ module.exports = {
     CASTLING_ROOK_FROM,
     CASTLING_ROOK_TO,
     PAWN_FIRST_RANK,
+    PAWN_PUSH_ONE_DELTA,
+    PAWN_PUSH_TWO_DELTA,
+    PAWN_CAPTURE_LEFT_DELTA,
+    PAWN_CAPTURE_RIGHT_DELTA,
     PAWN_LAST_RANK,
     SEARCH_LIMIT_CHECK,
     FEN_BOARD_REGEX,

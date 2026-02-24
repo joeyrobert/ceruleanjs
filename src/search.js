@@ -93,7 +93,20 @@ module.exports = class Search {
         return 0;
     }
 
-    search(board, alpha, beta, depth) {
+    scoreToTT(score, ply) {
+        if (score > MATE_VALUE - 1000) return score + ply;
+        if (score < -MATE_VALUE + 1000) return score - ply;
+        return score;
+    }
+
+    scoreFromTT(score, ply) {
+        if (score > MATE_VALUE - 1000) return score - ply;
+        if (score < -MATE_VALUE + 1000) return score + ply;
+        return score;
+    }
+
+    search(board, alpha, beta, depth, ply) {
+        ply = ply || 0;
         if (this.endedEarly) {
             return;
         }
@@ -110,21 +123,31 @@ module.exports = class Search {
         if (ttEntry) {
             [ttMove, ttData] = ttEntry;
             [ttDepth, ttFlag, ttScore] = utils.unpackSearchEntry(ttData);
+            ttScore = this.scoreFromTT(ttScore, ply);
 
             if (ttDepth >= depth) {
                 maxMove = ttMove;
-                if (ttFlag === HASH_ALPHA && ttScore < alpha) {
-                    alpha = ttScore;
-                } else if (ttFlag === HASH_BETA && ttScore > beta) {
-                    beta = ttScore;
-                } else if (ttFlag === HASH_EXACT) {
+                if (ttFlag === HASH_EXACT) {
                     this.pv[this.ply][depth] = ttMove;
                     return ttScore;
+                }
+                if (ttFlag === HASH_ALPHA && ttScore <= alpha) {
+                    return alpha;
+                }
+                if (ttFlag === HASH_BETA && ttScore >= beta) {
+                    return beta;
                 }
             }
         }
 
         if (depth === 0) {
+            return this.qsearch(board, alpha, beta);
+        }
+
+        var standPat = this.evaluate.evaluate(board);
+
+        // Razoring (conservative - only at depth 1)
+        if (depth === 1 && standPat + 300 < alpha) {
             return this.qsearch(board, alpha, beta);
         }
 
@@ -134,9 +157,9 @@ module.exports = class Search {
 
         // Add move ordering (Hash + iterative deepening PV + MVV/LVA)
         for (var i = 0; i < moves.length; i++) {
-            if (moves[i] === maxMove) {
+            if (maxMove && (moves[i] & MOVE_SANS_ORDER_MASK) === maxMove) {
                 moves[i] = utils.moveAddOrder(moves[i], MOVE_ORDER_FIRST);
-            } else if (this.pv[this.ply].length && moves[i] === this.pv[this.ply - 1][this.ply - 1]) {
+            } else if (this.pv[this.ply - 1] && this.pv[this.ply - 1][this.ply - 1] && (moves[i] & MOVE_SANS_ORDER_MASK) === this.pv[this.ply - 1][this.ply - 1]) {
                 moves[i] = utils.moveAddOrder(moves[i], MOVE_ORDER_SECOND);
             } else if (utils.moveCaptured(moves[i])) {
                 moves[i] = utils.moveAddOrder(moves[i], this.mvvLva(board, moves[i]) + this.relativeHistory(board.turn, moves[i]));
@@ -151,21 +174,40 @@ module.exports = class Search {
         // PVS search
         var alphaMove = 0;
 
+        var futilityMargin = 150;
         for (i = 0; i < moves.length; i++) {
             move = moves[i] & MOVE_SANS_ORDER_MASK;
             const historyIndex = utils.historyIndex(move);
+            var isCapture = utils.moveCaptured(move) !== EMPTY;
+            var isPromotion = utils.movePromotion(move) !== 0;
 
             if (board.addMove(move)) {
                 searchedMoves++;
 
+                // Futility pruning at depth 1
+                if (depth === 1 && !isCapture && !isPromotion && standPat + futilityMargin < alpha) {
+                    board.subtractMove(move);
+                    continue;
+                }
+
+                var reduction = 0;
+                if (alphaMove && i > 4 && !isCapture && !board.isInCheck() && depth >= 5) {
+                    reduction = 1;
+                }
+
+                var searchDepth = depth - 1 - reduction;
                 if (!alphaMove) {
-                    score = -this.search(board, -beta, -alpha, depth - 1);
+                    score = -this.search(board, -beta, -alpha, searchDepth, ply + 1);
                 } else {
-                    score = -this.search(board, -alpha - 1, -alpha, depth - 1);
+                    score = -this.search(board, -alpha - 1, -alpha, searchDepth, ply + 1);
 
                     if (score > alpha) {
-                        score = -this.search(board, -beta, -alpha, depth - 1);
+                        score = -this.search(board, -beta, -alpha, depth - 1, ply + 1);
                     }
+                }
+
+                if (reduction > 0 && score >= beta) {
+                    score = -this.search(board, -beta, -alpha, depth - 1, ply + 1);
                 }
 
                 board.subtractMove(move);
@@ -175,7 +217,7 @@ module.exports = class Search {
                     board.subtractHistory();
 
                     if (depth > ttDepth) {
-                        this.searchTable.set(board.loHash, board.hiHash, [move, utils.packSearchEntry(depth, HASH_BETA, score)]);
+                        this.searchTable.set(board.loHash, board.hiHash, [move, utils.packSearchEntry(depth, HASH_BETA, this.scoreToTT(score, ply))]);
                     }
 
                     this.historyHeuristic[board.turn][historyIndex] += 1;
@@ -194,8 +236,10 @@ module.exports = class Search {
             this.pv[this.ply][depth] = alphaMove;
 
             if (depth > ttDepth) {
-                this.searchTable.set(board.loHash, board.hiHash, [alphaMove, utils.packSearchEntry(depth, HASH_EXACT, alpha)]);
+                this.searchTable.set(board.loHash, board.hiHash, [alphaMove, utils.packSearchEntry(depth, HASH_EXACT, this.scoreToTT(alpha, ply))]);
             }
+        } else if (depth > ttDepth) {
+            this.searchTable.set(board.loHash, board.hiHash, [0, utils.packSearchEntry(depth, HASH_ALPHA, this.scoreToTT(alpha, ply))]);
         }
         board.subtractHistory();
 
@@ -279,7 +323,17 @@ module.exports = class Search {
             this.ply = depth;
             this.pv[this.ply] = [];
             this.evaluate.resetEvalCount();
-            score = this.search(board, -Infinity, +Infinity, depth);
+
+            var alpha = -Infinity;
+            var beta = Infinity;
+            if (depth > 1 && utils.isNumeric(score)) {
+                alpha = score - 50;
+                beta = score + 50;
+            }
+            score = this.search(board, alpha, beta, depth, 0);
+            if (!utils.isNumeric(score) || score <= alpha || score >= beta) {
+                score = this.search(board, -Infinity, +Infinity, depth, 0);
+            }
 
             if (utils.isNumeric(score)) {
                 moveStrings = [];

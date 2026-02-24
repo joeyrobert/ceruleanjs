@@ -290,7 +290,7 @@ module.exports = class Evaluate {
 
         if (display) {
             console.log('Material:      ', MATERIAL_COEFF,      '* (' + material[1]      + ' - ' + material[0]       + ') =', MATERIAL_COEFF * (material[1] - material[0]));
-            console.log('Pawn Structure:', PAWN_STRUCT_COEFF,   '* (' + pawnStructure[1] + ' - ' + pawnStructure[0]  + ') =', PAWN_STRUCT_COEFF * (pst[1] - pst[0]));
+            console.log('Pawn Structure:', PAWN_STRUCT_COEFF,   '* (' + pawnStructure[1] + ' - ' + pawnStructure[0]  + ') =', PAWN_STRUCT_COEFF * (pawnStructure[1] - pawnStructure[0]));
             console.log('PST:           ', PST_COEFF,           '* (' + pst[1]           + ' - ' + pst[0]            + ') =', PST_COEFF * (pst[1] - pst[0]));
             console.log('Mobility:      ', MOBILITY_COEFF,      '* (' + mobility[1]      + ' - ' + mobility[0]       + ') =', MOBILITY_COEFF * (mobility[1] - mobility[0]));
             console.log('Piece Bonuses: ', PIECE_BONUSES_COEFF, '* (' + pieceBonuses[1]  + ' - ' + pieceBonuses[0]   + ') =', PIECE_BONUSES_COEFF * (pieceBonuses[1] - pieceBonuses[0]));
@@ -315,17 +315,17 @@ module.exports = class Evaluate {
         var right = index + behindCoefficient * (WIDTH + 1);
 
         // Doubled pawn
-        if (board.board[behind] === PAWN && board.board[behind] % 2 === board.turn) {
+        if ((board.board[behind] & JUST_PIECE) === PAWN && (board.board[behind] & 1) === turn) {
             bonus -= this.DOUBLED_PAWN_PENALTY;
         }
 
         // Isolated pawn
-        if (pawnsByFile[turn][file - 1] === 0 && pawnsByFile[turn][file + 1] === 0) {
+        if ((file - 1 < 0 || pawnsByFile[turn][file - 1] === 0) && (file + 1 > 7 || pawnsByFile[turn][file + 1] === 0)) {
             bonus -= this.ISOLATED_PAWN_PENALTY;
         }
 
         // Backward pawn
-        if (pawnRank[turn][file - 1] > pawnRankOffset && pawnRank[turn][file + 1] > pawnRankOffset) {
+        if ((file - 1 >= 0 && pawnRank[turn][file - 1] > pawnRankOffset) && (file + 1 <= 7 && pawnRank[turn][file + 1] > pawnRankOffset)) {
             bonus -= this.BACKWARD_PAWN_PENALTY;
         }
 
@@ -393,7 +393,7 @@ module.exports = class Evaluate {
     rook(board, index, turn, pawnRank) {
         var bonus = 0;
         var rank = utils.indexToRank(index);
-        var file = utils.indexToRank(index);
+        var file = utils.indexToFile(index);
         var pawnRankOffset = turn === WHITE ? 7 - rank : rank;
 
         // Open file

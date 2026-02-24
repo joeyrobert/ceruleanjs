@@ -4,14 +4,6 @@ const utils = require('./utils');
 const polyglot = require('./polyglot');
 const BoardPieceList = require('./piece_list').BoardPieceList;
 const {
-    ATTACK_NONE,
-    ATTACK_DIAGONAL,
-    ATTACK_HORIZONTAL,
-    ATTACK_VERTICAL,
-    ATTACK_KNIGHT,
-    ATTACK_KING,
-    ATTACK_PAWN,
-    ATTACK_PIECE_ORDER,
     BISHOP,
     BLACK,
     CASTLING,
@@ -19,9 +11,6 @@ const {
     CASTLING_ROOK_FROM,
     CASTLING_ROOK_TO,
     DELTA_BISHOP,
-    DELTA_KING,
-    DELTA_KNIGHT,
-    DELTA_MAP,
     DELTA_ROOK,
     EMPTY,
     FEN_BOARD_REGEX,
@@ -41,15 +30,22 @@ const {
     PAWN,
     PAWN_FIRST_RANK,
     PAWN_LAST_RANK,
+    PAWN_PUSH_ONE_DELTA,
+    PAWN_PUSH_TWO_DELTA,
+    PAWN_CAPTURE_LEFT_DELTA,
+    PAWN_CAPTURE_RIGHT_DELTA,
     PIECE_MAP,
     POLYGLOT_PROMOTION_STRINGS,
     QUEEN,
     ROOK,
+    SQ64_INDEX,
     WHITE,
 } = require('./constants');
 const {
-    ATTACK_LOOKUP,
-    DELTA_LOOKUP,
+    KNIGHT_MOVES,
+    KING_MOVES,
+    PAWN_ATTACK_FROM,
+    PAWN_ATTACK_FROM_BLACK,
 } = require('./lookup');
 
 module.exports = class Board {
@@ -199,6 +195,34 @@ module.exports = class Board {
         this.currentHistory = this.history.length ? this.history[this.history.length - 1] : undefined;
     }
 
+    addNullMove() {
+        this.addHistory();
+        var zobristIndex;
+        if (this.enPassant) {
+            zobristIndex = polyglot.EN_PASSANT_OFFSET + utils.indexToFile(this.enPassant);
+            this.loHash ^= polyglot.LO_HASH[zobristIndex];
+            this.hiHash ^= polyglot.HI_HASH[zobristIndex];
+        }
+        this.enPassant = null;
+        this.loHash ^= polyglot.LO_HASH[polyglot.TURN_OFFSET];
+        this.hiHash ^= polyglot.HI_HASH[polyglot.TURN_OFFSET];
+        this.turn ^= 1;
+        return true;
+    }
+
+    subtractNullMove() {
+        this.enPassant = this.currentHistory[0];
+        this.castling = this.currentHistory[1];
+        this.loHash = this.currentHistory[2];
+        this.hiHash = this.currentHistory[3];
+        this.pawnLoHash = this.currentHistory[4];
+        this.pawnHiHash = this.currentHistory[5];
+        this.halfMoveClock = this.currentHistory[6];
+        this.turn ^= 1;
+        this.history.pop();
+        this.currentHistory = this.history.length ? this.history[this.history.length - 1] : undefined;
+    }
+
     resetHistory() {
         this.history = [];
         this.currentHistory = undefined;
@@ -233,7 +257,7 @@ module.exports = class Board {
                 this.halfMoveClock++;
                 break;
             case MOVE_BITS_CAPTURE:
-                zobristIndex = 64 * this.board[to] + 8 * utils.indexToRank(to) + utils.indexToFile(to);
+                zobristIndex = 64 * this.board[to] + SQ64_INDEX[to];
                 this.loHash ^= polyglot.LO_HASH[zobristIndex];
                 this.hiHash ^= polyglot.HI_HASH[zobristIndex];
                 this.pieces[opponentTurn].remove(to);
@@ -262,7 +286,7 @@ module.exports = class Board {
                 pawnIncrement = this.turn === WHITE ? -15 : 15;
                 var destroyedPawn = to + pawnIncrement;
                 this.pieces[opponentTurn].remove(destroyedPawn);
-                zobristIndex = 64 * this.board[destroyedPawn] + 8 * utils.indexToRank(destroyedPawn) + utils.indexToFile(destroyedPawn);
+                zobristIndex = 64 * this.board[destroyedPawn] + SQ64_INDEX[destroyedPawn];
                 this.loHash ^= polyglot.LO_HASH[zobristIndex];
                 this.hiHash ^= polyglot.HI_HASH[zobristIndex];
                 this.board[destroyedPawn] = EMPTY;
@@ -288,10 +312,10 @@ module.exports = class Board {
                 break;
             case MOVE_BITS_PROMOTION:
                 this.movePiece(from, to);
-                zobristIndex = 64 * this.board[to] + 8 * utils.indexToRank(to) + utils.indexToFile(to);
+                zobristIndex = 64 * this.board[to] + SQ64_INDEX[to];
                 promotion = utils.movePromotion(move);
                 this.board[to] = promotion | this.turn;
-                afterZobristIndex = 64 * this.board[to] + 8 * utils.indexToRank(to) + utils.indexToFile(to);
+                afterZobristIndex = 64 * this.board[to] + SQ64_INDEX[to];
                 // Recategorize in piece list
                 this.pieces[this.turn].remove(to);
                 this.pieces[this.turn].push(to);
@@ -305,14 +329,14 @@ module.exports = class Board {
                 this.halfMoveClock = 0;
                 break;
             case MOVE_BITS_PROMOTION_CAPTURE:
-                zobristIndex = 64 * this.board[to] + 8 * utils.indexToRank(to) + utils.indexToFile(to);
+                zobristIndex = 64 * this.board[to] + SQ64_INDEX[to];
                 this.loHash ^= polyglot.LO_HASH[zobristIndex];
                 this.hiHash ^= polyglot.HI_HASH[zobristIndex];
                 this.pieces[opponentTurn].remove(to);
                 this.movePiece(from, to);
                 promotion = utils.movePromotion(move);
                 this.board[to] = promotion | this.turn;
-                afterZobristIndex = 64 * this.board[to] + 8 * utils.indexToRank(to) + utils.indexToFile(to);
+                afterZobristIndex = 64 * this.board[to] + SQ64_INDEX[to];
                 // Recategorize in piece list
                 this.pieces[this.turn].remove(to);
                 this.pieces[this.turn].push(to);
@@ -422,7 +446,7 @@ module.exports = class Board {
     }
 
     movePiece(from, to) {
-        var zobristIndex = 64 * this.board[from] + 8 * utils.indexToRank(from) + utils.indexToFile(from);
+        var zobristIndex = 64 * this.board[from] + SQ64_INDEX[from];
         var isPawn = (this.board[from] & JUST_PIECE) === PAWN;
         this.loHash ^= polyglot.LO_HASH[zobristIndex];
         this.hiHash ^= polyglot.HI_HASH[zobristIndex];
@@ -434,7 +458,7 @@ module.exports = class Board {
         this.board[from] = EMPTY;
         this.pieces[this.turn].remove(from);
         this.pieces[this.turn].push(to);
-        zobristIndex = 64 * this.board[to] + 8 * utils.indexToRank(to) + utils.indexToFile(to);
+        zobristIndex = 64 * this.board[to] + SQ64_INDEX[to];
         this.loHash ^= polyglot.LO_HASH[zobristIndex];
         this.hiHash ^= polyglot.HI_HASH[zobristIndex];
         if (isPawn) {
@@ -465,7 +489,7 @@ module.exports = class Board {
                     this.pawnMoves(moves, index);
                     break;
                 case KNIGHT:
-                    this.deltaMoves(moves, DELTA_KNIGHT, index);
+                    this.lookupMoves(moves, KNIGHT_MOVES[index], index);
                     break;
                 case BISHOP:
                     this.slidingMoves(moves, DELTA_BISHOP, index);
@@ -478,7 +502,7 @@ module.exports = class Board {
                     this.slidingMoves(moves, DELTA_ROOK, index);
                     break;
                 case KING:
-                    this.deltaMoves(moves, DELTA_KING, index);
+                    this.lookupMoves(moves, KING_MOVES[index], index);
                     break;
             }
         }
@@ -505,7 +529,7 @@ module.exports = class Board {
                     this.pawnPromotions(moves, index);
                     break;
                 case KNIGHT:
-                    this.deltaCaptures(moves, DELTA_KNIGHT, index);
+                    this.lookupCaptures(moves, KNIGHT_MOVES[index], index);
                     break;
                 case BISHOP:
                     this.slidingCaptures(moves, DELTA_BISHOP, index);
@@ -518,7 +542,7 @@ module.exports = class Board {
                     this.slidingCaptures(moves, DELTA_ROOK, index);
                     break;
                 case KING:
-                    this.deltaCaptures(moves, DELTA_KING, index);
+                    this.lookupCaptures(moves, KING_MOVES[index], index);
                     break;
             }
         }
@@ -604,9 +628,10 @@ module.exports = class Board {
     pawnMoves(moves, index) {
         var lastRank = PAWN_LAST_RANK[this.turn];
         var firstRank = PAWN_FIRST_RANK[this.turn];
+        var turn = this.turn;
 
         // Regular push
-        var newMove = index - 15 + 30 * this.turn;
+        var newMove = index + PAWN_PUSH_ONE_DELTA[turn];
         if (this.board[newMove] === EMPTY) {
             if (newMove >= lastRank[0] && newMove <= lastRank[1]) {
                 moves.push(utils.createMove(index, newMove, MOVE_BITS_PROMOTION, EMPTY, QUEEN));
@@ -619,9 +644,9 @@ module.exports = class Board {
         }
 
         // Double push
-        newMove = index - 30 + 60 * this.turn;
+        newMove = index + PAWN_PUSH_TWO_DELTA[turn];
         if (this.board[newMove] === EMPTY &&
-            this.board[index - 15 + 30 * this.turn] === EMPTY &&
+            this.board[index + PAWN_PUSH_ONE_DELTA[turn]] === EMPTY &&
             index >= firstRank[0] && index <= firstRank[1]) {
             moves.push(utils.createMove(index, newMove, MOVE_BITS_DOUBLE_PAWN));
         }
@@ -634,7 +659,7 @@ module.exports = class Board {
 
         // Regular push promotions
         // Capture promotions are handled by pawnCaptures
-        var newMove = index - 15 + 30 * this.turn;
+        var newMove = index + PAWN_PUSH_ONE_DELTA[this.turn];
         if (this.board[newMove] === EMPTY && newMove >= lastRank[0] && newMove <= lastRank[1]) {
             moves.push(utils.createMove(index, newMove, MOVE_BITS_PROMOTION, EMPTY, QUEEN));
             moves.push(utils.createMove(index, newMove, MOVE_BITS_PROMOTION, EMPTY, ROOK));
@@ -648,10 +673,11 @@ module.exports = class Board {
         var newMove = 0;
         var lastRank = PAWN_LAST_RANK[this.turn];
         var square = 0;
+        var turn = this.turn;
 
         for (var j = 0; j < 2; j++) {
             // Captures
-            newMove = index + (14 + 2 * j) * (this.turn === WHITE ? 1 : -1);
+            newMove = index + (j === 0 ? PAWN_CAPTURE_LEFT_DELTA[turn] : PAWN_CAPTURE_RIGHT_DELTA[turn]);
             square = this.board[newMove];
             if (square !== OUT_OF_BOUNDS && square !== EMPTY && square % 2 !== this.turn) {
                 if (newMove >= lastRank[0] && newMove <= lastRank[1]) {
@@ -667,6 +693,19 @@ module.exports = class Board {
             // En passant
             if (newMove === this.enPassant) {
                 moves.push(utils.createMove(index, newMove, MOVE_BITS_EN_PASSANT, square));
+            }
+        }
+    }
+
+    lookupMoves(moves, targets, index) {
+        var j, newMove, square;
+        for (j = 0; j < targets.length; j++) {
+            newMove = targets[j];
+            square = this.board[newMove];
+            if (square === EMPTY) {
+                moves.push(utils.createMove(index, newMove));
+            } else if (square % 2 !== this.turn) {
+                moves.push(utils.createMove(index, newMove, MOVE_BITS_CAPTURE, square));
             }
         }
     }
@@ -704,6 +743,17 @@ module.exports = class Board {
         }
 
         return count;
+    }
+
+    lookupCaptures(moves, targets, index) {
+        var j, newMove, square;
+        for (j = 0; j < targets.length; j++) {
+            newMove = targets[j];
+            square = this.board[newMove];
+            if (square !== EMPTY && square % 2 !== this.turn) {
+                moves.push(utils.createMove(index, newMove, MOVE_BITS_CAPTURE, square));
+            }
+        }
     }
 
     deltaCaptures(moves, deltas, index) {
@@ -833,37 +883,28 @@ module.exports = class Board {
     }
 
     isAttackedByPawn(index, turn) {
-        var direction = turn === WHITE ? -1 : 1;
         var pawnPiece = PAWN | turn;
-        var attackIndices = [index + direction * 14, index + direction * 16];
-
-        for (var i = 0; i < 2; i++) {
-            var attackerIndex = attackIndices[i];
-            if (this.board[attackerIndex] === pawnPiece) {
-                return true;
-            }
+        var targets = turn === WHITE ? PAWN_ATTACK_FROM[index] : PAWN_ATTACK_FROM_BLACK[index];
+        for (var i = 0; i < targets.length; i++) {
+            if (this.board[targets[i]] === pawnPiece) return true;
         }
         return false;
     }
 
     isAttackedByKnight(index, turn) {
         var knightPiece = KNIGHT | turn;
-        for (var i = 0; i < 8; i++) {
-            var attackerIndex = index + DELTA_KNIGHT[i];
-            if (this.board[attackerIndex] === knightPiece) {
-                return true;
-            }
+        var targets = KNIGHT_MOVES[index];
+        for (var i = 0; i < targets.length; i++) {
+            if (this.board[targets[i]] === knightPiece) return true;
         }
         return false;
     }
 
     isAttackedByKing(index, turn) {
         var kingPiece = KING | turn;
-        for (var i = 0; i < 8; i++) {
-            var attackerIndex = index + DELTA_KING[i];
-            if (this.board[attackerIndex] === kingPiece) {
-                return true;
-            }
+        var targets = KING_MOVES[index];
+        for (var i = 0; i < targets.length; i++) {
+            if (this.board[targets[i]] === kingPiece) return true;
         }
         return false;
     }
@@ -925,7 +966,7 @@ module.exports = class Board {
             for (fileIndex = 0; fileIndex <= 7; fileIndex++) {
                 index = utils.rankFileToIndex(rankIndex, fileIndex);
                 if (this.board[index] !== EMPTY) {
-                    zobristIndex = 64 * this.board[index] + 8 * rankIndex + fileIndex;
+                    zobristIndex = 64 * this.board[index] + SQ64_INDEX[index];
                     this.loHash ^= polyglot.LO_HASH[zobristIndex];
                     this.hiHash ^= polyglot.HI_HASH[zobristIndex];
 

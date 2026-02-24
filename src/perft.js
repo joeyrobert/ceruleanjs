@@ -9,6 +9,9 @@ module.exports = class Perft {
     }
 
     perft(board, depth) {
+        if (this.nodeCounter) {
+            this.nodeCounter.count++;
+        }
         if (depth === 0) {
             return 1;
         }

@@ -27,6 +27,8 @@ const {
     HASH_SCORE_OFFSET,
     HASH_FLAG_MASK,
     HASH_DEPTH_MASK,
+    RANK_INDEX,
+    FILE_INDEX,
 } = require('./constants');
 
 function isNumeric(n) {
@@ -42,11 +44,11 @@ function rankFileToIndex64(rankIndex, fileIndex) {
 }
 
 function indexToRank(index) {
-    return ((index / 15) >> 0) - 2;
+    return RANK_INDEX[index];
 }
 
 function indexToFile(index) {
-    return index % 15 - 3;
+    return FILE_INDEX[index];
 }
 
 function algebraicToIndex(algebraic) {
