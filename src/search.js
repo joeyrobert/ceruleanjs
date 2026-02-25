@@ -163,8 +163,17 @@ module.exports = class Search {
         var standPat = this.evaluate.evaluate(board);
 
         // Razoring (conservative - only at depth 1)
-        if (depth === 1 && standPat + 300 < alpha) {
+        if (depth === 1 && standPat + 350 < alpha) {
             return this.qsearch(board, alpha, beta);
+        }
+
+        // Internal Iterative Deepening (when no TT move, depth >= 7)
+        if (!maxMove && depth >= 7) {
+            this.search(board, alpha, beta, depth - 1, ply);
+            ttEntry = this.searchTable.get(board.loHash, board.hiHash);
+            if (ttEntry) {
+                maxMove = ttEntry[0];
+            }
         }
 
         var score;
@@ -198,7 +207,7 @@ module.exports = class Search {
         // PVS search
         var alphaMove = 0;
 
-        var futilityMargin = 120;
+        var futilityMargin = 110;
         for (i = 0; i < moves.length; i++) {
             move = moves[i] & MOVE_SANS_ORDER_MASK;
             const historyIndex = utils.historyIndex(move);

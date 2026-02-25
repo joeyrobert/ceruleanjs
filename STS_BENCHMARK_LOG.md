@@ -306,11 +306,229 @@ Records each benchmark run and the changes that produced it.
 
 ---
 
-## Current Best: 4995 (Run 36)
+## Run 38
+- **Score**: 5018
+- **Duration**: 84.063s
+- **Workers**: 12
+- **Change**: Razoring margin 300 → 350 (less aggressive)
+
+---
+
+## Run 39
+- **Score**: 4884
+- **Duration**: 84.075s
+- **Workers**: 12
+- **Change**: Null move R=2, totalPieces>10
+- **Result**: Reverted (−134)
+
+---
+
+## Run 40
+- **Score**: 5057
+- **Duration**: 84.069s
+- **Workers**: 12
+- **Change**: IID when no TT move, depth >= 8 (depth-2 probe)
+
+---
+
+## Run 41
+- **Score**: 5058
+- **Duration**: 84.072s
+- **Workers**: 12
+- **Change**: CANDIDATE_PASSED_BONUS 8 → 10
+
+---
+
+## Run 42
+- **Score**: 5063
+- **Duration**: 84.072s
+- **Workers**: 12
+- **Change**: ROOK_OPEN_FILE_VS_KING_BONUS 10 → 12
+
+---
+
+## Run 43
+- **Score**: 5009
+- **Duration**: 84.071s
+- **Workers**: 12
+- **Change**: ROOK_ON_SEVENTH_BONUS 22 → 24
+- **Result**: Reverted (−54)
+
+---
+
+## Run 44
+- **Score**: 5052
+- **Duration**: 84.074s
+- **Workers**: 12
+- **Change**: Razoring margin 350 → 400
+- **Result**: Reverted (−11)
+
+---
+
+## Run 45
+- **Score**: 5072
+- **Duration**: 84.068s
+- **Workers**: 12
+- **Change**: IID depth threshold 8 → 7
+
+---
+
+## Run 46
+- **Score**: 5049
+- **Duration**: 84.067s
+- **Workers**: 12
+- **Change**: IID depth threshold 7 → 6
+- **Result**: Reverted (−23)
+
+---
+
+## Run 47
+- **Score**: 5049
+- **Duration**: 84.074s
+- **Workers**: 12
+- **Change**: TEMPO_BONUS 20 → 22
+- **Result**: Reverted (−23)
+
+---
+
+## Run 48
+- **Score**: 4960
+- **Duration**: 84.072s
+- **Workers**: 12
+- **Change**: CONNECTED_PASSED_BONUS 20 → 22
+- **Result**: Reverted (−112)
+
+---
+
+## Run 49
+- **Score**: 5075
+- **Duration**: 84.077s
+- **Workers**: 12
+- **Change**: KNIGHT_OUTPOST_BONUS 10 → 12
+
+---
+
+## Run 50
+- **Score**: 5061
+- **Duration**: 84.071s
+- **Workers**: 12
+- **Change**: QSearch delta margin 350 → 300
+- **Result**: Reverted (−14)
+
+---
+
+## Run 51
+- **Score**: 4957
+- **Duration**: 84.066s
+- **Workers**: 12
+- **Change**: LMR depth threshold 4 → 5
+- **Result**: Reverted (−118)
+
+---
+
+## Run 52
+- **Score**: 4926
+- **Duration**: 84.066s
+- **Workers**: 12
+- **Change**: CENTER_CONTROL_BONUS 8 → 10
+- **Result**: Reverted (−149)
+
+---
+
+## Run 53
+- **Score**: 5067
+- **Duration**: 84.060s
+- **Workers**: 12
+- **Change**: SEE downscore 100 → 80
+- **Result**: Reverted (−8)
+
+---
+
+## Run 54
+- **Score**: 5069
+- **Duration**: 84.069s
+- **Workers**: 12
+- **Change**: QSearch delta margin 350 → 400
+- **Result**: Reverted (−6)
+
+---
+
+## Run 55
+- **Score**: 4974
+- **Duration**: 84.080s
+- **Workers**: 12
+- **Change**: BISHOP_OPEN_GAME_BONUS 8 → 10
+- **Result**: Reverted (−101)
+
+---
+
+## Run 56
+- **Score**: 5088
+- **Duration**: 84.065s
+- **Workers**: 12
+- **Change**: Futility margin 120 → 110
+
+---
+
+## Run 57
+- **Score**: 5086
+- **Duration**: 84.069s
+- **Workers**: 12
+- **Change**: Futility margin 110 → 100
+- **Result**: Reverted (−2)
+
+---
+
+## Run 58
+- **Score**: 5090
+- **Duration**: 84.068s
+- **Workers**: 12
+- **Change**: IID depth-2 → depth-1 (less reduction)
+
+---
+
+## Run 59
+- **Score**: 4963
+- **Duration**: 84.067s
+- **Workers**: 12
+- **Change**: ROOK_OPEN_FILE_BONUS 15 → 17
+- **Result**: Reverted (−127)
+
+---
+
+## Run 60
+- **Score**: 5105
+- **Duration**: 84.076s
+- **Workers**: 12
+- **Change**: ROOK_BEHIND_PASSED_BONUS 12 → 14
+
+---
+
+## Run 61
+- **Score**: 4921
+- **Duration**: 84.072s
+- **Workers**: 12
+- **Change**: PROTECTED_PAWN_BONUS 10 → 12
+- **Result**: Reverted (−184)
+
+---
+
+## Run 62
+- **Score**: 4926
+- **Duration**: 84.065s
+- **Workers**: 12
+- **Change**: BISHOP_OPPOSITE_COLOR_BONUS 8 → 10
+- **Result**: Reverted (−179)
+
+---
+
+## Current Best: 5105 (Run 60)
 
 ## Current State
 - Time per move: 1s (standard)
 - Hash size: 18 (STS workers only)
 - Killer moves: enabled
-- Futility margin: 120
+- Futility margin: 110
+- Razoring margin: 350
+- IID: depth>=7 when no TT move (depth-1 probe)
 - LMR: i>5, depth>=4, reduction 1
