@@ -7,7 +7,7 @@ const utils = require('./utils');
 
 function stsParallel(timePerMove, numWorkers) {
     timePerMove = timePerMove || 1000;
-    numWorkers = numWorkers || process.env.STS_WORKERS || os.cpus().length;
+    numWorkers = numWorkers || process.env.STS_WORKERS || Math.min(12, os.cpus().length);
 
     console.log('Running Strategic Test Suite (Parallel)\n');
 
@@ -70,7 +70,8 @@ function stsParallel(timePerMove, numWorkers) {
                 workerData: {
                     positions: chunk,
                     timePerMove,
-                    maxDepth
+                    maxDepth,
+                    hashSize: 18
                 }
             });
             worker.on('message', (msg) => resolve(msg));

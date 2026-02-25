@@ -47,6 +47,7 @@ const {
     PAWN_ATTACK_FROM,
     PAWN_ATTACK_FROM_BLACK,
 } = require('./lookup');
+const { RANK_INDEX, FILE_INDEX } = require('./constants');
 
 module.exports = class Board {
     constructor() {
@@ -55,6 +56,10 @@ module.exports = class Board {
 
     emptyBoard() {
         this.resetHistory();
+        if (!this.historyStack) {
+            this.historyStack = [];
+            for (var i = 0; i < 128; i++) this.historyStack[i] = new Array(7);
+        }
         this.board = utils.getEmptyBoardArray();
         this.pieces = [new BoardPieceList(this), new BoardPieceList(this)];
         this.castling = 0;
@@ -186,8 +191,17 @@ module.exports = class Board {
     }
 
     addHistory() {
-        this.currentHistory = [this.enPassant, this.castling, this.loHash, this.hiHash, this.pawnLoHash, this.pawnHiHash, this.halfMoveClock];
-        this.history.push(this.currentHistory);
+        var idx = this.history.length;
+        var s = this.historyStack[idx];
+        s[0] = this.enPassant;
+        s[1] = this.castling;
+        s[2] = this.loHash;
+        s[3] = this.hiHash;
+        s[4] = this.pawnLoHash;
+        s[5] = this.pawnHiHash;
+        s[6] = this.halfMoveClock;
+        this.currentHistory = s;
+        this.history.push(s);
     }
 
     subtractHistory() {
@@ -745,6 +759,78 @@ module.exports = class Board {
         return count;
     }
 
+    lookupMovesToTargets(moves, targets, index, validTargets) {
+        var j, to, square;
+        for (j = 0; j < targets.length; j++) {
+            to = targets[j];
+            if (validTargets.indexOf(to) < 0) continue;
+            square = this.board[to];
+            if (square === EMPTY) moves.push(utils.createMove(index, to));
+            else if (square % 2 !== this.turn) moves.push(utils.createMove(index, to, MOVE_BITS_CAPTURE, square));
+        }
+    }
+
+    slidingMovesToTargets(moves, deltas, index, validTargets) {
+        var i, delta, to, square;
+        for (i = 0; i < 4; i++) {
+            delta = deltas[i];
+            to = index + delta;
+            while (this.board[to] !== OUT_OF_BOUNDS) {
+                square = this.board[to];
+                if (square === EMPTY) {
+                    if (validTargets.indexOf(to) >= 0) moves.push(utils.createMove(index, to));
+                    to += delta;
+                    continue;
+                }
+                if (validTargets.indexOf(to) >= 0 && square % 2 !== this.turn) moves.push(utils.createMove(index, to, MOVE_BITS_CAPTURE, square));
+                break;
+            }
+        }
+    }
+
+    pawnMovesToTargets(moves, index, validTargets) {
+        var lastRank = PAWN_LAST_RANK[this.turn];
+        var firstRank = PAWN_FIRST_RANK[this.turn];
+        var turn = this.turn;
+        var newMove, square, j;
+
+        newMove = index + PAWN_PUSH_ONE_DELTA[turn];
+        if (this.board[newMove] === EMPTY && validTargets.indexOf(newMove) >= 0) {
+            if (newMove >= lastRank[0] && newMove <= lastRank[1]) {
+                moves.push(utils.createMove(index, newMove, MOVE_BITS_PROMOTION, EMPTY, QUEEN));
+                moves.push(utils.createMove(index, newMove, MOVE_BITS_PROMOTION, EMPTY, ROOK));
+                moves.push(utils.createMove(index, newMove, MOVE_BITS_PROMOTION, EMPTY, BISHOP));
+                moves.push(utils.createMove(index, newMove, MOVE_BITS_PROMOTION, EMPTY, KNIGHT));
+            } else {
+                moves.push(utils.createMove(index, newMove, MOVE_BITS_PAWN));
+            }
+        }
+
+        newMove = index + PAWN_PUSH_TWO_DELTA[turn];
+        if (this.board[newMove] === EMPTY && this.board[index + PAWN_PUSH_ONE_DELTA[turn]] === EMPTY &&
+            index >= firstRank[0] && index <= firstRank[1] && validTargets.indexOf(newMove) >= 0) {
+            moves.push(utils.createMove(index, newMove, MOVE_BITS_DOUBLE_PAWN));
+        }
+
+        for (j = 0; j < 2; j++) {
+            newMove = index + (j === 0 ? PAWN_CAPTURE_LEFT_DELTA[turn] : PAWN_CAPTURE_RIGHT_DELTA[turn]);
+            square = this.board[newMove];
+            if (validTargets.indexOf(newMove) >= 0) {
+                if (square !== OUT_OF_BOUNDS && square !== EMPTY && square % 2 !== turn) {
+                    if (newMove >= lastRank[0] && newMove <= lastRank[1]) {
+                        moves.push(utils.createMove(index, newMove, MOVE_BITS_PROMOTION_CAPTURE, square, QUEEN));
+                        moves.push(utils.createMove(index, newMove, MOVE_BITS_PROMOTION_CAPTURE, square, ROOK));
+                        moves.push(utils.createMove(index, newMove, MOVE_BITS_PROMOTION_CAPTURE, square, BISHOP));
+                        moves.push(utils.createMove(index, newMove, MOVE_BITS_PROMOTION_CAPTURE, square, KNIGHT));
+                    } else {
+                        moves.push(utils.createMove(index, newMove, MOVE_BITS_CAPTURE, square));
+                    }
+                }
+                if (newMove === this.enPassant) moves.push(utils.createMove(index, newMove, MOVE_BITS_EN_PASSANT, PAWN | (turn ^ 1)));
+            }
+        }
+    }
+
     lookupCaptures(moves, targets, index) {
         var j, newMove, square;
         for (j = 0; j < targets.length; j++) {
@@ -874,11 +960,38 @@ module.exports = class Board {
     }
 
     isAttacked(index, turn) {
-        if (this.isAttackedByPawn(index, turn)) return true;
-        if (this.isAttackedByKnight(index, turn)) return true;
-        if (this.isAttackedByBishopOrQueen(index, turn)) return true;
-        if (this.isAttackedByRookOrQueen(index, turn)) return true;
-        if (this.isAttackedByKing(index, turn)) return true;
+        var board = this.board;
+        var pawnPiece = PAWN | turn, knightPiece = KNIGHT | turn, bishopPiece = BISHOP | turn;
+        var rookPiece = ROOK | turn, queenPiece = QUEEN | turn, kingPiece = KING | turn;
+        var i, piece, attackerIndex, delta, targets;
+
+        targets = turn === WHITE ? PAWN_ATTACK_FROM[index] : PAWN_ATTACK_FROM_BLACK[index];
+        for (i = 0; i < targets.length; i++) { if (board[targets[i]] === pawnPiece) return true; }
+        targets = KNIGHT_MOVES[index];
+        for (i = 0; i < targets.length; i++) { if (board[targets[i]] === knightPiece) return true; }
+        targets = KING_MOVES[index];
+        for (i = 0; i < targets.length; i++) { if (board[targets[i]] === kingPiece) return true; }
+
+        for (i = 0; i < 4; i++) {
+            delta = DELTA_BISHOP[i];
+            attackerIndex = index + delta;
+            while (board[attackerIndex] !== OUT_OF_BOUNDS) {
+                piece = board[attackerIndex];
+                if (piece === EMPTY) { attackerIndex += delta; continue; }
+                if (piece === bishopPiece || piece === queenPiece) return true;
+                break;
+            }
+        }
+        for (i = 0; i < 4; i++) {
+            delta = DELTA_ROOK[i];
+            attackerIndex = index + delta;
+            while (board[attackerIndex] !== OUT_OF_BOUNDS) {
+                piece = board[attackerIndex];
+                if (piece === EMPTY) { attackerIndex += delta; continue; }
+                if (piece === rookPiece || piece === queenPiece) return true;
+                break;
+            }
+        }
         return false;
     }
 
@@ -953,6 +1066,124 @@ module.exports = class Board {
 
     isInCheck() {
         return this.isAttacked(this.kings[this.turn], (this.turn) ^ 1);
+    }
+
+    getCheckers(kingIndex, attackerTurn) {
+        var checkers = [];
+        var i, piece, attackerIndex, delta;
+        var pawnPiece = PAWN | attackerTurn;
+        var knightPiece = KNIGHT | attackerTurn;
+        var bishopPiece = BISHOP | attackerTurn;
+        var rookPiece = ROOK | attackerTurn;
+        var queenPiece = QUEEN | attackerTurn;
+        var kingPiece = KING | attackerTurn;
+
+        var pawnTargets = attackerTurn === WHITE ? PAWN_ATTACK_FROM[kingIndex] : PAWN_ATTACK_FROM_BLACK[kingIndex];
+        for (i = 0; i < pawnTargets.length; i++) {
+            attackerIndex = pawnTargets[i];
+            if (this.board[attackerIndex] === pawnPiece) checkers.push(attackerIndex);
+        }
+        for (i = 0; i < KNIGHT_MOVES[kingIndex].length; i++) {
+            attackerIndex = KNIGHT_MOVES[kingIndex][i];
+            if (this.board[attackerIndex] === knightPiece) checkers.push(attackerIndex);
+        }
+        for (i = 0; i < KING_MOVES[kingIndex].length; i++) {
+            attackerIndex = KING_MOVES[kingIndex][i];
+            if (this.board[attackerIndex] === kingPiece) checkers.push(attackerIndex);
+        }
+        for (i = 0; i < 4; i++) {
+            delta = DELTA_BISHOP[i];
+            attackerIndex = kingIndex + delta;
+            while (this.board[attackerIndex] !== OUT_OF_BOUNDS) {
+                piece = this.board[attackerIndex];
+                if (piece === EMPTY) { attackerIndex += delta; continue; }
+                if (piece === bishopPiece || piece === queenPiece) checkers.push(attackerIndex);
+                break;
+            }
+        }
+        for (i = 0; i < 4; i++) {
+            delta = DELTA_ROOK[i];
+            attackerIndex = kingIndex + delta;
+            while (this.board[attackerIndex] !== OUT_OF_BOUNDS) {
+                piece = this.board[attackerIndex];
+                if (piece === EMPTY) { attackerIndex += delta; continue; }
+                if (piece === rookPiece || piece === queenPiece) checkers.push(attackerIndex);
+                break;
+            }
+        }
+        return checkers;
+    }
+
+    getSquaresBetween(kingIndex, checkerIndex) {
+        var kr = RANK_INDEX[kingIndex], kf = FILE_INDEX[kingIndex];
+        var cr = RANK_INDEX[checkerIndex], cf = FILE_INDEX[checkerIndex];
+        var dr = cr - kr, df = cf - kf;
+        var unit, i, sq, between = [];
+        if (dr === 0 && df === 0) return between;
+        if (dr === 0) unit = df > 0 ? 1 : -1;
+        else if (df === 0) unit = dr > 0 ? 15 : -15;
+        else if (dr === df) unit = dr > 0 ? 16 : -16;
+        else if (dr === -df) unit = dr > 0 ? 14 : -14;
+        else return between;
+        for (sq = kingIndex + unit; sq !== checkerIndex; sq += unit) {
+            if (this.board[sq] === OUT_OF_BOUNDS) break;
+            between.push(sq);
+        }
+        return between;
+    }
+
+    generateEvasions(moves) {
+        var kingIndex = this.kings[this.turn];
+        var attackerTurn = this.turn ^ 1;
+        var checkers = this.getCheckers(kingIndex, attackerTurn);
+        var i, j, targets, to, piece, index; var between = [];
+
+        for (i = 0; i < KING_MOVES[kingIndex].length; i++) {
+            to = KING_MOVES[kingIndex][i];
+            if (!this.isAttacked(to, attackerTurn) && (this.board[to] === EMPTY || (this.board[to] % 2 !== this.turn))) {
+                if (this.board[to] === EMPTY) moves.push(utils.createMove(kingIndex, to));
+                else moves.push(utils.createMove(kingIndex, to, MOVE_BITS_CAPTURE, this.board[to]));
+            }
+        }
+
+        if (checkers.length >= 2) return;
+
+        var checker = checkers[0];
+        var validTargets = [checker];
+        var checkerPiece = this.board[checker] & JUST_PIECE;
+        if (checkerPiece === BISHOP || checkerPiece === ROOK || checkerPiece === QUEEN) {
+            between = this.getSquaresBetween(kingIndex, checker);
+            for (j = 0; j < between.length; j++) validTargets.push(between[j]);
+        }
+        if (this.enPassant && checkerPiece === PAWN) {
+            var epPawnSquare = this.enPassant + (attackerTurn === WHITE ? 15 : -15);
+            if (checker === epPawnSquare) validTargets.push(this.enPassant);
+        }
+
+        var pieces = this.pieces[this.turn];
+        for (i = 0; i < pieces.length; i++) {
+            index = pieces.indices[i];
+            piece = this.board[index] & JUST_PIECE;
+            if (piece === KING) continue;
+            switch (piece) {
+                case PAWN:
+                    this.pawnMovesToTargets(moves, index, validTargets);
+                    break;
+                case KNIGHT:
+                    this.lookupMovesToTargets(moves, KNIGHT_MOVES[index], index, validTargets);
+                    break;
+                case BISHOP:
+                    this.slidingMovesToTargets(moves, DELTA_BISHOP, index, validTargets);
+                    break;
+                case ROOK:
+                    this.slidingMovesToTargets(moves, DELTA_ROOK, index, validTargets);
+                    break;
+                case QUEEN:
+                    this.slidingMovesToTargets(moves, DELTA_BISHOP, index, validTargets);
+                    this.slidingMovesToTargets(moves, DELTA_ROOK, index, validTargets);
+                    break;
+            }
+        }
     }
 
     initialHash() {

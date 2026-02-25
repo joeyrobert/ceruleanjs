@@ -26,6 +26,7 @@ const MOVE_ORDER_SHIFT              = 23;
 const MOVE_INDEX_OFFSET             = 33;
 const MOVE_ORDER_FIRST              = 255;
 const MOVE_ORDER_SECOND             = 254;
+const MOVE_ORDER_KILLER             = 253;
 const JUST_PIECE                    = 0b1110;
 const PAWN                          = 0;
 const KNIGHT                        = 2;
@@ -292,6 +293,7 @@ module.exports = {
     MOVE_INDEX_OFFSET,
     MOVE_ORDER_FIRST,
     MOVE_ORDER_SECOND,
+    MOVE_ORDER_KILLER,
     JUST_PIECE,
     PAWN,
     KNIGHT,

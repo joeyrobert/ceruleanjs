@@ -5,10 +5,15 @@ const Board = require('./board');
 const Search = require('./search');
 const utils = require('./utils');
 
-const { positions, timePerMove, maxDepth } = workerData;
+const { positions, timePerMove, maxDepth, hashSize } = workerData;
 
 const board = new Board();
 const search = new Search();
+if (hashSize) {
+    search.hashSize = hashSize;
+    search.evaluate.hashSize = hashSize;
+    search.evaluate.pawnHashSize = Math.min(hashSize, 16);
+}
 
 const results = [];
 

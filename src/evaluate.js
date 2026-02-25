@@ -27,7 +27,8 @@ const MOBILITY_COEFF = 100;
 const PST_COEFF = 100;
 const PIECE_BONUSES_COEFF = 100;
 const PAWN_STRUCT_COEFF = 100;
-const TOTAL_COEFFICIENT = MATERIAL_COEFF + PST_COEFF + MATERIAL_COEFF + PIECE_BONUSES_COEFF;
+const CENTER_COEFF = 100;
+const TOTAL_COEFFICIENT = MATERIAL_COEFF + PST_COEFF + MOBILITY_COEFF + PIECE_BONUSES_COEFF + PAWN_STRUCT_COEFF + CENTER_COEFF;
 
 /*
  * Piece square tables
@@ -46,56 +47,56 @@ const TOTAL_COEFFICIENT = MATERIAL_COEFF + PST_COEFF + MATERIAL_COEFF + PIECE_BO
 
 const PIECE_SQUARE_TABLES_PAWN = new Int32Array([
     0,   0,   0,   0,   0,   0,   0,   0,
-    5,  10,  15,  20,  20,  15,  10,   5,
+    6,  10,  14,  18,  18,  14,  10,   6,
     4,   8,  12,  16,  16,  12,   8,   4,
     3,   6,   9,  12,  12,   9,   6,   3,
     2,   4,   6,   8,   8,   6,   4,   2,
-    1,   2,   3, -10, -10,   3,   2,   1,
-    0,   0,   0, -40, -40,   0,   0,   0,
+    1,   2,   3, -12, -12,   3,   2,   1,
+    0,   0,   0, -45, -45,   0,   0,   0,
     0,   0,   0,   0,   0,   0,   0,   0
 ]);
 
 const PIECE_SQUARE_TABLES_KNIGHT = new Int32Array([
-    -10, -10, -10, -10, -10, -10, -10, -10,
-    -10,   0,   0,   0,   0,   0,   0, -10,
-    -10,   0,   5,   5,   5,   5,   0, -10,
-    -10,   0,   5,  10,  10,   5,   0, -10,
-    -10,   0,   5,  10,  10,   5,   0, -10,
-    -10,   0,   5,   5,   5,   5,   0, -10,
-    -10,   0,   0,   0,   0,   0,   0, -10,
-    -10, -30, -10, -10, -10, -10, -30, -10
+    -25, -20, -15, -15, -15, -15, -20, -25,
+    -20, -10,   0,   5,   5,   0, -10, -20,
+    -15,   0,  10,  15,  15,  10,   0, -15,
+    -15,   5,  15,  20,  20,  15,   5, -15,
+    -15,   5,  15,  20,  20,  15,   5, -15,
+    -15,   0,  10,  15,  15,  10,   0, -15,
+    -20, -10,   0,   0,   0,   0, -10, -20,
+    -25, -20, -15, -15, -15, -15, -20, -25
 ]);
 
 const PIECE_SQUARE_TABLES_BISHOP = new Int32Array([
-    -10, -10, -10, -10, -10, -10, -10, -10,
-    -10,   0,   0,   0,   0,   0,   0, -10,
+    -15, -10, -10, -10, -10, -10, -10, -15,
     -10,   0,   5,   5,   5,   5,   0, -10,
-    -10,   0,   5,  10,  10,   5,   0, -10,
-    -10,   0,   5,  10,  10,   5,   0, -10,
+    -10,   5,  10,  12,  12,  10,   5, -10,
+    -10,   5,  12,  15,  15,  12,   5, -10,
+    -10,   5,  12,  15,  15,  12,   5, -10,
+    -10,   5,  10,  12,  12,  10,   5, -10,
     -10,   0,   5,   5,   5,   5,   0, -10,
-    -10,   0,   0,   0,   0,   0,   0, -10,
-    -10, -10, -20, -10, -10, -20, -10, -10
+    -15, -10, -10, -10, -10, -10, -10, -15
 ]);
 
 const PIECE_SQUARE_TABLES_ROOK = new Int32Array([
-      0,  0,  0,  0,  0,  0,  0,  0,
-      5, 10, 10, 10, 10, 10, 10,  5,
-     -5,  0,  0,  0,  0,  0,  0, -5,
-     -5,  0,  0,  0,  0,  0,  0, -5,
-     -5,  0,  0,  0,  0,  0,  0, -5,
-     -5,  0,  0,  0,  0,  0,  0, -5,
-     -5,  0,  0,  0,  0,  0,  0, -5,
-      0,  0,  0,  5,  5,  0,  0,  0
+    0,  0,  0,  0,  0,  0,  0,  0,
+    5, 10, 10, 10, 10, 10, 10,  5,
+   -5,  0,  0,  0,  0,  0,  0, -5,
+   -5,  0,  0,  0,  0,  0,  0, -5,
+   -5,  0,  0,  0,  0,  0,  0, -5,
+   -5,  0,  0,  0,  0,  0,  0, -5,
+   -5,  0,  0,  0,  0,  0,  0, -5,
+    0,  0,  0,  5,  5,  0,  0,  0
 ]);
 
 const PIECE_SQUARE_TABLES_QUEEN = new Int32Array([
     -10, -5, -5, -1, -1, -5, -5,-10,
-     -5,  0,  0,  0,  0,  0,  0, -5,
-     -5,  0,  1,  1,  1,  1,  0, -5,
-     -1,  0,  1,  1,  1,  1,  0, -1,
-      0,  0,  1,  1,  1,  1,  0, -1,
-     -5,  1,  1,  1,  1,  1,  0, -5,
-     -5,  0,  1,  0,  0,  0,  0, -5,
+     -5,  0,  2,  2,  2,  2,  0, -5,
+     -5,  2,  5,  6,  6,  5,  2, -5,
+     -1,  2,  6,  8,  8,  6,  2, -1,
+      0,  2,  6,  8,  8,  6,  2, -1,
+     -5,  2,  5,  6,  6,  5,  2, -5,
+     -5,  0,  2,  2,  2,  2,  0, -5,
     -10, -5, -5, -1, -1, -5, -5,-10
 ]);
 
@@ -206,6 +207,7 @@ module.exports = class Evaluate {
         var mobility        = [0, 0];
         var pieceBonuses    = [0, 0];
         var pawnStructure   = [0, 0];
+        var centerControl   = [0, 0];
         var savedPawn       = this.pawnTable.get(board.pawnLoHash, board.pawnHiHash);
 
         // Game phase and close
@@ -241,12 +243,18 @@ module.exports = class Evaluate {
                     case KNIGHT:
                         pst[turn] += PIECE_SQUARE_TABLES_KNIGHT[pstIndex];
                         pieceBonuses[turn] += this.knight(board, index, turn, gameClosed);
+                        if ((pstIndex & 7) >= 2 && (pstIndex & 7) <= 5 && pstIndex >= 18 && pstIndex <= 45) {
+                            centerControl[turn] += this.CENTER_CONTROL_BONUS;
+                        }
                         moveCount = board.deltaMoveCount(DELTA_KNIGHT, index, turn);
                         mobility[turn] += this.KNIGHT_MOBILITY_BONUS * moveCount;
                         break;
                     case BISHOP:
                         pst[turn] += PIECE_SQUARE_TABLES_BISHOP[pstIndex];
-                        pieceBonuses[turn] += this.bishop(board, index, turn, pawnNumber);
+                        pieceBonuses[turn] += this.bishop(board, index, turn, pawnNumber, gameClosed);
+                        if ((pstIndex & 7) >= 2 && (pstIndex & 7) <= 5 && pstIndex >= 18 && pstIndex <= 45) {
+                            centerControl[turn] += this.CENTER_CONTROL_BONUS;
+                        }
                         moveCount = board.slidingMoveCount(DELTA_BISHOP, index, turn);
                         mobility[turn] += this.BISHOP_MOBILITY_BONUS * moveCount;
                         break;
@@ -258,13 +266,13 @@ module.exports = class Evaluate {
                         break;
                     case QUEEN:
                         pst[turn] += PIECE_SQUARE_TABLES_QUEEN[pstIndex];
-                        pieceBonuses[turn] += this.queen();
+                        pieceBonuses[turn] += this.queen(index, turn, pawnRank);
                         moveCount = board.slidingMoveCount(DELTA_BISHOP, index, turn) + board.slidingMoveCount(DELTA_ROOK, index, turn);
                         mobility[turn] += this.QUEEN_MOBILITY_BONUS * moveCount;
                         break;
                     case KING:
                         pst[turn] += this.interpolate(PIECE_SQUARE_TABLES_KING_EARLY[pstIndex], PIECE_SQUARE_TABLES_KING_LATE[pstIndex], gamePhase);
-                        pieceBonuses[turn] += this.king();
+                        pieceBonuses[turn] += this.king(board, index, turn, gamePhase);
                         moveCount = board.deltaMoveCount(DELTA_KING, index, turn);
                         mobility[turn] += this.KING_MOBILITY_BONUS * moveCount;
                         break;
@@ -278,13 +286,16 @@ module.exports = class Evaluate {
             MATERIAL_COEFF      * (material[1] - material[0]) +
             PST_COEFF           * (pst[1] - pst[0]) +
             MOBILITY_COEFF      * (mobility[1] - mobility[0]) +
-            PIECE_BONUSES_COEFF * (pieceBonuses[1] - pieceBonuses[0]);
+            PIECE_BONUSES_COEFF * (pieceBonuses[1] - pieceBonuses[0]) +
+            CENTER_COEFF        * (centerControl[1] - centerControl[0]);
 
         if (savedPawn !== undefined) {
             total += PAWN_STRUCT_COEFF * savedPawn;
         } else {
             this.pawnTable.set(board.pawnLoHash, board.pawnHiHash, pawnStructure[1] - pawnStructure[0]);
         }
+
+        total += turnCoefficient * (this.TEMPO_BONUS || 0);
 
         total = Math.round(turnCoefficient * total / TOTAL_COEFFICIENT);
 
@@ -330,10 +341,26 @@ module.exports = class Evaluate {
         }
 
         // Passed pawn
-        if ((file - 1 < 0 || pawnRank[turn ^ 1][file - 1] <= inversePawnRankOffset) &&
+        var isPassed = (file - 1 < 0 || pawnRank[turn ^ 1][file - 1] <= inversePawnRankOffset) &&
            (pawnRank[turn ^ 1][file] <= inversePawnRankOffset) &&
-           (file + 1 > 7 || pawnRank[turn ^ 1][file + 1] <= inversePawnRankOffset)) {
+           (file + 1 > 7 || pawnRank[turn ^ 1][file + 1] <= inversePawnRankOffset);
+        if (isPassed) {
             bonus += this.PASSED_PAWN_BONUS;
+            if ((this.CONNECTED_PASSED_BONUS || 0) && ((file > 0 && pawnsByFile[turn][file - 1] > 0) || (file < 7 && pawnsByFile[turn][file + 1] > 0))) {
+                bonus += this.CONNECTED_PASSED_BONUS;
+            }
+        } else if (pawnRankOffset < 7 && (this.CANDIDATE_PASSED_BONUS || 0)) {
+            var invNext = inversePawnRankOffset + 1;
+            if ((file - 1 < 0 || pawnRank[turn ^ 1][file - 1] <= inversePawnRankOffset) &&
+                (pawnRank[turn ^ 1][file] <= invNext) &&
+                (file + 1 > 7 || pawnRank[turn ^ 1][file + 1] <= inversePawnRankOffset)) {
+                bonus += this.CANDIDATE_PASSED_BONUS;
+            }
+        }
+
+        // Pawn advancement on wings (STS 8/9: f/g/h and a/b/c pawn storms)
+        if (pawnRankOffset >= 4 && (file <= 2 || file >= 5)) {
+            bonus += (this.PAWN_WING_ADVANCE_BONUS || 0) * (pawnRankOffset - 3);
         }
 
         // Protected pawn
@@ -351,7 +378,7 @@ module.exports = class Evaluate {
         var left = index + behindCoefficient * (WIDTH - 1);
         var right = index + behindCoefficient * (WIDTH + 1);
 
-        // Closed game bonus
+        // Closed game bonus (knight better in closed)
         if (gameClosed >= 0.5) {
             bonus += this.KNIGHT_CLOSED_GAME_BONUS;
         }
@@ -361,30 +388,38 @@ module.exports = class Evaluate {
         var pawnRankOffset = turn === WHITE ? 7 - rank : rank;
 
         if (pawnRankOffset > 3 &&
-            // Protected
-            ((board.board[left] === PAWN && board.board[left] % 2 === board.turn) ||
-            (board.board[right] === PAWN && board.board[right] % 2 === board.turn))) {
+            (((board.board[left] & JUST_PIECE) === PAWN && (board.board[left] & 1) === turn) ||
+             ((board.board[right] & JUST_PIECE) === PAWN && (board.board[right] & 1) === turn))) {
             bonus += this.KNIGHT_OUTPOST_BONUS;
+        }
+
+        // Knight on rim penalty
+        var knightFile = utils.indexToFile(index);
+        if ((knightFile === 0 || knightFile === 7) && (this.KNIGHT_ON_RIM_PENALTY || 0)) {
+            bonus -= this.KNIGHT_ON_RIM_PENALTY;
         }
 
         return bonus;
     }
 
-    bishop(board, index, turn, pawnNumber) {
+    bishop(board, index, turn, pawnNumber, gameClosed) {
         var bonus = 0;
         var bishops = board.pieces[turn].pieces[BISHOP];
 
         // Bishop pair
-        // TODO: Extend this to up to 10 bishops
         if (bishops.length === 2) {
             bonus += this.BISHOP_DOUBLE_BONUS;
-
-            // if (bishops[0] % 2 !== bishops[1] % 2) {
-            //     bonus += BISHOP_PAIR_BONUS;
-            // }
+            if ((this.BISHOP_OPPOSITE_COLOR_BONUS || 0) && (bishops.indices[0] % 2) !== (bishops.indices[1] % 2)) {
+                bonus += this.BISHOP_OPPOSITE_COLOR_BONUS;
+            }
         }
 
-        // Close if they have many pawns on that diagonal
+        // Bishop vs Knight: bishop better in open positions (STS 5)
+        if (gameClosed < 0.5) {
+            bonus += this.BISHOP_OPEN_GAME_BONUS;
+        }
+
+        // Penalty when opponent has many pawns on same color diagonal
         bonus -= this.BISHOP_PAIRITY_PENALTY * pawnNumber[turn ^ 1][index % 2];
 
         return bonus;
@@ -395,11 +430,20 @@ module.exports = class Evaluate {
         var rank = utils.indexToRank(index);
         var file = utils.indexToFile(index);
         var pawnRankOffset = turn === WHITE ? 7 - rank : rank;
+        var ourPawnAdvance = pawnRank[turn][file];
+        var theirPawnAdvance = pawnRank[turn ^ 1][file];
 
         // Open file
-        if (pawnRank[turn][file] === 0) {
-            if (pawnRank[turn ^ 1][file] === 0) {
+        if (ourPawnAdvance === 0) {
+            if (theirPawnAdvance === 0) {
                 bonus += this.ROOK_OPEN_FILE_BONUS;
+                // Rook on open file vs king: enemy king on this file or adjacent
+                if ((this.ROOK_OPEN_FILE_VS_KING_BONUS || 0)) {
+                    var enemyKingFile = utils.indexToFile(board.kings[turn ^ 1]);
+                    if (Math.abs(enemyKingFile - file) <= 1) {
+                        bonus += this.ROOK_OPEN_FILE_VS_KING_BONUS;
+                    }
+                }
             } else {
                 bonus += this.ROOK_SEMI_OPEN_FILE_BONUS;
             }
@@ -409,15 +453,53 @@ module.exports = class Evaluate {
             bonus += this.ROOK_ON_SEVENTH_BONUS;
         }
 
+        // Rook behind passed pawn (STS 14 - rooks support passed pawns)
+        if (ourPawnAdvance >= 4 && (theirPawnAdvance === 0 || theirPawnAdvance < ourPawnAdvance)) {
+            var pawnRankIdx = turn === WHITE ? 7 - ourPawnAdvance : ourPawnAdvance;
+            var rookBehind = turn === WHITE ? rank > pawnRankIdx : rank < pawnRankIdx;
+            if (rookBehind && (this.ROOK_BEHIND_PASSED_BONUS || 0)) {
+                bonus += this.ROOK_BEHIND_PASSED_BONUS;
+            }
+        }
+
         return bonus;
     }
 
-    queen() {
-        return 0;
+    queen(index, turn, pawnRank) {
+        var bonus = 0;
+        var rank = utils.indexToRank(index);
+        var pawnRankOffset = turn === WHITE ? 7 - rank : rank;
+        if (pawnRankOffset === 6) {
+            bonus += this.QUEEN_ON_SEVENTH_BONUS;
+        }
+        return bonus;
     }
 
-    king() {
-        return 0;
+    king(board, index, turn, gamePhase) {
+        var bonus = 0;
+        var rank = utils.indexToRank(index);
+        var file = utils.indexToFile(index);
+        var shieldCount = 0;
+        var behindCoefficient = turn === WHITE ? -1 : 1;
+        var shield1 = index + behindCoefficient * WIDTH;
+        var shield2 = index + behindCoefficient * (WIDTH - 1);
+        var shield3 = index + behindCoefficient * (WIDTH + 1);
+
+        // King safety: pawn shield in middlegame (STS 8/9 - pawn storms attack exposed kings)
+        if (gamePhase > 0.3 && (this.KING_SHIELD_PENALTY || 0)) {
+            if ((board.board[shield1] & JUST_PIECE) === PAWN && (board.board[shield1] & 1) === turn) shieldCount++;
+            if (file > 0 && (board.board[shield2] & JUST_PIECE) === PAWN && (board.board[shield2] & 1) === turn) shieldCount++;
+            if (file < 7 && (board.board[shield3] & JUST_PIECE) === PAWN && (board.board[shield3] & 1) === turn) shieldCount++;
+            bonus -= this.KING_SHIELD_PENALTY * (3 - shieldCount);
+        }
+
+        // King activity in endgame (STS 11)
+        if (gamePhase < 0.5) {
+            var centerDist = Math.abs(file - 3.5) + Math.abs(rank - 3.5);
+            bonus += this.KING_ACTIVITY_BONUS * (4 - centerDist);
+        }
+
+        return bonus;
     }
 
     // Produce phase coefficient

@@ -3,11 +3,13 @@
 const {
     EMPTY,
     HASH_EXACT,
+    PIECE_VALUES,
     HASH_ALPHA,
     HASH_BETA,
     JUST_PIECE,
     MATE_VALUE,
     MOVE_ORDER_FIRST,
+    MOVE_ORDER_KILLER,
     MOVE_ORDER_SECOND,
     MOVE_SANS_ORDER_MASK,
     MVV_LVA_OFFSET,
@@ -34,6 +36,10 @@ module.exports = class Search {
             new Uint32Array(64*64),
             new Uint32Array(64*64),
         ];
+        this.killerMoves = [];
+        for (var k = 0; k < 64; k++) {
+            this.killerMoves[k] = [0, 0];
+        }
     }
 
     set hashSize(exponent=1) {
@@ -83,6 +89,14 @@ module.exports = class Search {
 
         const x = ((MVV_LVA_PIECE_VALUES[captured] * 5 + 5 - MVV_LVA_PIECE_VALUES[attacker]) | 0) + MVV_LVA_OFFSET;
         return x;
+    }
+
+    // Simple capture gain for ordering (captured - attacker; positive = winning)
+    seeGain(board, move) {
+        var captured = utils.moveCaptured(move);
+        if (captured === EMPTY) return 0;
+        var attacker = board.board[utils.moveFrom(move)] & JUST_PIECE;
+        return PIECE_VALUES[captured] - PIECE_VALUES[attacker];
     }
 
     relativeHistory(turn, move) {
@@ -137,6 +151,8 @@ module.exports = class Search {
                 if (ttFlag === HASH_BETA && ttScore >= beta) {
                     return beta;
                 }
+            } else if (ttMove) {
+                maxMove = ttMove;
             }
         }
 
@@ -155,14 +171,22 @@ module.exports = class Search {
         var searchedMoves = 0;
         var move, moves = board.generateMoves();
 
-        // Add move ordering (Hash + iterative deepening PV + MVV/LVA)
+        // Add move ordering (Hash + PV + Killer + MVV/LVA + History)
+        var moveMask;
         for (var i = 0; i < moves.length; i++) {
-            if (maxMove && (moves[i] & MOVE_SANS_ORDER_MASK) === maxMove) {
+            moveMask = moves[i] & MOVE_SANS_ORDER_MASK;
+            if (maxMove && moveMask === maxMove) {
                 moves[i] = utils.moveAddOrder(moves[i], MOVE_ORDER_FIRST);
-            } else if (this.pv[this.ply - 1] && this.pv[this.ply - 1][this.ply - 1] && (moves[i] & MOVE_SANS_ORDER_MASK) === this.pv[this.ply - 1][this.ply - 1]) {
+            } else if (this.pv[this.ply - 1] && this.pv[this.ply - 1][this.ply - 1] && moveMask === this.pv[this.ply - 1][this.ply - 1]) {
+                moves[i] = utils.moveAddOrder(moves[i], MOVE_ORDER_SECOND);
+            } else if (!utils.moveCaptured(moves[i]) && ply < 64 && (moveMask === this.killerMoves[ply][0] || moveMask === this.killerMoves[ply][1])) {
+                moves[i] = utils.moveAddOrder(moves[i], MOVE_ORDER_KILLER);
+            } else if (utils.movePromotion(moves[i])) {
                 moves[i] = utils.moveAddOrder(moves[i], MOVE_ORDER_SECOND);
             } else if (utils.moveCaptured(moves[i])) {
-                moves[i] = utils.moveAddOrder(moves[i], this.mvvLva(board, moves[i]) + this.relativeHistory(board.turn, moves[i]));
+                var capOrder = this.mvvLva(board, moves[i]) + this.relativeHistory(board.turn, moves[i]);
+                if (this.seeGain(board, moves[i]) < 0) capOrder -= 100;
+                moves[i] = utils.moveAddOrder(moves[i], capOrder);
             } else {
                 moves[i] = utils.moveAddOrder(moves[i], this.relativeHistory(board.turn, moves[i]));
             }
@@ -174,7 +198,7 @@ module.exports = class Search {
         // PVS search
         var alphaMove = 0;
 
-        var futilityMargin = 150;
+        var futilityMargin = 120;
         for (i = 0; i < moves.length; i++) {
             move = moves[i] & MOVE_SANS_ORDER_MASK;
             const historyIndex = utils.historyIndex(move);
@@ -184,14 +208,14 @@ module.exports = class Search {
             if (board.addMove(move)) {
                 searchedMoves++;
 
-                // Futility pruning at depth 1
+                // Futility pruning at depth 1 (less aggressive for positional play)
                 if (depth === 1 && !isCapture && !isPromotion && standPat + futilityMargin < alpha) {
                     board.subtractMove(move);
                     continue;
                 }
 
                 var reduction = 0;
-                if (alphaMove && i > 4 && !isCapture && !board.isInCheck() && depth >= 5) {
+                if (alphaMove && i > 5 && !isCapture && !board.isInCheck() && depth >= 4) {
                     reduction = 1;
                 }
 
@@ -214,6 +238,12 @@ module.exports = class Search {
 
                 this.butterflyHeuristic[board.turn][historyIndex] += 1;
                 if (score >= beta) {
+                    if (!isCapture && ply < 64) {
+                        if (this.killerMoves[ply][0] !== move) {
+                            this.killerMoves[ply][1] = this.killerMoves[ply][0];
+                            this.killerMoves[ply][0] = move;
+                        }
+                    }
                     board.subtractHistory();
 
                     if (depth > ttDepth) {
@@ -265,6 +295,17 @@ module.exports = class Search {
             return;
         }
 
+        var ttEntry = this.searchTable.get(board.loHash, board.hiHash);
+        if (ttEntry) {
+            var qttMove = ttEntry[0];
+            var qttData = ttEntry[1];
+            var qttDepth, qttFlag, qttScore;
+            [qttDepth, qttFlag, qttScore] = utils.unpackSearchEntry(qttData);
+            if (qttFlag === HASH_EXACT) return qttScore;
+            if (qttFlag === HASH_ALPHA && qttScore <= alpha) return alpha;
+            if (qttFlag === HASH_BETA && qttScore >= beta) return beta;
+        }
+
         var standPat = this.evaluate.evaluate(board);
 
         if (standPat >= beta) {
@@ -287,8 +328,13 @@ module.exports = class Search {
 
         board.addHistory();
 
+        var captured, deltaMargin = 350;
         for (i = 0; i < moves.length; i++) {
             move = moves[i];
+            captured = utils.moveCaptured(move);
+            if (captured !== EMPTY && standPat + PIECE_VALUES[captured] + deltaMargin < alpha) {
+                continue;
+            }
 
             if (board.addMove(move)) {
                 score = -this.qsearch(board, -beta, -alpha);
@@ -370,5 +416,9 @@ module.exports = class Search {
         this.historyHeuristic[1].fill(0);
         this.butterflyHeuristic[0].fill(0);
         this.butterflyHeuristic[1].fill(0);
+        for (var k = 0; k < 64; k++) {
+            this.killerMoves[k][0] = 0;
+            this.killerMoves[k][1] = 0;
+        }
     }
 };
